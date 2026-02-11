@@ -1,34 +1,43 @@
-name: snapshot
+# 快照构建工作流配置文件
+name: snapshot  # 工作流名称：快照
 
+# 触发条件
 on:
   push:
     branches:
-      - main
+      - main  # 当推送到 main 分支时
 
+# 权限配置
 permissions:
-  contents: read
+  contents: read  # 只读访问仓库内容
 
+# 并发控制
 concurrency:
-  group: snapshot-${{ github.ref }}
-  cancel-in-progress: true
+  group: snapshot-${{ github.ref }}  # 工作流组名称
+  cancel-in-progress: true  # 取消正在进行的相同工作流
 
+# 任务定义
 jobs:
-  snapshot:
+  snapshot:  # 快照构建任务
     runs-on:
-      # Use our own large runners with more CPU and RAM for faster builds
-      group: releasers
+      # 使用我们自己的大型运行器，具有更多 CPU 和 RAM 以加快构建速度
+      group: releasers  # 运行器组：发布者
     steps:
+      # 检出代码
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          fetch-depth: 0
-          persist-credentials: false
+          fetch-depth: 0  # 获取完整的 git 历史
+          persist-credentials: false  # 不持久化凭证
+      # 设置 Go 环境
       - uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6.2.0
         with:
-          go-version-file: go.mod
+          go-version-file: go.mod  # 从 go.mod 文件读取 Go 版本
+      # 使用 Goreleaser 构建快照版本
       - uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6.4.0
         with:
-          version: "nightly"
-          distribution: goreleaser-pro
-          args: build --snapshot --clean
+          version: "nightly"  # Goreleaser 版本：夜间构建版
+          distribution: goreleaser-pro  # Goreleaser 分发版本：专业版
+          args: build --snapshot --clean  # 构建参数：快照模式，清理构建目录
         env:
+          # 环境变量：Goreleaser 密钥
           GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}

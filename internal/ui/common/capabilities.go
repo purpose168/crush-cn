@@ -11,33 +11,31 @@ import (
 	xstrings "github.com/charmbracelet/x/exp/strings"
 )
 
-// Capabilities define different terminal capabilities supported.
+// Capabilities 定义支持的不同终端能力。
 type Capabilities struct {
-	// Profile is the terminal color profile used to determine how colors are
-	// rendered.
+	// Profile 是用于确定如何渲染颜色的终端颜色配置文件。
 	Profile colorprofile.Profile
-	// Columns is the number of character columns in the terminal.
+	// Columns 是终端中的字符列数。
 	Columns int
-	// Rows is the number of character rows in the terminal.
+	// Rows 是终端中的字符行数。
 	Rows int
-	// PixelX is the width of the terminal in pixels.
+	// PixelX 是终端的宽度（像素）。
 	PixelX int
-	// PixelY is the height of the terminal in pixels.
+	// PixelY 是终端的高度（像素）。
 	PixelY int
-	// KittyGraphics indicates whether the terminal supports the Kitty graphics
-	// protocol.
+	// KittyGraphics 指示终端是否支持 Kitty 图形协议。
 	KittyGraphics bool
-	// SixelGraphics indicates whether the terminal supports Sixel graphics.
+	// SixelGraphics 指示终端是否支持 Sixel 图形。
 	SixelGraphics bool
-	// Env is the terminal environment variables.
+	// Env 是终端环境变量。
 	Env uv.Environ
-	// TerminalVersion is the terminal version string.
+	// TerminalVersion 是终端版本字符串。
 	TerminalVersion string
-	// ReportFocusEvents indicates whether the terminal supports focus events.
+	// ReportFocusEvents 指示终端是否支持焦点事件。
 	ReportFocusEvents bool
 }
 
-// Update updates the capabilities based on the given message.
+// Update 根据给定消息更新能力。
 func (c *Capabilities) Update(msg any) {
 	switch m := msg.(type) {
 	case tea.EnvMsg:
@@ -66,19 +64,18 @@ func (c *Capabilities) Update(msg any) {
 	}
 }
 
-// QueryCmd returns a [tea.Cmd] that queries the terminal for different
-// capabilities.
+// QueryCmd 返回一个 [tea.Cmd]，用于查询终端的不同能力。
 func QueryCmd(env uv.Environ) tea.Cmd {
 	var sb strings.Builder
 	sb.WriteString(ansi.RequestPrimaryDeviceAttributes)
 	sb.WriteString(ansi.QueryModifyOtherKeys)
 
-	// Queries that should only be sent to "smart" normal terminals.
+	// 仅应发送到"智能"普通终端的查询。
 	shouldQueryFor := shouldQueryCapabilities(env)
 	if shouldQueryFor {
 		sb.WriteString(ansi.RequestNameVersion)
-		// sb.WriteString(ansi.RequestModeFocusEvent) // TODO: re-enable when we need notifications.
-		sb.WriteString(ansi.WindowOp(14)) // Window size in pixels
+		// sb.WriteString(ansi.RequestModeFocusEvent) // TODO: 当我们需要通知时重新启用。
+		sb.WriteString(ansi.WindowOp(14)) // 窗口大小（像素）
 		kittyReq := ansi.KittyGraphics([]byte("AAAA"), "i=31", "s=1", "v=1", "a=q", "t=d", "f=24")
 		if _, isTmux := env.LookupEnv("TMUX"); isTmux {
 			kittyReq = ansi.TmuxPassthrough(kittyReq)
@@ -89,22 +86,22 @@ func QueryCmd(env uv.Environ) tea.Cmd {
 	return tea.Raw(sb.String())
 }
 
-// SupportsTrueColor returns true if the terminal supports true color.
+// SupportsTrueColor 如果终端支持真彩色则返回 true。
 func (c Capabilities) SupportsTrueColor() bool {
 	return c.Profile == colorprofile.TrueColor
 }
 
-// SupportsKittyGraphics returns true if the terminal supports Kitty graphics.
+// SupportsKittyGraphics 如果终端支持 Kitty 图形则返回 true。
 func (c Capabilities) SupportsKittyGraphics() bool {
 	return c.KittyGraphics
 }
 
-// SupportsSixelGraphics returns true if the terminal supports Sixel graphics.
+// SupportsSixelGraphics 如果终端支持 Sixel 图形则返回 true。
 func (c Capabilities) SupportsSixelGraphics() bool {
 	return c.SixelGraphics
 }
 
-// CellSize returns the size of a single terminal cell in pixels.
+// CellSize 返回单个终端单元格的像素大小。
 func (c Capabilities) CellSize() (width, height int) {
 	if c.Columns == 0 || c.Rows == 0 {
 		return 0, 0
@@ -116,7 +113,7 @@ func modeSupported(v ansi.ModeSetting) bool {
 	return v.IsSet() || v.IsReset()
 }
 
-// kittyTerminals defines terminals supporting querying capabilities.
+// kittyTerminals 定义支持查询能力的终端。
 var kittyTerminals = []string{"alacritty", "ghostty", "kitty", "rio", "wezterm"}
 
 func shouldQueryCapabilities(env uv.Environ) bool {
@@ -129,6 +126,6 @@ func shouldQueryCapabilities(env uv.Environ) bool {
 	}
 	return (!okTermProg && !okSSHTTY) ||
 		(!strings.Contains(termProg, osVendorTypeApple) && !okSSHTTY) ||
-		// Terminals that do support XTVERSION.
+		// 支持 XTVERSION 的终端。
 		xstrings.ContainsAnyOf(termType, kittyTerminals...)
 }

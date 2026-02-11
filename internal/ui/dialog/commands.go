@@ -17,13 +17,13 @@ import (
 	uv "github.com/charmbracelet/ultraviolet"
 )
 
-// CommandsID is the identifier for the commands dialog.
+// CommandsID 是命令对话框的标识符。
 const CommandsID = "commands"
 
-// CommandType represents the type of commands being displayed.
+// CommandType 表示正在显示的命令类型。
 type CommandType uint
 
-// String returns the string representation of the CommandType.
+// String 返回 CommandType 的字符串表示。
 func (c CommandType) String() string { return []string{"System", "User", "MCP"}[c] }
 
 const (
@@ -38,7 +38,7 @@ const (
 	MCPPrompts
 )
 
-// Commands represents a dialog that shows available commands.
+// Commands 表示一个显示可用命令的对话框。
 type Commands struct {
 	com    *common.Common
 	keyMap struct {
@@ -51,7 +51,7 @@ type Commands struct {
 		Close key.Binding
 	}
 
-	sessionID string // can be empty for non-session-specific commands
+	sessionID string // 对于非会话特定命令可以为空
 	selected  CommandType
 
 	spinner spinner.Model
@@ -69,7 +69,7 @@ type Commands struct {
 
 var _ Dialog = (*Commands)(nil)
 
-// NewCommands creates a new commands dialog.
+// NewCommands 创建一个新的命令对话框。
 func NewCommands(com *common.Common, sessionID string, customCommands []commands.CustomCommand, mcpPrompts []commands.MCPPrompt) (*Commands, error) {
 	c := &Commands{
 		com:            com,
@@ -90,39 +90,39 @@ func NewCommands(com *common.Common, sessionID string, customCommands []commands
 
 	c.input = textinput.New()
 	c.input.SetVirtualCursor(false)
-	c.input.Placeholder = "Type to filter"
+	c.input.Placeholder = "输入以过滤"
 	c.input.SetStyles(com.Styles.TextInput)
 	c.input.Focus()
 
 	c.keyMap.Select = key.NewBinding(
 		key.WithKeys("enter", "ctrl+y"),
-		key.WithHelp("enter", "confirm"),
+		key.WithHelp("enter", "确认"),
 	)
 	c.keyMap.UpDown = key.NewBinding(
 		key.WithKeys("up", "down"),
-		key.WithHelp("↑/↓", "choose"),
+		key.WithHelp("↑/↓", "选择"),
 	)
 	c.keyMap.Next = key.NewBinding(
 		key.WithKeys("down"),
-		key.WithHelp("↓", "next item"),
+		key.WithHelp("↓", "下一项"),
 	)
 	c.keyMap.Previous = key.NewBinding(
 		key.WithKeys("up", "ctrl+p"),
-		key.WithHelp("↑", "previous item"),
+		key.WithHelp("↑", "上一项"),
 	)
 	c.keyMap.Tab = key.NewBinding(
 		key.WithKeys("tab"),
-		key.WithHelp("tab", "switch selection"),
+		key.WithHelp("tab", "切换选择"),
 	)
 	c.keyMap.ShiftTab = key.NewBinding(
 		key.WithKeys("shift+tab"),
-		key.WithHelp("shift+tab", "switch selection prev"),
+		key.WithHelp("shift+tab", "切换选择（上一个）"),
 	)
 	closeKey := CloseKey
-	closeKey.SetHelp("esc", "cancel")
+	closeKey.SetHelp("esc", "取消")
 	c.keyMap.Close = closeKey
 
-	// Set initial commands
+	// 设置初始命令
 	c.setCommandItems(c.selected)
 
 	s := spinner.New()
@@ -133,12 +133,12 @@ func NewCommands(com *common.Common, sessionID string, customCommands []commands
 	return c, nil
 }
 
-// ID implements Dialog.
+// ID 实现 Dialog 接口。
 func (c *Commands) ID() string {
 	return CommandsID
 }
 
-// HandleMsg implements [Dialog].
+// HandleMsg 实现 [Dialog] 接口。
 func (c *Commands) HandleMsg(msg tea.Msg) Action {
 	switch msg := msg.(type) {
 	case spinner.TickMsg:
@@ -205,12 +205,12 @@ func (c *Commands) HandleMsg(msg tea.Msg) Action {
 	return nil
 }
 
-// Cursor returns the cursor position relative to the dialog.
+// Cursor 返回相对于对话框的光标位置。
 func (c *Commands) Cursor() *tea.Cursor {
 	return InputCursor(c.com.Styles, c.input.Cursor())
 }
 
-// commandsRadioView generates the command type selector radio buttons.
+// commandsRadioView 生成命令类型选择器单选按钮。
 func commandsRadioView(sty *styles.Styles, selected CommandType, hasUserCmds bool, hasMCPPrompts bool) string {
 	if !hasUserCmds && !hasMCPPrompts {
 		return ""
@@ -237,15 +237,15 @@ func commandsRadioView(sty *styles.Styles, selected CommandType, hasUserCmds boo
 	return strings.Join(parts, " ")
 }
 
-// Draw implements [Dialog].
+// Draw 实现 [Dialog] 接口。
 func (c *Commands) Draw(scr uv.Screen, area uv.Rectangle) *tea.Cursor {
 	t := c.com.Styles
 	width := max(0, min(defaultCommandsDialogMaxWidth, area.Dx()-t.Dialog.View.GetHorizontalBorderSize()))
 	height := max(0, min(defaultCommandsDialogMaxHeight, area.Dy()-t.Dialog.View.GetVerticalBorderSize()))
 	if area.Dx() != c.windowWidth && c.selected == SystemCommands {
 		c.windowWidth = area.Dx()
-		// since some items in the list depend on width (e.g. toggle sidebar command),
-		// we need to reset the command items when width changes
+		// 由于列表中的某些项目依赖于宽度（例如切换侧边栏命令），
+		// 我们需要在宽度变化时重置命令项目
 		c.setCommandItems(c.selected)
 	}
 
@@ -261,7 +261,7 @@ func (c *Commands) Draw(scr uv.Screen, area uv.Rectangle) *tea.Cursor {
 	c.help.SetWidth(innerWidth)
 
 	rc := NewRenderContext(t, width)
-	rc.Title = "Commands"
+	rc.Title = "命令"
 	rc.TitleInfo = commandsRadioView(t, c.selected, len(c.customCommands) > 0, len(c.mcpPrompts) > 0)
 	inputView := t.Dialog.InputPrompt.Render(c.input.View())
 	rc.AddPart(inputView)
@@ -270,7 +270,7 @@ func (c *Commands) Draw(scr uv.Screen, area uv.Rectangle) *tea.Cursor {
 	rc.Help = c.help.View(c)
 
 	if c.loading {
-		rc.Help = c.spinner.View() + " Generating Prompt..."
+		rc.Help = c.spinner.View() + " 正在生成提示..."
 	}
 
 	view := rc.Render()
@@ -280,7 +280,7 @@ func (c *Commands) Draw(scr uv.Screen, area uv.Rectangle) *tea.Cursor {
 	return cur
 }
 
-// ShortHelp implements [help.KeyMap].
+// ShortHelp 实现 [help.KeyMap] 接口。
 func (c *Commands) ShortHelp() []key.Binding {
 	return []key.Binding{
 		c.keyMap.Tab,
@@ -290,7 +290,7 @@ func (c *Commands) ShortHelp() []key.Binding {
 	}
 }
 
-// FullHelp implements [help.KeyMap].
+// FullHelp 实现 [help.KeyMap] 接口。
 func (c *Commands) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
 		{c.keyMap.Select, c.keyMap.Next, c.keyMap.Previous, c.keyMap.Tab},
@@ -298,7 +298,7 @@ func (c *Commands) FullHelp() [][]key.Binding {
 	}
 }
 
-// nextCommandType returns the next command type in the cycle.
+// nextCommandType 返回循环中的下一个命令类型。
 func (c *Commands) nextCommandType() CommandType {
 	switch c.selected {
 	case SystemCommands:
@@ -321,7 +321,7 @@ func (c *Commands) nextCommandType() CommandType {
 	}
 }
 
-// previousCommandType returns the previous command type in the cycle.
+// previousCommandType 返回循环中的上一个命令类型。
 func (c *Commands) previousCommandType() CommandType {
 	switch c.selected {
 	case SystemCommands:
@@ -344,7 +344,7 @@ func (c *Commands) previousCommandType() CommandType {
 	}
 }
 
-// setCommandItems sets the command items based on the specified command type.
+// setCommandItems 根据指定的命令类型设置命令项目。
 func (c *Commands) setCommandItems(commandType CommandType) {
 	c.selected = commandType
 
@@ -382,20 +382,20 @@ func (c *Commands) setCommandItems(commandType CommandType) {
 	c.input.SetValue("")
 }
 
-// defaultCommands returns the list of default system commands.
+// defaultCommands 返回默认系统命令列表。
 func (c *Commands) defaultCommands() []*CommandItem {
 	commands := []*CommandItem{
-		NewCommandItem(c.com.Styles, "new_session", "New Session", "ctrl+n", ActionNewSession{}),
-		NewCommandItem(c.com.Styles, "switch_session", "Sessions", "ctrl+s", ActionOpenDialog{SessionsID}),
-		NewCommandItem(c.com.Styles, "switch_model", "Switch Model", "ctrl+l", ActionOpenDialog{ModelsID}),
+		NewCommandItem(c.com.Styles, "new_session", "新建会话", "ctrl+n", ActionNewSession{}),
+		NewCommandItem(c.com.Styles, "switch_session", "会话", "ctrl+s", ActionOpenDialog{SessionsID}),
+		NewCommandItem(c.com.Styles, "switch_model", "切换模型", "ctrl+l", ActionOpenDialog{ModelsID}),
 	}
 
-	// Only show compact command if there's an active session
+	// 仅在有活动会话时显示摘要命令
 	if c.sessionID != "" {
-		commands = append(commands, NewCommandItem(c.com.Styles, "summarize", "Summarize Session", "", ActionSummarize{SessionID: c.sessionID}))
+		commands = append(commands, NewCommandItem(c.com.Styles, "summarize", "摘要会话", "", ActionSummarize{SessionID: c.sessionID}))
 	}
 
-	// Add reasoning toggle for models that support it
+	// 为支持推理的模型添加推理切换
 	cfg := c.com.Config()
 	if agentCfg, ok := cfg.Agents[config.AgentCoder]; ok {
 		providerCfg := cfg.GetProviderForModel(agentCfg.Model)
@@ -403,53 +403,53 @@ func (c *Commands) defaultCommands() []*CommandItem {
 		if providerCfg != nil && model != nil && model.CanReason {
 			selectedModel := cfg.Models[agentCfg.Model]
 
-			// Anthropic models: thinking toggle
+			// Anthropic 模型：思考切换
 			if model.CanReason && len(model.ReasoningLevels) == 0 {
-				status := "Enable"
+				status := "启用"
 				if selectedModel.Think {
-					status = "Disable"
+					status = "禁用"
 				}
-				commands = append(commands, NewCommandItem(c.com.Styles, "toggle_thinking", status+" Thinking Mode", "", ActionToggleThinking{}))
+				commands = append(commands, NewCommandItem(c.com.Styles, "toggle_thinking", status+" 思考模式", "", ActionToggleThinking{}))
 			}
 
-			// OpenAI models: reasoning effort dialog
+			// OpenAI 模型：推理强度对话框
 			if len(model.ReasoningLevels) > 0 {
-				commands = append(commands, NewCommandItem(c.com.Styles, "select_reasoning_effort", "Select Reasoning Effort", "", ActionOpenDialog{
+				commands = append(commands, NewCommandItem(c.com.Styles, "select_reasoning_effort", "选择推理强度", "", ActionOpenDialog{
 					DialogID: ReasoningID,
 				}))
 			}
 		}
 	}
-	// Only show toggle compact mode command if window width is larger than compact breakpoint (120)
+	// 仅在窗口宽度大于紧凑断点（120）时显示切换紧凑模式命令
 	if c.windowWidth >= sidebarCompactModeBreakpoint && c.sessionID != "" {
-		commands = append(commands, NewCommandItem(c.com.Styles, "toggle_sidebar", "Toggle Sidebar", "", ActionToggleCompactMode{}))
+		commands = append(commands, NewCommandItem(c.com.Styles, "toggle_sidebar", "切换侧边栏", "", ActionToggleCompactMode{}))
 	}
 	if c.sessionID != "" {
 		cfg := c.com.Config()
 		agentCfg := cfg.Agents[config.AgentCoder]
 		model := cfg.GetModelByType(agentCfg.Model)
 		if model != nil && model.SupportsImages {
-			commands = append(commands, NewCommandItem(c.com.Styles, "file_picker", "Open File Picker", "ctrl+f", ActionOpenDialog{
-				// TODO: Pass in the file picker dialog id
+			commands = append(commands, NewCommandItem(c.com.Styles, "file_picker", "打开文件选择器", "ctrl+f", ActionOpenDialog{
+				// TODO: 传入文件选择器对话框 ID
 			}))
 		}
 	}
 
-	// Add external editor command if $EDITOR is available
-	// TODO: Use [tea.EnvMsg] to get environment variable instead of os.Getenv
+	// 如果 $EDITOR 可用，则添加外部编辑器命令
+	// TODO: 使用 [tea.EnvMsg] 获取环境变量而不是 os.Getenv
 	if os.Getenv("EDITOR") != "" {
-		commands = append(commands, NewCommandItem(c.com.Styles, "open_external_editor", "Open External Editor", "ctrl+o", ActionExternalEditor{}))
+		commands = append(commands, NewCommandItem(c.com.Styles, "open_external_editor", "打开外部编辑器", "ctrl+o", ActionExternalEditor{}))
 	}
 
 	return append(commands,
-		NewCommandItem(c.com.Styles, "toggle_yolo", "Toggle Yolo Mode", "", ActionToggleYoloMode{}),
-		NewCommandItem(c.com.Styles, "toggle_help", "Toggle Help", "ctrl+g", ActionToggleHelp{}),
-		NewCommandItem(c.com.Styles, "init", "Initialize Project", "", ActionInitializeProject{}),
-		NewCommandItem(c.com.Styles, "quit", "Quit", "ctrl+c", tea.QuitMsg{}),
+		NewCommandItem(c.com.Styles, "toggle_yolo", "切换 Yolo 模式", "", ActionToggleYoloMode{}),
+		NewCommandItem(c.com.Styles, "toggle_help", "切换帮助", "ctrl+g", ActionToggleHelp{}),
+		NewCommandItem(c.com.Styles, "init", "初始化项目", "", ActionInitializeProject{}),
+		NewCommandItem(c.com.Styles, "quit", "退出", "ctrl+c", tea.QuitMsg{}),
 	)
 }
 
-// SetCustomCommands sets the custom commands and refreshes the view if user commands are currently displayed.
+// SetCustomCommands 设置自定义命令，如果当前显示用户命令则刷新视图。
 func (c *Commands) SetCustomCommands(customCommands []commands.CustomCommand) {
 	c.customCommands = customCommands
 	if c.selected == UserCommands {
@@ -457,7 +457,7 @@ func (c *Commands) SetCustomCommands(customCommands []commands.CustomCommand) {
 	}
 }
 
-// SetMCPPrompts sets the MCP prompts and refreshes the view if MCP prompts are currently displayed.
+// SetMCPPrompts 设置 MCP 提示，如果当前显示 MCP 提示则刷新视图。
 func (c *Commands) SetMCPPrompts(mcpPrompts []commands.MCPPrompt) {
 	c.mcpPrompts = mcpPrompts
 	if c.selected == MCPPrompts {
@@ -465,7 +465,7 @@ func (c *Commands) SetMCPPrompts(mcpPrompts []commands.MCPPrompt) {
 	}
 }
 
-// StartLoading implements [LoadingDialog].
+// StartLoading 实现 [LoadingDialog] 接口。
 func (a *Commands) StartLoading() tea.Cmd {
 	if a.loading {
 		return nil
@@ -474,7 +474,7 @@ func (a *Commands) StartLoading() tea.Cmd {
 	return a.spinner.Tick
 }
 
-// StopLoading implements [LoadingDialog].
+// StopLoading 实现 [LoadingDialog] 接口。
 func (a *Commands) StopLoading() {
 	a.loading = false
 }

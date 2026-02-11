@@ -1,61 +1,61 @@
-# UI Development Instructions
+# UI 开发指南
 
-## General Guidelines
-- Never use commands to send messages when you can directly mutate children or state.
-- Keep things simple; do not overcomplicate.
-- Create files if needed to separate logic; do not nest models.
-- Never do IO or expensive work in `Update`; always use a `tea.Cmd`.
-- Never change the model state inside of a command use messages and than update the state in the main loop
+## 通用准则
+- 当可以直接修改子组件或状态时，切勿使用命令发送消息。
+- 保持简洁；不要过度复杂化。
+- 必要时创建文件以分离逻辑；不要嵌套模型。
+- 切勿在 `Update` 中执行 IO 或耗时操作；始终使用 `tea.Cmd`。
+- 切勿在命令内部更改模型状态，应使用消息并在主循环中更新状态
 
-## Architecture
+## 架构
 
-### Main Model (`model/ui.go`)
-Keep most of the logic and state in the main model. This is where:
-- Message routing happens
-- Focus and UI state is managed
-- Layout calculations are performed
-- Dialogs are orchestrated
+### 主模型 (`model/ui.go`)
+将大部分逻辑和状态保存在主模型中。主模型负责：
+- 消息路由
+- 焦点和 UI 状态管理
+- 布局计算
+- 对话框编排
 
-### Components Should Be Dumb
-Components should not handle bubbletea messages directly. Instead:
-- Expose methods for state changes
-- Return `tea.Cmd` from methods when side effects are needed
-- Handle their own rendering via `Render(width int) string`
+### 组件应保持简单
+组件不应直接处理 bubbletea 消息。相反：
+- 暴露状态更改方法
+- 当需要副作用时，从方法返回 `tea.Cmd`
+- 通过 `Render(width int) string` 处理自身渲染
 
-### Chat Logic (`model/chat.go`)
-Most chat-related logic belongs here. Individual chat items in `chat/` should be simple renderers that cache their output and invalidate when data changes (see `cachedMessageItem` in `chat/messages.go`).
+### 聊天逻辑 (`model/chat.go`)
+大多数聊天相关逻辑应在此处。`chat/` 中的单个聊天项应是简单的渲染器，缓存其输出并在数据更改时失效（参见 `chat/messages.go` 中的 `cachedMessageItem`）。
 
-## Key Patterns
+## 关键模式
 
-### Composition Over Inheritance
-Use struct embedding for shared behaviors. See `chat/messages.go` for examples of reusable embedded structs for highlighting, caching, and focus.
+### 组合优于继承
+使用结构体嵌入实现共享行为。有关用于高亮、缓存和焦点的可重用嵌入结构体的示例，请参见 `chat/messages.go`。
 
-### Interfaces
-- List item interfaces are in `list/item.go`
-- Chat message interfaces are in `chat/messages.go`
-- Dialog interface is in `dialog/dialog.go`
+### 接口
+- 列表项接口在 `list/item.go` 中
+- 聊天消息接口在 `chat/messages.go` 中
+- 对话框接口在 `dialog/dialog.go` 中
 
-### Styling
-- All styles are defined in `styles/styles.go`
-- Access styles via `*common.Common` passed to components
-- Use semantic color fields rather than hardcoded colors
+### 样式
+- 所有样式在 `styles/styles.go` 中定义
+- 通过传递给组件的 `*common.Common` 访问样式
+- 使用语义颜色字段而非硬编码颜色
 
-### Dialogs
-- Implement the dialog interface in `dialog/dialog.go`
-- Return message types from `Update()` to signal actions to the main model
-- Use the overlay system for managing dialog lifecycle
+### 对话框
+- 在 `dialog/dialog.go` 中实现对话框接口
+- 从 `Update()` 返回消息类型以向主模型发出操作信号
+- 使用覆盖系统管理对话框生命周期
 
-## File Organization
-- `model/` - Main UI model and major components (chat, sidebar, etc.)
-- `chat/` - Chat message item types and renderers
-- `dialog/` - Dialog implementations
-- `list/` - Generic list component with lazy rendering
-- `common/` - Shared utilities and the Common struct
-- `styles/` - All style definitions
-- `anim/` - Animation system
-- `logo/` - Logo rendering
+## 文件组织
+- `model/` - 主 UI 模型和主要组件（聊天、侧边栏等）
+- `chat/` - 聊天消息项类型和渲染器
+- `dialog/` - 对话框实现
+- `list/` - 带有延迟渲染的通用列表组件
+- `common/` - 共享工具和 Common 结构体
+- `styles/` - 所有样式定义
+- `anim/` - 动画系统
+- `logo/` - Logo 渲染
 
-## Common Gotchas
-- Always account for padding/borders in width calculations
-- Use `tea.Batch()` when returning multiple commands
-- Pass `*common.Common` to components that need styles or app access
+## 常见陷阱
+- 在宽度计算中始终考虑内边距/边框
+- 返回多个命令时使用 `tea.Batch()`
+- 向需要样式或应用访问的组件传递 `*common.Common`

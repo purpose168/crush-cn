@@ -11,13 +11,13 @@ import (
 	"github.com/charmbracelet/x/ansi"
 )
 
-// InputCursor adjusts the cursor position for an input field within a dialog.
+// InputCursor 调整对话框内输入字段的光标位置。
 func InputCursor(t *styles.Styles, cur *tea.Cursor) *tea.Cursor {
 	if cur != nil {
 		titleStyle := t.Dialog.Title
 		dialogStyle := t.Dialog.View
 		inputStyle := t.Dialog.InputPrompt
-		// Adjust cursor position to account for dialog layout
+		// 调整光标位置以考虑对话框布局
 		cur.X += inputStyle.GetBorderLeftSize() +
 			inputStyle.GetMarginLeft() +
 			inputStyle.GetPaddingLeft() +
@@ -38,43 +38,40 @@ func InputCursor(t *styles.Styles, cur *tea.Cursor) *tea.Cursor {
 	return cur
 }
 
-// RenderContext is a dialog rendering context that can be used to render
-// common dialog layouts.
+// RenderContext 是一个对话框渲染上下文，可用于渲染
+// 常见的对话框布局。
 type RenderContext struct {
-	// Styles is the styles to use for rendering.
+	// Styles 是用于渲染的样式。
 	Styles *styles.Styles
-	// TitleStyle is the style of the dialog title by default it uses Styles.Dialog.Title
+	// TitleStyle 是对话框标题的样式，默认使用 Styles.Dialog.Title
 	TitleStyle lipgloss.Style
-	// ViewStyle is the style of the dialog title by default it uses Styles.Dialog.View
+	// ViewStyle 是对话框标题的样式，默认使用 Styles.Dialog.View
 	ViewStyle lipgloss.Style
-	// TitleGradientFromColor is the color the title gradient starts by defaults its Style.Primary
+	// TitleGradientFromColor 是标题渐变开始的颜色，默认为 Style.Primary
 	TitleGradientFromColor color.Color
-	// TitleGradientToColor is the color the title gradient starts by defaults its Style.Secondary
+	// TitleGradientToColor 是标题渐变开始的颜色，默认为 Style.Secondary
 	TitleGradientToColor color.Color
-	// Width is the total width of the dialog including any margins, borders,
-	// and paddings.
+	// Width 是对话框的总宽度，包括任何边距、边框和内边距。
 	Width int
-	// Gap is the gap between content parts. Zero means no gap.
+	// Gap 是内容部分之间的间隙。零表示没有间隙。
 	Gap int
-	// Title is the title of the dialog. This will be styled using the default
-	// dialog title style and prepended to the content parts slice.
+	// Title 是对话框的标题。这将使用默认对话框标题样式进行样式化，
+	// 并添加到内容部分切片的前面。
 	Title string
-	// TitleInfo is additional information to display next to the title. This
-	// part is displayed as is, any styling must be applied before setting this
-	// field.
+	// TitleInfo 是在标题旁边显示的附加信息。此部分按原样显示，
+	// 任何样式必须在设置此字段之前应用。
 	TitleInfo string
-	// Parts are the rendered parts of the dialog.
+	// Parts 是对话框的渲染部分。
 	Parts []string
-	// Help is the help view content. This will be appended to the content parts
-	// slice using the default dialog help style.
+	// Help 是帮助视图内容。这将使用默认对话框帮助样式
+	// 添加到内容部分切片。
 	Help string
-	// IsOnboarding indicates whether to render the dialog as part of the
-	// onboarding flow. This means that the content will be rendered at the
-	// bottom left of the screen.
+	// IsOnboarding 指示是否作为引导流程的一部分渲染对话框。
+	// 这意味着内容将在屏幕的左下角渲染。
 	IsOnboarding bool
 }
 
-// NewRenderContext creates a new RenderContext with the provided styles and width.
+// NewRenderContext 使用提供的样式和宽度创建一个新的 RenderContext。
 func NewRenderContext(t *styles.Styles, width int) *RenderContext {
 	return &RenderContext{
 		Styles:                 t,
@@ -87,14 +84,14 @@ func NewRenderContext(t *styles.Styles, width int) *RenderContext {
 	}
 }
 
-// AddPart adds a rendered part to the dialog.
+// AddPart 向对话框添加一个渲染部分。
 func (rc *RenderContext) AddPart(part string) {
 	if len(part) > 0 {
 		rc.Parts = append(rc.Parts, part)
 	}
 }
 
-// Render renders the dialog using the provided context.
+// Render 使用提供的上下文渲染对话框。
 func (rc *RenderContext) Render() string {
 	titleStyle := rc.TitleStyle
 	dialogStyle := rc.ViewStyle.Width(rc.Width)

@@ -19,10 +19,10 @@ import (
 	uv "github.com/charmbracelet/ultraviolet"
 )
 
-// PermissionsID is the identifier for the permissions dialog.
+// PermissionsID 是权限对话框的标识符。
 const PermissionsID = "permissions"
 
-// PermissionAction represents the user's response to a permission request.
+// PermissionAction 表示用户对权限请求的响应。
 type PermissionAction string
 
 const (
@@ -31,46 +31,46 @@ const (
 	PermissionDeny            PermissionAction = "deny"
 )
 
-// Permissions dialog sizing constants.
+// Permissions 对话框大小常量。
 const (
-	// diffMaxWidth is the maximum width for diff views.
+	// diffMaxWidth 是差异视图的最大宽度。
 	diffMaxWidth = 180
-	// diffSizeRatio is the size ratio for diff views relative to window.
+	// diffSizeRatio 是差异视图相对于窗口的大小比例。
 	diffSizeRatio = 0.8
-	// simpleMaxWidth is the maximum width for simple content dialogs.
+	// simpleMaxWidth 是简单内容对话框的最大宽度。
 	simpleMaxWidth = 100
-	// simpleSizeRatio is the size ratio for simple content dialogs.
+	// simpleSizeRatio 是简单内容对话框的大小比例。
 	simpleSizeRatio = 0.6
-	// simpleHeightRatio is the height ratio for simple content dialogs.
+	// simpleHeightRatio 是简单内容对话框的高度比例。
 	simpleHeightRatio = 0.5
-	// splitModeMinWidth is the minimum width to enable split diff mode.
+	// splitModeMinWidth 是启用分割差异模式的最小宽度。
 	splitModeMinWidth = 140
-	// layoutSpacingLines is the number of empty lines used for layout spacing.
+	// layoutSpacingLines 是用于布局间距的空行数。
 	layoutSpacingLines = 4
-	// minWindowWidth is the minimum window width before forcing fullscreen.
+	// minWindowWidth 是强制全屏之前的最小窗口宽度。
 	minWindowWidth = 77
-	// minWindowHeight is the minimum window height before forcing fullscreen.
+	// minWindowHeight 是强制全屏之前的最小窗口高度。
 	minWindowHeight = 20
 )
 
-// Permissions represents a dialog for permission requests.
+// Permissions 表示一个用于权限请求的对话框。
 type Permissions struct {
 	com          *common.Common
-	windowWidth  int // Terminal window dimensions.
+	windowWidth  int // 终端窗口尺寸。
 	windowHeight int
-	fullscreen   bool // true when dialog is fullscreen
+	fullscreen   bool // 当对话框全屏时为 true
 
 	permission     permission.PermissionRequest
-	selectedOption int // 0: Allow, 1: Allow for session, 2: Deny
+	selectedOption int // 0: 允许, 1: 允许本次会话, 2: 拒绝
 
 	viewport      viewport.Model
-	viewportDirty bool // true when viewport content needs to be re-rendered
+	viewportDirty bool // 当视口内容需要重新渲染时为 true
 	viewportWidth int
 
-	// Diff view state.
-	diffSplitMode        *bool // nil means use default based on width
-	defaultDiffSplitMode bool  // default split mode based on width
-	diffXOffset          int   // horizontal scroll offset for diff view
+	// 差异视图状态。
+	diffSplitMode        *bool // nil 表示根据宽度使用默认值
+	defaultDiffSplitMode bool  // 基于宽度的默认分割模式
+	diffXOffset          int   // 差异视图的水平滚动偏移量
 	unifiedDiffContent   string
 	splitDiffContent     string
 
@@ -101,95 +101,95 @@ func defaultPermissionsKeyMap() permissionsKeyMap {
 	return permissionsKeyMap{
 		Left: key.NewBinding(
 			key.WithKeys("left", "h"),
-			key.WithHelp("←", "previous"),
+			key.WithHelp("←", "上一个"),
 		),
 		Right: key.NewBinding(
 			key.WithKeys("right", "l"),
-			key.WithHelp("→", "next"),
+			key.WithHelp("→", "下一个"),
 		),
 		Tab: key.NewBinding(
 			key.WithKeys("tab"),
-			key.WithHelp("tab", "next option"),
+			key.WithHelp("tab", "下一个选项"),
 		),
 		Select: key.NewBinding(
 			key.WithKeys("enter", "ctrl+y"),
-			key.WithHelp("enter", "confirm"),
+			key.WithHelp("enter", "确认"),
 		),
 		Allow: key.NewBinding(
 			key.WithKeys("a", "A", "ctrl+a"),
-			key.WithHelp("a", "allow"),
+			key.WithHelp("a", "允许"),
 		),
 		AllowSession: key.NewBinding(
 			key.WithKeys("s", "S", "ctrl+s"),
-			key.WithHelp("s", "allow session"),
+			key.WithHelp("s", "允许本次会话"),
 		),
 		Deny: key.NewBinding(
 			key.WithKeys("d", "D"),
-			key.WithHelp("d", "deny"),
+			key.WithHelp("d", "拒绝"),
 		),
 		Close: CloseKey,
 		ToggleDiffMode: key.NewBinding(
 			key.WithKeys("t"),
-			key.WithHelp("t", "toggle diff view"),
+			key.WithHelp("t", "切换差异视图"),
 		),
 		ToggleFullscreen: key.NewBinding(
 			key.WithKeys("f"),
-			key.WithHelp("f", "toggle fullscreen"),
+			key.WithHelp("f", "切换全屏"),
 		),
 		ScrollUp: key.NewBinding(
 			key.WithKeys("shift+up", "K"),
-			key.WithHelp("shift+↑", "scroll up"),
+			key.WithHelp("shift+↑", "向上滚动"),
 		),
 		ScrollDown: key.NewBinding(
 			key.WithKeys("shift+down", "J"),
-			key.WithHelp("shift+↓", "scroll down"),
+			key.WithHelp("shift+↓", "向下滚动"),
 		),
 		ScrollLeft: key.NewBinding(
 			key.WithKeys("shift+left", "H"),
-			key.WithHelp("shift+←", "scroll left"),
+			key.WithHelp("shift+←", "向左滚动"),
 		),
 		ScrollRight: key.NewBinding(
 			key.WithKeys("shift+right", "L"),
-			key.WithHelp("shift+→", "scroll right"),
+			key.WithHelp("shift+→", "向右滚动"),
 		),
 		Choose: key.NewBinding(
 			key.WithKeys("left", "right"),
-			key.WithHelp("←/→", "choose"),
+			key.WithHelp("←/→", "选择"),
 		),
 		Scroll: key.NewBinding(
 			key.WithKeys("shift+left", "shift+down", "shift+up", "shift+right"),
-			key.WithHelp("shift+←↓↑→", "scroll"),
+			key.WithHelp("shift+←↓↑→", "滚动"),
 		),
 	}
 }
 
 var _ Dialog = (*Permissions)(nil)
 
-// PermissionsOption configures the permissions dialog.
+// PermissionsOption 配置权限对话框。
 type PermissionsOption func(*Permissions)
 
-// WithDiffMode sets the initial diff mode (split or unified).
+// WithDiffMode 设置初始差异模式（分割或统一）。
 func WithDiffMode(split bool) PermissionsOption {
 	return func(p *Permissions) {
 		p.diffSplitMode = &split
 	}
 }
 
-// NewPermissions creates a new permissions dialog.
+// NewPermissions 创建一个新的权限对话框。
 func NewPermissions(com *common.Common, perm permission.PermissionRequest, opts ...PermissionsOption) *Permissions {
 	h := help.New()
 	h.Styles = com.Styles.DialogHelpStyles()
 
 	km := defaultPermissionsKeyMap()
 
-	// Configure viewport with matching keybindings.
+	// 使用匹配的键绑定配置视口。
 	vp := viewport.New()
 	vp.KeyMap = viewport.KeyMap{
 		Up:    km.ScrollUp,
 		Down:  km.ScrollDown,
 		Left:  km.ScrollLeft,
 		Right: km.ScrollRight,
-		// Disable other viewport keys to avoid conflicts with dialog shortcuts.
+		// 禁用其他视口键以避免与对话框快捷键冲突。
 		PageUp:       key.NewBinding(key.WithDisabled()),
 		PageDown:     key.NewBinding(key.WithDisabled()),
 		HalfPageUp:   key.NewBinding(key.WithDisabled()),
@@ -212,30 +212,30 @@ func NewPermissions(com *common.Common, perm permission.PermissionRequest, opts 
 	return p
 }
 
-// Calculate usable content width (dialog border + horizontal padding).
+// 计算可用内容宽度（对话框边框 + 水平内边距）。
 func (p *Permissions) calculateContentWidth(width int) int {
 	t := p.com.Styles
 	const dialogHorizontalPadding = 2
 	return width - t.Dialog.View.GetHorizontalFrameSize() - dialogHorizontalPadding
 }
 
-// ID implements [Dialog].
+// ID 实现 [Dialog] 接口。
 func (*Permissions) ID() string {
 	return PermissionsID
 }
 
-// HandleMsg implements [Dialog].
+// HandleMsg 实现 [Dialog] 接口。
 func (p *Permissions) HandleMsg(msg tea.Msg) Action {
 	switch msg := msg.(type) {
 	case tea.KeyPressMsg:
 		switch {
 		case key.Matches(msg, p.keyMap.Close):
-			// Escape denies the permission request.
+			// Escape 拒绝权限请求。
 			return p.respond(PermissionDeny)
 		case key.Matches(msg, p.keyMap.Right), key.Matches(msg, p.keyMap.Tab):
 			p.selectedOption = (p.selectedOption + 1) % 3
 		case key.Matches(msg, p.keyMap.Left):
-			// Add 2 instead of subtracting 1 to avoid negative modulo.
+			// 加 2 而不是减 1 以避免负模运算。
 			p.selectedOption = (p.selectedOption + 2) % 3
 		case key.Matches(msg, p.keyMap.Select):
 			return p.selectCurrentOption()
@@ -286,7 +286,7 @@ func (p *Permissions) HandleMsg(msg tea.Msg) Action {
 			p.viewport, _ = p.viewport.Update(msg)
 		}
 	default:
-		// Pass unhandled keys to viewport for non-diff content scrolling.
+		// 将未处理的键传递给视口以进行非差异内容滚动。
 		if !p.hasDiffView() {
 			p.viewport, _ = p.viewport.Update(msg)
 			p.viewportDirty = true
@@ -341,24 +341,24 @@ func (p *Permissions) scrollRight() {
 	p.viewportDirty = true
 }
 
-// Draw implements [Dialog].
+// Draw 实现 [Dialog] 接口。
 func (p *Permissions) Draw(scr uv.Screen, area uv.Rectangle) *tea.Cursor {
 	t := p.com.Styles
-	// Force fullscreen when window is too small.
+	// 当窗口太小时强制全屏。
 	forceFullscreen := area.Dx() <= minWindowWidth || area.Dy() <= minWindowHeight
 
-	// Calculate dialog dimensions based on fullscreen state and content type.
+	// 根据全屏状态和内容类型计算对话框尺寸。
 	var width, maxHeight int
 	if forceFullscreen || (p.fullscreen && p.hasDiffView()) {
-		// Use nearly full window for fullscreen.
+		// 全屏时使用几乎整个窗口。
 		width = area.Dx()
 		maxHeight = area.Dy()
 	} else if p.hasDiffView() {
-		// Wide for side-by-side diffs, capped for readability.
+		// 并排差异视图较宽，为了可读性进行限制。
 		width = min(int(float64(area.Dx())*diffSizeRatio), diffMaxWidth)
 		maxHeight = int(float64(area.Dy()) * diffSizeRatio)
 	} else {
-		// Narrower for simple content like commands/URLs.
+		// 简单内容（如命令/URL）较窄。
 		width = min(int(float64(area.Dx())*simpleSizeRatio), simpleMaxWidth)
 		maxHeight = int(float64(area.Dy()) * simpleHeightRatio)
 	}
@@ -370,7 +370,7 @@ func (p *Permissions) Draw(scr uv.Screen, area uv.Rectangle) *tea.Cursor {
 	buttons := p.renderButtons(contentWidth)
 	helpView := p.help.View(p)
 
-	// Calculate available height for content.
+	// 计算内容的可用高度。
 	headerHeight := lipgloss.Height(header)
 	buttonsHeight := lipgloss.Height(buttons)
 	helpHeight := lipgloss.Height(helpView)
@@ -378,11 +378,11 @@ func (p *Permissions) Draw(scr uv.Screen, area uv.Rectangle) *tea.Cursor {
 
 	p.defaultDiffSplitMode = width >= splitModeMinWidth
 
-	// Pre-render content to measure its actual height.
+	// 预渲染内容以测量其实际高度。
 	renderedContent := p.renderContent(contentWidth)
 	contentHeight := lipgloss.Height(renderedContent)
 
-	// For non-diff views, shrink dialog to fit content if it's smaller than max.
+	// 对于非差异视图，如果内容小于最大值，则缩小对话框以适应内容。
 	var availableHeight int
 	if !p.hasDiffView() && !forceFullscreen {
 		fixedHeight := headerHeight + buttonsHeight + helpHeight + frameHeight
@@ -397,15 +397,15 @@ func (p *Permissions) Draw(scr uv.Screen, area uv.Rectangle) *tea.Cursor {
 		availableHeight = maxHeight - headerHeight - buttonsHeight - helpHeight - frameHeight
 	}
 
-	// Determine if scrollbar is needed.
+	// 确定是否需要滚动条。
 	needsScrollbar := p.hasDiffView() || contentHeight > availableHeight
 	viewportWidth := contentWidth
 	if needsScrollbar {
-		viewportWidth = contentWidth - 1 // Reserve space for scrollbar.
+		viewportWidth = contentWidth - 1 // 为滚动条预留空间。
 	}
 
 	if p.viewport.Width() != viewportWidth {
-		// Mark content as dirty if width has changed.
+		// 如果宽度已更改，则将内容标记为脏。
 		p.viewportDirty = true
 		renderedContent = p.renderContent(viewportWidth)
 	}
@@ -424,7 +424,7 @@ func (p *Permissions) Draw(scr uv.Screen, area uv.Rectangle) *tea.Cursor {
 		scrollbar = common.Scrollbar(t, availableHeight, p.viewport.TotalLineCount(), availableHeight, p.viewport.YOffset())
 	}
 
-	// Join content with scrollbar if present.
+	// 如果存在滚动条，则将内容与滚动条连接。
 	if scrollbar != "" {
 		content = lipgloss.JoinHorizontal(lipgloss.Top, content, scrollbar)
 	}
@@ -443,25 +443,25 @@ func (p *Permissions) Draw(scr uv.Screen, area uv.Rectangle) *tea.Cursor {
 func (p *Permissions) renderHeader(contentWidth int) string {
 	t := p.com.Styles
 
-	title := common.DialogTitle(t, "Permission Required", contentWidth-t.Dialog.Title.GetHorizontalFrameSize(), t.Primary, t.Secondary)
+	title := common.DialogTitle(t, "需要权限", contentWidth-t.Dialog.Title.GetHorizontalFrameSize(), t.Primary, t.Secondary)
 	title = t.Dialog.Title.Render(title)
 
-	// Tool info.
+	// 工具信息。
 	toolLine := p.renderToolName(contentWidth)
-	pathLine := p.renderKeyValue("Path", fsext.PrettyPath(p.permission.Path), contentWidth)
+	pathLine := p.renderKeyValue("路径", fsext.PrettyPath(p.permission.Path), contentWidth)
 
 	lines := []string{title, "", toolLine, pathLine}
 
-	// Add tool-specific header info.
+	// 添加工具特定的头部信息。
 	switch p.permission.ToolName {
 	case tools.BashToolName:
 		if params, ok := p.permission.Params.(tools.BashPermissionsParams); ok {
-			lines = append(lines, p.renderKeyValue("Desc", params.Description, contentWidth))
+			lines = append(lines, p.renderKeyValue("描述", params.Description, contentWidth))
 		}
 	case tools.DownloadToolName:
 		if params, ok := p.permission.Params.(tools.DownloadPermissionsParams); ok {
 			lines = append(lines, p.renderKeyValue("URL", params.URL, contentWidth))
-			lines = append(lines, p.renderKeyValue("File", fsext.PrettyPath(params.FilePath), contentWidth))
+			lines = append(lines, p.renderKeyValue("文件", fsext.PrettyPath(params.FilePath), contentWidth))
 		}
 	case tools.EditToolName, tools.WriteToolName, tools.MultiEditToolName, tools.ViewToolName:
 		var filePath string
@@ -476,11 +476,11 @@ func (p *Permissions) renderHeader(contentWidth int) string {
 			filePath = params.FilePath
 		}
 		if filePath != "" {
-			lines = append(lines, p.renderKeyValue("File", fsext.PrettyPath(filePath), contentWidth))
+			lines = append(lines, p.renderKeyValue("文件", fsext.PrettyPath(filePath), contentWidth))
 		}
 	case tools.LSToolName:
 		if params, ok := p.permission.Params.(tools.LSPermissionsParams); ok {
-			lines = append(lines, p.renderKeyValue("Directory", fsext.PrettyPath(params.Path), contentWidth))
+			lines = append(lines, p.renderKeyValue("目录", fsext.PrettyPath(params.Path), contentWidth))
 		}
 	}
 
@@ -501,7 +501,7 @@ func (p *Permissions) renderKeyValue(key, value string, width int) string {
 func (p *Permissions) renderToolName(width int) string {
 	toolName := p.permission.ToolName
 
-	// Check if this is an MCP tool (format: mcp_<mcpname>_<toolname>).
+	// 检查这是否是 MCP 工具（格式：mcp_<mcpname>_<toolname>）。
 	if strings.HasPrefix(toolName, "mcp_") {
 		parts := strings.SplitN(toolName, "_", 3)
 		if len(parts) == 3 {
@@ -511,10 +511,10 @@ func (p *Permissions) renderToolName(width int) string {
 		}
 	}
 
-	return p.renderKeyValue("Tool", toolName, width)
+	return p.renderKeyValue("工具", toolName, width)
 }
 
-// prettyName converts snake_case or kebab-case to Title Case.
+// prettyName 将 snake_case 或 kebab-case 转换为标题大小写。
 func prettyName(name string) string {
 	name = strings.ReplaceAll(name, "_", " ")
 	name = strings.ReplaceAll(name, "-", " ")
@@ -614,9 +614,9 @@ func (p *Permissions) renderDownloadContent(width int) string {
 		return ""
 	}
 
-	content := fmt.Sprintf("URL: %s\nFile: %s", params.URL, fsext.PrettyPath(params.FilePath))
+	content := fmt.Sprintf("URL: %s\n文件: %s", params.URL, fsext.PrettyPath(params.FilePath))
 	if params.Timeout > 0 {
-		content += fmt.Sprintf("\nTimeout: %ds", params.Timeout)
+		content += fmt.Sprintf("\n超时: %ds", params.Timeout)
 	}
 
 	return p.renderContentPanel(content, width)
@@ -639,9 +639,9 @@ func (p *Permissions) renderAgenticFetchContent(width int) string {
 
 	var content string
 	if params.URL != "" {
-		content = fmt.Sprintf("URL: %s\n\nPrompt: %s", params.URL, params.Prompt)
+		content = fmt.Sprintf("URL: %s\n\n提示: %s", params.URL, params.Prompt)
 	} else {
-		content = fmt.Sprintf("Prompt: %s", params.Prompt)
+		content = fmt.Sprintf("提示: %s", params.Prompt)
 	}
 
 	return p.renderContentPanel(content, width)
@@ -653,12 +653,12 @@ func (p *Permissions) renderViewContent(width int) string {
 		return ""
 	}
 
-	content := fmt.Sprintf("File: %s", fsext.PrettyPath(params.FilePath))
+	content := fmt.Sprintf("文件: %s", fsext.PrettyPath(params.FilePath))
 	if params.Offset > 0 {
-		content += fmt.Sprintf("\nStarting from line: %d", params.Offset+1)
+		content += fmt.Sprintf("\n起始行: %d", params.Offset+1)
 	}
 	if params.Limit > 0 && params.Limit != 2000 {
-		content += fmt.Sprintf("\nLines to read: %d", params.Limit)
+		content += fmt.Sprintf("\n读取行数: %d", params.Limit)
 	}
 
 	return p.renderContentPanel(content, width)
@@ -670,9 +670,9 @@ func (p *Permissions) renderLSContent(width int) string {
 		return ""
 	}
 
-	content := fmt.Sprintf("Directory: %s", fsext.PrettyPath(params.Path))
+	content := fmt.Sprintf("目录: %s", fsext.PrettyPath(params.Path))
 	if len(params.Ignore) > 0 {
-		content += fmt.Sprintf("\nIgnore patterns: %s", strings.Join(params.Ignore, ", "))
+		content += fmt.Sprintf("\n忽略模式: %s", strings.Join(params.Ignore, ", "))
 	}
 
 	return p.renderContentPanel(content, width)
@@ -681,12 +681,12 @@ func (p *Permissions) renderLSContent(width int) string {
 func (p *Permissions) renderDefaultContent(width int) string {
 	t := p.com.Styles
 	var content string
-	// do not add the description for mcp tools
+	// 不要为 mcp 工具添加描述
 	if !strings.HasPrefix(p.permission.ToolName, "mcp_") {
 		content = p.permission.Description
 	}
 
-	// Pretty-print JSON params if available.
+	// 如果可用，则漂亮地打印 JSON 参数。
 	if p.permission.Params != nil {
 		var paramStr string
 		if str, ok := p.permission.Params.(string); ok {
@@ -723,7 +723,7 @@ func (p *Permissions) renderDefaultContent(width int) string {
 	return p.renderContentPanel(strings.TrimSpace(content), width)
 }
 
-// renderContentPanel renders content in a panel with the full width.
+// renderContentPanel 在具有全宽度的面板中渲染内容。
 func (p *Permissions) renderContentPanel(content string, width int) string {
 	panelStyle := p.com.Styles.Dialog.ContentPanel
 	return panelStyle.Width(width).Render(content)
@@ -731,14 +731,14 @@ func (p *Permissions) renderContentPanel(content string, width int) string {
 
 func (p *Permissions) renderButtons(contentWidth int) string {
 	buttons := []common.ButtonOpts{
-		{Text: "Allow", UnderlineIndex: 0, Selected: p.selectedOption == 0},
-		{Text: "Allow for Session", UnderlineIndex: 10, Selected: p.selectedOption == 1},
-		{Text: "Deny", UnderlineIndex: 0, Selected: p.selectedOption == 2},
+		{Text: "允许", UnderlineIndex: 0, Selected: p.selectedOption == 0},
+		{Text: "允许本次会话", UnderlineIndex: 10, Selected: p.selectedOption == 1},
+		{Text: "拒绝", UnderlineIndex: 0, Selected: p.selectedOption == 2},
 	}
 
 	content := common.ButtonGroup(p.com.Styles, buttons, "  ")
 
-	// If buttons are too wide, stack them vertically.
+	// 如果按钮太宽，则垂直堆叠它们。
 	if lipgloss.Width(content) > contentWidth {
 		content = common.ButtonGroup(p.com.Styles, buttons, "\n")
 		return lipgloss.NewStyle().
@@ -755,14 +755,14 @@ func (p *Permissions) renderButtons(contentWidth int) string {
 
 func (p *Permissions) canScroll() bool {
 	if p.hasDiffView() {
-		// Diff views can always scroll.
+		// 差异视图始终可以滚动。
 		return true
 	}
-	// For non-diff content, check if viewport has scrollable content.
+	// 对于非差异内容，检查视口是否具有可滚动内容。
 	return !p.viewport.AtTop() || !p.viewport.AtBottom()
 }
 
-// ShortHelp implements [help.KeyMap].
+// ShortHelp 实现 [help.KeyMap] 接口。
 func (p *Permissions) ShortHelp() []key.Binding {
 	bindings := []key.Binding{
 		p.keyMap.Choose,
@@ -784,7 +784,7 @@ func (p *Permissions) ShortHelp() []key.Binding {
 	return bindings
 }
 
-// FullHelp implements [help.KeyMap].
+// FullHelp 实现 [help.KeyMap] 接口。
 func (p *Permissions) FullHelp() [][]key.Binding {
 	return [][]key.Binding{p.ShortHelp()}
 }

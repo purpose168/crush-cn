@@ -4,7 +4,7 @@ import (
 	"charm.land/bubbles/v2/key"
 )
 
-// KeyMap defines the key bindings for the completions component.
+// KeyMap 定义补全组件的按键绑定。
 type KeyMap struct {
 	Down,
 	Up,
@@ -14,37 +14,37 @@ type KeyMap struct {
 	UpInsert key.Binding
 }
 
-// DefaultKeyMap returns the default key bindings for completions.
+// DefaultKeyMap 返回补全的默认按键绑定。
 func DefaultKeyMap() KeyMap {
 	return KeyMap{
 		Down: key.NewBinding(
 			key.WithKeys("down"),
-			key.WithHelp("down", "move down"),
+			key.WithHelp("down", "向下移动"),
 		),
 		Up: key.NewBinding(
 			key.WithKeys("up"),
-			key.WithHelp("up", "move up"),
+			key.WithHelp("up", "向上移动"),
 		),
 		Select: key.NewBinding(
 			key.WithKeys("enter", "tab", "ctrl+y"),
-			key.WithHelp("enter", "select"),
+			key.WithHelp("enter", "选择"),
 		),
 		Cancel: key.NewBinding(
 			key.WithKeys("esc", "alt+esc"),
-			key.WithHelp("esc", "cancel"),
+			key.WithHelp("esc", "取消"),
 		),
 		DownInsert: key.NewBinding(
 			key.WithKeys("ctrl+n"),
-			key.WithHelp("ctrl+n", "insert next"),
+			key.WithHelp("ctrl+n", "插入下一个"),
 		),
 		UpInsert: key.NewBinding(
 			key.WithKeys("ctrl+p"),
-			key.WithHelp("ctrl+p", "insert previous"),
+			key.WithHelp("ctrl+p", "插入上一个"),
 		),
 	}
 }
 
-// KeyBindings returns all key bindings as a slice.
+// KeyBindings 以切片形式返回所有按键绑定。
 func (k KeyMap) KeyBindings() []key.Binding {
 	return []key.Binding{
 		k.Down,
@@ -54,7 +54,7 @@ func (k KeyMap) KeyBindings() []key.Binding {
 	}
 }
 
-// FullHelp returns the full help for the key bindings.
+// FullHelp 返回按键绑定的完整帮助。
 func (k KeyMap) FullHelp() [][]key.Binding {
 	m := [][]key.Binding{}
 	slice := k.KeyBindings()
@@ -65,7 +65,7 @@ func (k KeyMap) FullHelp() [][]key.Binding {
 	return m
 }
 
-// ShortHelp returns the short help for the key bindings.
+// ShortHelp 返回按键绑定的简短帮助。
 func (k KeyMap) ShortHelp() []key.Binding {
 	return []key.Binding{
 		k.Up,

@@ -17,23 +17,24 @@ import (
 )
 
 const (
-	headerDiag     = "╱"
-	minHeaderDiags = 3
-	leftPadding    = 1
-	rightPadding   = 1
+	headerDiag     = "╱" // 头部斜杠字符
+	minHeaderDiags = 3   // 头部斜杠的最小数量
+	leftPadding    = 1   // 左侧填充
+	rightPadding   = 1   // 右侧填充
 )
 
+// header 表示应用程序的头部模型
 type header struct {
-	// cached logo and compact logo
-	logo        string
-	compactLogo string
+	// cached logo and compact logo 缓存的标志和紧凑标志
+	logo        string // 标志
+	compactLogo string // 紧凑标志
 
-	com     *common.Common
-	width   int
-	compact bool
+	com     *common.Common // 公共组件
+	width   int            // 宽度
+	compact bool           // 是否紧凑
 }
 
-// newHeader creates a new header model.
+// newHeader 创建一个新的头部模型
 func newHeader(com *common.Common) *header {
 	h := &header{
 		com: com,
@@ -44,7 +45,7 @@ func newHeader(com *common.Common) *header {
 	return h
 }
 
-// drawHeader draws the header for the given session.
+// drawHeader 为给定会话绘制头部
 func (h *header) drawHeader(
 	scr uv.Screen,
 	area uv.Rectangle,
@@ -102,7 +103,7 @@ func (h *header) drawHeader(
 	view.Draw(scr, area)
 }
 
-// renderHeaderDetails renders the details section of the header.
+// renderHeaderDetails 渲染头部的详细信息部分
 func renderHeaderDetails(
 	com *common.Common,
 	session *session.Session,

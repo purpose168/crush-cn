@@ -1,43 +1,44 @@
-version: 2
+# Dependabot 配置文件，用于自动更新项目依赖
+version: 2  # 配置文件版本
 
-updates:
-  - package-ecosystem: "gomod"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "05:00"
-      timezone: "America/New_York"
-    labels:
-      - "area: dependencies"
-    commit-message:
-      prefix: "chore"
-      include: "scope"
-    groups:
-      all:
-        patterns:
-          - "*"
-    ignore:
-      - dependency-name: github.com/charmbracelet/bubbletea/v2
-        versions:
-          - v2.0.0-beta1
-      - dependency-name: github.com/charmbracelet/lipgloss/v2
-        versions:
-          - v2.0.0-beta1
+updates:  # 更新配置
+  - package-ecosystem: "gomod"  # 包生态系统：Go 模块
+    directory: "/"  # 配置文件所在目录
+    schedule:  # 更新计划
+      interval: "weekly"  # 更新频率：每周
+      day: "monday"  # 更新日期：周一
+      time: "05:00"  # 更新时间：05:00
+      timezone: "America/New_York"  # 时区：美国纽约
+    labels:  # PR 标签
+      - "area: dependencies"  # 依赖相关标签
+    commit-message:  # 提交信息配置
+      prefix: "chore"  # 提交前缀
+      include: "scope"  # 包含作用域
+    groups:  # 依赖分组
+      all:  # 所有依赖
+        patterns:  # 模式
+          - "*"  # 匹配所有依赖
+    ignore:  # 忽略的依赖
+      - dependency-name: github.com/charmbracelet/bubbletea/v2  # 忽略的依赖名称
+        versions:  # 忽略的版本
+          - v2.0.0-beta1  # 忽略 beta 版本
+      - dependency-name: github.com/charmbracelet/lipgloss/v2  # 忽略的依赖名称
+        versions:  # 忽略的版本
+          - v2.0.0-beta1  # 忽略 beta 版本
 
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "05:00"
-      timezone: "America/New_York"
-    labels:
-      - "area: dependencies"
-    commit-message:
-      prefix: "chore"
-      include: "scope"
-    groups:
-      all:
-        patterns:
-          - "*"
+  - package-ecosystem: "github-actions"  # 包生态系统：GitHub Actions
+    directory: "/"  # 配置文件所在目录
+    schedule:  # 更新计划
+      interval: "weekly"  # 更新频率：每周
+      day: "monday"  # 更新日期：周一
+      time: "05:00"  # 更新时间：05:00
+      timezone: "America/New_York"  # 时区：美国纽约
+    labels:  # PR 标签
+      - "area: dependencies"  # 依赖相关标签
+    commit-message:  # 提交信息配置
+      prefix: "chore"  # 提交前缀
+      include: "scope"  # 包含作用域
+    groups:  # 依赖分组
+      all:  # 所有依赖
+        patterns:  # 模式
+          - "*"  # 匹配所有依赖

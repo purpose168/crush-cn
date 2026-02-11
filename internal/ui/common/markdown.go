@@ -5,8 +5,7 @@ import (
 	"github.com/charmbracelet/crush/internal/ui/styles"
 )
 
-// MarkdownRenderer returns a glamour [glamour.TermRenderer] configured with
-// the given styles and width.
+// MarkdownRenderer 返回一个使用给定样式和宽度配置的 glamour [glamour.TermRenderer]。
 func MarkdownRenderer(sty *styles.Styles, width int) *glamour.TermRenderer {
 	r, _ := glamour.NewTermRenderer(
 		glamour.WithStyles(sty.Markdown),
@@ -15,8 +14,8 @@ func MarkdownRenderer(sty *styles.Styles, width int) *glamour.TermRenderer {
 	return r
 }
 
-// PlainMarkdownRenderer returns a glamour [glamour.TermRenderer] with no colors
-// (plain text with structure) and the given width.
+// PlainMarkdownRenderer 返回一个没有颜色的 glamour [glamour.TermRenderer]
+// （带有结构的纯文本）和给定的宽度。
 func PlainMarkdownRenderer(sty *styles.Styles, width int) *glamour.TermRenderer {
 	r, _ := glamour.NewTermRenderer(
 		glamour.WithStyles(sty.PlainMarkdown),

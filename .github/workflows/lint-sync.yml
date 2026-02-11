@@ -1,14 +1,20 @@
-name: lint-sync
+# Lint 配置同步工作流
+name: lint-sync  # 工作流名称：lint 同步
+
+# 触发条件
 on:
   # schedule:
   #   # every Sunday at midnight
   #   - cron: "0 0 * * 0"
-  workflow_dispatch: # allows manual triggering
+  workflow_dispatch: # 允许手动触发
 
+# 权限配置
 permissions:
-  contents: write
-  pull-requests: write
+  contents: write  # 写入仓库内容权限
+  pull-requests: write  # 写入 PR 权限
 
+# 任务定义
 jobs:
-  lint:
+  lint:  # lint 任务
+    # 复用 charmbracelet/meta 仓库的 lint-sync 工作流配置
     uses: charmbracelet/meta/.github/workflows/lint-sync.yml@main

@@ -11,11 +11,10 @@ import (
 	"github.com/charmbracelet/crush/internal/ui/styles"
 )
 
-// SyntaxHighlight applies syntax highlighting to the given source code based
-// on the file name and background color. It returns the highlighted code as a
-// string.
+// SyntaxHighlight 根据文件名和背景色对给定的源代码应用语法高亮。
+// 它返回高亮代码作为字符串。
 func SyntaxHighlight(st *styles.Styles, source, fileName string, bg color.Color) (string, error) {
-	// Determine the language lexer to use
+	// 确定要使用的语言词法分析器
 	l := lexers.Match(fileName)
 	if l == nil {
 		l = lexers.Analyse(source)
@@ -25,7 +24,7 @@ func SyntaxHighlight(st *styles.Styles, source, fileName string, bg color.Color)
 	}
 	l = chroma.Coalesce(l)
 
-	// Get the formatter
+	// 获取格式化器
 	f := formatters.Get("terminal16m")
 	if f == nil {
 		f = formatters.Fallback
@@ -33,7 +32,7 @@ func SyntaxHighlight(st *styles.Styles, source, fileName string, bg color.Color)
 
 	style := chroma.MustNewStyle("crush", st.ChromaTheme())
 
-	// Modify the style to use the provided background
+	// 修改样式以使用提供的背景
 	s, err := style.Builder().Transform(
 		func(t chroma.StyleEntry) chroma.StyleEntry {
 			r, g, b, _ := bg.RGBA()
@@ -45,7 +44,7 @@ func SyntaxHighlight(st *styles.Styles, source, fileName string, bg color.Color)
 		s = chromastyles.Fallback
 	}
 
-	// Tokenize and format
+	// 标记化和格式化
 	it, err := l.Tokenise(nil, source)
 	if err != nil {
 		return "", err

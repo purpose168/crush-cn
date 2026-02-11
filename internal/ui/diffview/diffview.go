@@ -31,7 +31,7 @@ const (
 	layoutSplit
 )
 
-// DiffView represents a view for displaying differences between two files.
+// DiffView 表示用于显示两个文件之间差异的视图。
 type DiffView struct {
 	layout          layout
 	before          file
@@ -56,20 +56,20 @@ type DiffView struct {
 
 	totalLines      int
 	codeWidth       int
-	fullCodeWidth   int  // with leading symbols
-	extraColOnAfter bool // add extra column on after panel
+	fullCodeWidth   int  // 包含前导符号
+	extraColOnAfter bool // 在after面板上添加额外列
 	beforeNumDigits int
 	afterNumDigits  int
 
-	// Cache lexer to avoid expensive file pattern matching on every line
+	// 缓存词法分析器以避免在每一行上进行昂贵的文件模式匹配
 	cachedLexer chroma.Lexer
 
-	// Cache highlighted lines to avoid re-highlighting the same content
-	// Key: hash of (content + background color), Value: highlighted string
+	// 缓存高亮显示的行以避免重新高亮显示相同内容
+	// 键：（内容+背景色）的哈希，值：高亮显示的字符串
 	syntaxCache map[string]string
 }
 
-// New creates a new DiffView with default settings.
+// New 使用默认设置创建一个新的DiffView。
 func New() *DiffView {
 	dv := &DiffView{
 		layout:       layoutUnified,
@@ -82,116 +82,115 @@ func New() *DiffView {
 	return dv
 }
 
-// Unified sets the layout of the DiffView to unified.
+// Unified 将DiffView的布局设置为统一视图。
 func (dv *DiffView) Unified() *DiffView {
 	dv.layout = layoutUnified
 	return dv
 }
 
-// Split sets the layout of the DiffView to split (side-by-side).
+// Split 将DiffView的布局设置为分屏（并排）视图。
 func (dv *DiffView) Split() *DiffView {
 	dv.layout = layoutSplit
 	return dv
 }
 
-// Before sets the "before" file for the DiffView.
+// Before 为DiffView设置"before"文件。
 func (dv *DiffView) Before(path, content string) *DiffView {
 	dv.before = file{path: path, content: content}
-	// Clear caches when content changes
+	// 当内容更改时清除缓存
 	dv.clearCaches()
 	return dv
 }
 
-// After sets the "after" file for the DiffView.
+// After 为DiffView设置"after"文件。
 func (dv *DiffView) After(path, content string) *DiffView {
 	dv.after = file{path: path, content: content}
-	// Clear caches when content changes
+	// 当内容更改时清除缓存
 	dv.clearCaches()
 	return dv
 }
 
-// clearCaches clears all caches when content or major settings change.
+// clearCaches 当内容或主要设置更改时清除所有缓存。
 func (dv *DiffView) clearCaches() {
 	dv.cachedLexer = nil
 	dv.clearSyntaxCache()
 	dv.isComputed = false
 }
 
-// ContextLines sets the number of context lines for the DiffView.
+// ContextLines 为DiffView设置上下文行数。
 func (dv *DiffView) ContextLines(contextLines int) *DiffView {
 	dv.contextLines = contextLines
 	return dv
 }
 
-// Style sets the style for the DiffView.
+// Style 为DiffView设置样式。
 func (dv *DiffView) Style(style Style) *DiffView {
 	dv.style = style
 	return dv
 }
 
-// LineNumbers sets whether to display line numbers in the DiffView.
+// LineNumbers 设置是否在DiffView中显示行号。
 func (dv *DiffView) LineNumbers(lineNumbers bool) *DiffView {
 	dv.lineNumbers = lineNumbers
 	return dv
 }
 
-// Height sets the height of the DiffView.
+// Height 设置DiffView的高度。
 func (dv *DiffView) Height(height int) *DiffView {
 	dv.height = height
 	return dv
 }
 
-// Width sets the width of the DiffView.
+// Width 设置DiffView的宽度。
 func (dv *DiffView) Width(width int) *DiffView {
 	dv.width = width
 	return dv
 }
 
-// XOffset sets the horizontal offset for the DiffView.
+// XOffset 为DiffView设置水平偏移。
 func (dv *DiffView) XOffset(xOffset int) *DiffView {
 	dv.xOffset = xOffset
 	return dv
 }
 
-// YOffset sets the vertical offset for the DiffView.
+// YOffset 为DiffView设置垂直偏移。
 func (dv *DiffView) YOffset(yOffset int) *DiffView {
 	dv.yOffset = yOffset
 	return dv
 }
 
-// InfiniteYScroll allows the YOffset to scroll beyond the last line.
+// InfiniteYScroll 允许YOffset滚动到最后一行之外。
 func (dv *DiffView) InfiniteYScroll(infiniteYScroll bool) *DiffView {
 	dv.infiniteYScroll = infiniteYScroll
 	return dv
 }
 
-// TabWidth sets the tab width. Only relevant for code that contains tabs, like
-// Go code.
+// TabWidth 设置制表符宽度。仅对包含制表符的代码（如Go代码）相关。
 func (dv *DiffView) TabWidth(tabWidth int) *DiffView {
 	dv.tabWidth = tabWidth
 	return dv
 }
 
-// ChromaStyle sets the chroma style for syntax highlighting.
-// If nil, no syntax highlighting will be applied.
+// ChromaStyle 设置语法高亮的chroma样式。
+// 如果为nil，则不应用语法高亮。
 func (dv *DiffView) ChromaStyle(style *chroma.Style) *DiffView {
 	dv.chromaStyle = style
-	// Clear syntax cache when style changes since highlighting will be different
+	// 当样式更改时清除语法缓存，因为高亮显示将不同
 	dv.clearSyntaxCache()
 	return dv
 }
 
-// clearSyntaxCache clears the syntax highlighting cache.
+// clearSyntaxCache 清除语法高亮缓存。
 func (dv *DiffView) clearSyntaxCache() {
 	if dv.syntaxCache != nil {
-		// Clear the map but keep it allocated
+		// 清除映射但保持其分配
 		for k := range dv.syntaxCache {
 			delete(dv.syntaxCache, k)
 		}
 	}
 }
 
-// String returns the string representation of the DiffView.
+// String 返回DiffView的字符串表示。
 func (dv *DiffView) String() string {
 	dv.normalizeLineEndings()
 	dv.replaceTabs()
@@ -228,21 +227,20 @@ func (dv *DiffView) String() string {
 	}
 }
 
-// normalizeLineEndings ensures the file contents use Unix-style line endings.
+// normalizeLineEndings 确保文件内容使用Unix风格的行结束符。
 func (dv *DiffView) normalizeLineEndings() {
 	dv.before.content = strings.ReplaceAll(dv.before.content, "\r\n", "\n")
 	dv.after.content = strings.ReplaceAll(dv.after.content, "\r\n", "\n")
 }
 
-// replaceTabs replaces tabs in the before and after file contents with spaces
-// according to the specified tab width.
+// replaceTabs 根据指定的制表符宽度，将before和after文件内容中的制表符替换为空格。
 func (dv *DiffView) replaceTabs() {
 	spaces := strings.Repeat(" ", dv.tabWidth)
 	dv.before.content = strings.ReplaceAll(dv.before.content, "\t", spaces)
 	dv.after.content = strings.ReplaceAll(dv.after.content, "\t", spaces)
 }
 
-// computeDiff computes the differences between the "before" and "after" files.
+// computeDiff 计算"before"和"after"文件之间的差异。
 func (dv *DiffView) computeDiff() error {
 	if dv.isComputed {
 		return dv.err
@@ -262,8 +260,7 @@ func (dv *DiffView) computeDiff() error {
 	return dv.err
 }
 
-// convertDiffToSplit converts the unified diff to a split diff if the layout is
-// set to split.
+// convertDiffToSplit 如果布局设置为分屏，则将统一差异转换为分屏差异。
 func (dv *DiffView) convertDiffToSplit() {
 	if dv.layout != layoutSplit {
 		return
@@ -275,7 +272,7 @@ func (dv *DiffView) convertDiffToSplit() {
 	}
 }
 
-// adjustStyles adjusts adds padding and alignment to the styles.
+// adjustStyles 调整添加填充和对齐到样式。
 func (dv *DiffView) adjustStyles() {
 	setPadding := func(s lipgloss.Style) lipgloss.Style {
 		return s.Padding(0, lineNumPadding).Align(lipgloss.Right)
@@ -287,8 +284,7 @@ func (dv *DiffView) adjustStyles() {
 	dv.style.DeleteLine.LineNumber = setPadding(dv.style.DeleteLine.LineNumber)
 }
 
-// detectNumDigits calculates the maximum number of digits needed for before and
-// after line numbers.
+// detectNumDigits 计算before和after行号所需的最大位数。
 func (dv *DiffView) detectNumDigits() {
 	dv.beforeNumDigits = 0
 	dv.afterNumDigits = 0
@@ -319,18 +315,18 @@ func (dv *DiffView) preventInfiniteYScroll() {
 		return
 	}
 
-	// clamp yOffset to prevent scrolling beyond the last line
+	// 限制yOffset以防止滚动到最后一行之外
 	if dv.height > 0 {
 		maxYOffset := max(0, dv.totalLines-dv.height)
 		dv.yOffset = min(dv.yOffset, maxYOffset)
 	} else {
-		// if no height limit, ensure yOffset doesn't exceed total lines
+		// 如果没有高度限制，确保yOffset不超过总行数
 		dv.yOffset = min(dv.yOffset, max(0, dv.totalLines-1))
 	}
-	dv.yOffset = max(0, dv.yOffset) // ensure yOffset is not negative
+	dv.yOffset = max(0, dv.yOffset) // 确保yOffset不为负数
 }
 
-// detectCodeWidth calculates the maximum width of code lines in the diff view.
+// detectCodeWidth 计算差异视图中代码行的最大宽度。
 func (dv *DiffView) detectCodeWidth() {
 	switch dv.layout {
 	case layoutUnified:
@@ -341,8 +337,7 @@ func (dv *DiffView) detectCodeWidth() {
 	dv.fullCodeWidth = dv.codeWidth + leadingSymbolsSize
 }
 
-// detectUnifiedCodeWidth calculates the maximum width of code lines in a
-// unified diff.
+// detectUnifiedCodeWidth 计算统一差异中代码行的最大宽度。
 func (dv *DiffView) detectUnifiedCodeWidth() {
 	dv.codeWidth = 0
 
@@ -356,8 +351,7 @@ func (dv *DiffView) detectUnifiedCodeWidth() {
 	}
 }
 
-// detectSplitCodeWidth calculates the maximum width of code lines in a
-// split diff.
+// detectSplitCodeWidth 计算分屏差异中代码行的最大宽度。
 func (dv *DiffView) detectSplitCodeWidth() {
 	dv.codeWidth = 0
 
@@ -377,7 +371,7 @@ func (dv *DiffView) detectSplitCodeWidth() {
 	}
 }
 
-// resizeCodeWidth resizes the code width to fit within the specified width.
+// resizeCodeWidth 调整代码宽度以适应指定的宽度。
 func (dv *DiffView) resizeCodeWidth() {
 	fullNumWidth := dv.beforeNumDigits + dv.afterNumDigits
 	fullNumWidth += lineNumPadding * 4 // left and right padding for both line numbers
@@ -394,7 +388,7 @@ func (dv *DiffView) resizeCodeWidth() {
 	dv.fullCodeWidth = dv.codeWidth + leadingSymbolsSize
 }
 
-// renderUnified renders the unified diff view as a string.
+// renderUnified 将统一差异视图渲染为字符串。
 func (dv *DiffView) renderUnified() string {
 	var b strings.Builder
 
@@ -429,7 +423,7 @@ outer:
 		afterLine := h.ToLine
 
 		for j, l := range h.Lines {
-			// print ellipis if we don't have enough space to print the rest of the diff
+			// 如果我们没有足够的空间来打印差异的其余部分，则打印省略号
 			hasReachedHeight := dv.height > 0 && printedLines+1 == dv.height
 			isLastHunk := i+1 == len(dv.unified.Hunks)
 			isLastLine := j+1 == len(h.Lines)
@@ -503,7 +497,7 @@ outer:
 	return b.String()
 }
 
-// renderSplit renders the split (side-by-side) diff view as a string.
+// renderSplit 将分屏（并排）差异视图渲染为字符串。
 func (dv *DiffView) renderSplit() string {
 	var b strings.Builder
 
@@ -542,7 +536,7 @@ outer:
 		afterLine := h.toLine
 
 		for j, l := range h.lines {
-			// print ellipis if we don't have enough space to print the rest of the diff
+			// 如果我们没有足够的空间来打印差异的其余部分，则打印省略号
 			hasReachedHeight := dv.height > 0 && printedLines+1 == dv.height
 			isLastHunk := i+1 == len(dv.unified.Hunks)
 			isLastLine := j+1 == len(h.lines)
@@ -660,7 +654,7 @@ outer:
 	return b.String()
 }
 
-// hunkLineFor formats the header line for a hunk in the unified diff view.
+// hunkLineFor 格式化统一差异视图中块的标题行。
 func (dv *DiffView) hunkLineFor(h *udiff.Hunk) string {
 	beforeShownLines, afterShownLines := dv.hunkShownLines(h)
 
@@ -673,8 +667,7 @@ func (dv *DiffView) hunkLineFor(h *udiff.Hunk) string {
 	)
 }
 
-// hunkShownLines calculates the number of lines shown in a hunk for both before
-// and after versions.
+// hunkShownLines 计算before和after版本中显示的行数。
 func (dv *DiffView) hunkShownLines(h *udiff.Hunk) (before, after int) {
 	for _, l := range h.Lines {
 		switch l.Kind {
@@ -708,10 +701,10 @@ func (dv *DiffView) hightlightCode(source string, bgColor color.Color) string {
 		return source
 	}
 
-	// Create cache key from content and background color
+	// 从内容和背景色创建缓存键
 	cacheKey := dv.createSyntaxCacheKey(source, bgColor)
 
-	// Check if we already have this highlighted
+	// 检查我们是否已经有这个高亮显示的内容
 	if cached, exists := dv.syntaxCache[cacheKey]; exists {
 		return cached
 	}

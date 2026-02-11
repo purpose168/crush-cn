@@ -23,44 +23,44 @@ const (
 	maxWidth  = 100
 )
 
-// SelectionMsg is sent when a completion is selected.
+// SelectionMsg 在选择补全时发送。
 type SelectionMsg[T any] struct {
 	Value    T
-	KeepOpen bool // If true, insert without closing.
+	KeepOpen bool // 如果为 true，则在插入后不关闭。
 }
 
-// ClosedMsg is sent when the completions are closed.
+// ClosedMsg 在补全关闭时发送。
 type ClosedMsg struct{}
 
-// CompletionItemsLoadedMsg is sent when files have been loaded for completions.
+// CompletionItemsLoadedMsg 在为补全加载文件时发送。
 type CompletionItemsLoadedMsg struct {
 	Files     []FileCompletionValue
 	Resources []ResourceCompletionValue
 }
 
-// Completions represents the completions popup component.
+// Completions 表示补全弹出组件。
 type Completions struct {
-	// Popup dimensions
+	// 弹出尺寸
 	width  int
 	height int
 
-	// State
+	// 状态
 	open  bool
 	query string
 
-	// Key bindings
+	// 按键绑定
 	keyMap KeyMap
 
-	// List component
+	// 列表组件
 	list *list.FilterableList
 
-	// Styling
+	// 样式
 	normalStyle  lipgloss.Style
 	focusedStyle lipgloss.Style
 	matchStyle   lipgloss.Style
 }
 
-// New creates a new completions component.
+// New 创建一个新的补全组件。
 func New(normalStyle, focusedStyle, matchStyle lipgloss.Style) *Completions {
 	l := list.NewFilterableList()
 	l.SetGap(0)
@@ -75,28 +75,28 @@ func New(normalStyle, focusedStyle, matchStyle lipgloss.Style) *Completions {
 	}
 }
 
-// IsOpen returns whether the completions popup is open.
+// IsOpen 返回补全弹出窗口是否打开。
 func (c *Completions) IsOpen() bool {
 	return c.open
 }
 
-// Query returns the current filter query.
+// Query 返回当前过滤查询。
 func (c *Completions) Query() string {
 	return c.query
 }
 
-// Size returns the visible size of the popup.
+// Size 返回弹出窗口的可见尺寸。
 func (c *Completions) Size() (width, height int) {
 	visible := len(c.list.FilteredItems())
 	return c.width, min(visible, c.height)
 }
 
-// KeyMap returns the key bindings.
+// KeyMap 返回按键绑定。
 func (c *Completions) KeyMap() KeyMap {
 	return c.keyMap
 }
 
-// Open opens the completions with file items from the filesystem.
+// Open 使用来自文件系统的文件项目打开补全。
 func (c *Completions) Open(depth, limit int) tea.Cmd {
 	return func() tea.Msg {
 		var msg CompletionItemsLoadedMsg
@@ -112,11 +112,11 @@ func (c *Completions) Open(depth, limit int) tea.Cmd {
 	}
 }
 
-// SetItems sets the files and MCP resources and rebuilds the merged list.
+// SetItems 设置文件和 MCP 资源并重建合并列表。
 func (c *Completions) SetItems(files []FileCompletionValue, resources []ResourceCompletionValue) {
 	items := make([]list.FilterableItem, 0, len(files)+len(resources))
 
-	// Add files first.
+	// 首先添加文件。
 	for _, file := range files {
 		item := NewCompletionItem(
 			file.Path,
@@ -128,7 +128,7 @@ func (c *Completions) SetItems(files []FileCompletionValue, resources []Resource
 		items = append(items, item)
 	}
 
-	// Add MCP resources.
+	// 添加 MCP 资源。
 	for _, resource := range resources {
 		item := NewCompletionItem(
 			resource.MCPName+"/"+cmp.Or(resource.Title, resource.URI),
@@ -155,12 +155,12 @@ func (c *Completions) SetItems(files []FileCompletionValue, resources []Resource
 	c.updateSize()
 }
 
-// Close closes the completions popup.
+// Close 关闭补全弹出窗口。
 func (c *Completions) Close() {
 	c.open = false
 }
 
-// Filter filters the completions with the given query.
+// Filter 使用给定查询过滤补全。
 func (c *Completions) Filter(query string) {
 	if !c.open {
 		return
@@ -195,12 +195,12 @@ func (c *Completions) updateSize() {
 	c.list.ScrollToSelected()
 }
 
-// HasItems returns whether there are visible items.
+// HasItems 返回是否有可见项目。
 func (c *Completions) HasItems() bool {
 	return len(c.list.FilteredItems()) > 0
 }
 
-// Update handles key events for the completions.
+// Update 处理补全的按键事件。
 func (c *Completions) Update(msg tea.KeyPressMsg) (tea.Msg, bool) {
 	if !c.open {
 		return nil, false
@@ -234,7 +234,7 @@ func (c *Completions) Update(msg tea.KeyPressMsg) (tea.Msg, bool) {
 	return nil, false
 }
 
-// selectPrev selects the previous item with circular navigation.
+// selectPrev 使用循环导航选择上一个项目。
 func (c *Completions) selectPrev() {
 	items := c.list.FilteredItems()
 	if len(items) == 0 {
@@ -246,7 +246,7 @@ func (c *Completions) selectPrev() {
 	c.list.ScrollToSelected()
 }
 
-// selectNext selects the next item with circular navigation.
+// selectNext 使用循环导航选择下一个项目。
 func (c *Completions) selectNext() {
 	items := c.list.FilteredItems()
 	if len(items) == 0 {
@@ -258,7 +258,7 @@ func (c *Completions) selectNext() {
 	c.list.ScrollToSelected()
 }
 
-// selectCurrent returns a command with the currently selected item.
+// selectCurrent 返回一个带有当前选中项目的命令。
 func (c *Completions) selectCurrent(keepOpen bool) tea.Msg {
 	items := c.list.FilteredItems()
 	if len(items) == 0 {
@@ -295,7 +295,7 @@ func (c *Completions) selectCurrent(keepOpen bool) tea.Msg {
 	}
 }
 
-// Render renders the completions popup.
+// Render 渲染补全弹出窗口。
 func (c *Completions) Render() string {
 	if !c.open {
 		return ""

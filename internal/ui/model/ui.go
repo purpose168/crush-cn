@@ -52,36 +52,36 @@ import (
 	"github.com/charmbracelet/x/editor"
 )
 
-// Compact mode breakpoints.
+// 紧凑模式断点
 const (
-	compactModeWidthBreakpoint  = 120
-	compactModeHeightBreakpoint = 30
+	compactModeWidthBreakpoint  = 120 // 紧凑模式宽度断点
+	compactModeHeightBreakpoint = 30  // 紧凑模式高度断点
 )
 
-// If pasted text has more than 2 newlines, treat it as a file attachment.
+// 如果粘贴的文本超过2个换行符，则将其视为文件附件
 const pasteLinesThreshold = 10
 
-// Session details panel max height.
+// 会话详情面板最大高度
 const sessionDetailsMaxHeight = 20
 
-// uiFocusState represents the current focus state of the UI.
+// uiFocusState 表示UI当前的焦点状态
 type uiFocusState uint8
 
-// Possible uiFocusState values.
+// uiFocusState 的可能值
 const (
-	uiFocusNone uiFocusState = iota
-	uiFocusEditor
-	uiFocusMain
+	uiFocusNone   uiFocusState = iota // 无焦点
+	uiFocusEditor                     // 编辑器焦点
+	uiFocusMain                       // 主区域焦点
 )
 
 type uiState uint8
 
-// Possible uiState values.
+// uiState 的可能值
 const (
-	uiOnboarding uiState = iota
-	uiInitialize
-	uiLanding
-	uiChat
+	uiOnboarding uiState = iota // 引导状态
+	uiInitialize                // 初始化状态
+	uiLanding                   // 登陆页面状态
+	uiChat                      // 聊天状态
 )
 
 type openEditorMsg struct {
@@ -89,51 +89,51 @@ type openEditorMsg struct {
 }
 
 type (
-	// cancelTimerExpiredMsg is sent when the cancel timer expires.
+	// cancelTimerExpiredMsg 在取消计时器过期时发送
 	cancelTimerExpiredMsg struct{}
-	// userCommandsLoadedMsg is sent when user commands are loaded.
+	// userCommandsLoadedMsg 在用户命令加载完成时发送
 	userCommandsLoadedMsg struct {
 		Commands []commands.CustomCommand
 	}
-	// mcpPromptsLoadedMsg is sent when mcp prompts are loaded.
+	// mcpPromptsLoadedMsg 在MCP提示加载完成时发送
 	mcpPromptsLoadedMsg struct {
 		Prompts []commands.MCPPrompt
 	}
-	// mcpStateChangedMsg is sent when there is a change in MCP client states.
+	// mcpStateChangedMsg 在MCP客户端状态发生变化时发送
 	mcpStateChangedMsg struct {
 		states map[string]mcp.ClientInfo
 	}
-	// sendMessageMsg is sent to send a message.
-	// currently only used for mcp prompts.
+	// sendMessageMsg 用于发送消息
+	// 目前仅用于MCP提示
 	sendMessageMsg struct {
 		Content     string
 		Attachments []message.Attachment
 	}
 
-	// closeDialogMsg is sent to close the current dialog.
+	// closeDialogMsg 用于关闭当前对话框
 	closeDialogMsg struct{}
 
-	// copyChatHighlightMsg is sent to copy the current chat highlight to clipboard.
+	// copyChatHighlightMsg 用于将当前聊天高亮内容复制到剪贴板
 	copyChatHighlightMsg struct{}
 
-	// sessionFilesUpdatesMsg is sent when the files for this session have been updated
+	// sessionFilesUpdatesMsg 在当前会话的文件更新时发送
 	sessionFilesUpdatesMsg struct {
 		sessionFiles []SessionFile
 	}
 )
 
-// UI represents the main user interface model.
+// UI 表示主用户界面模型
 type UI struct {
 	com          *common.Common
 	session      *session.Session
 	sessionFiles []SessionFile
 
-	// keeps track of read files while we don't have a session id
+	// 在没有会话ID时跟踪已读取的文件
 	sessionFileReads []string
 
 	lastUserMessageTime int64
 
-	// The width and height of the terminal in cells.
+	// 终端的宽度和高度（以单元格为单位）
 	width  int
 	height int
 	layout uiLayout
@@ -149,80 +149,79 @@ type UI struct {
 	dialog *dialog.Overlay
 	status *Status
 
-	// isCanceling tracks whether the user has pressed escape once to cancel.
+	// isCanceling 跟踪用户是否已按一次ESC键取消
 	isCanceling bool
 
 	header *header
 
-	// sendProgressBar instructs the TUI to send progress bar updates to the
-	// terminal.
+	// sendProgressBar 指示TUI向终端发送进度条更新
 	sendProgressBar    bool
 	progressBarEnabled bool
 
-	// caps hold different terminal capabilities that we query for.
+	// caps 保存我们查询的不同终端能力
 	caps common.Capabilities
 
-	// Editor components
+	// 编辑器组件
 	textarea textarea.Model
 
-	// Attachment list
+	// 附件列表
 	attachments *attachments.Attachments
 
 	readyPlaceholder   string
 	workingPlaceholder string
 
-	// Completions state
+	// 自动完成状态
 	completions              *completions.Completions
 	completionsOpen          bool
 	completionsStartIndex    int
 	completionsQuery         string
-	completionsPositionStart image.Point // x,y where user typed '@'
+	completionsPositionStart image.Point // 用户输入'@'时的x,y坐标
 
-	// Chat components
+	// 聊天组件
 	chat *Chat
 
-	// onboarding state
+	// 引导状态
 	onboarding struct {
 		yesInitializeSelected bool
 	}
 
-	// lsp
+	// LSP (Language Server Protocol - 语言服务器协议)
 	lspStates map[string]app.LSPClientInfo
 
-	// mcp
+	// MCP (Model Context Protocol - 模型上下文协议)
 	mcpStates map[string]mcp.ClientInfo
 
-	// sidebarLogo keeps a cached version of the sidebar sidebarLogo.
+	// sidebarLogo 保存侧边栏logo的缓存版本
 	sidebarLogo string
 
-	// custom commands & mcp commands
+	// 自定义命令和MCP命令
 	customCommands []commands.CustomCommand
 	mcpPrompts     []commands.MCPPrompt
 
-	// forceCompactMode tracks whether compact mode is forced by user toggle
+	// forceCompactMode 跟踪紧凑模式是否由用户切换强制启用
 	forceCompactMode bool
 
-	// isCompact tracks whether we're currently in compact layout mode (either
-	// by user toggle or auto-switch based on window size)
+	// isCompact 跟踪当前是否处于紧凑布局模式
+	//（通过用户切换或基于窗口大小自动切换）
 	isCompact bool
 
-	// detailsOpen tracks whether the details panel is open (in compact mode)
+	// detailsOpen 跟踪详情面板是否打开（在紧凑模式下）
 	detailsOpen bool
 
-	// pills state
+	// 药丸状态
 	pillsExpanded      bool
 	focusedPillSection pillSection
 	promptQueue        int
 	pillsView          string
 
-	// Todo spinner
+	// 待办事项旋转器
 	todoSpinner    spinner.Model
 	todoIsSpinning bool
 
-	// mouse highlighting related state
+	// 鼠标高亮相关状态
 	lastClickTime time.Time
 
-	// Prompt history for up/down navigation through previous messages.
+	// 提示历史记录，用于通过上/下键导航到之前的消息
 	promptHistory struct {
 		messages []string
 		index    int
@@ -230,9 +229,9 @@ type UI struct {
 	}
 }
 
-// New creates a new instance of the [UI] model.
+// New 创建一个新的 [UI] 模型实例
 func New(com *common.Common) *UI {
-	// Editor components
+	// 编辑器组件
 	ta := textarea.New()
 	ta.SetStyles(com.Styles.TextArea)
 	ta.ShowLineNumbers = false
@@ -244,7 +243,7 @@ func New(com *common.Common) *UI {
 
 	keyMap := DefaultKeyMap()
 
-	// Completions component
+	// 自动完成组件
 	comp := completions.New(
 		com.Styles.Completions.Normal,
 		com.Styles.Completions.Focused,
@@ -256,7 +255,7 @@ func New(com *common.Common) *UI {
 		spinner.WithStyle(com.Styles.Pills.TodoSpinner),
 	)
 
-	// Attachments component
+	// 附件组件
 	attachments := attachments.New(
 		attachments.NewRenderer(
 			com.Styles.Attachments.Normal,
@@ -294,10 +293,10 @@ func New(com *common.Common) *UI {
 	ui.textarea.Placeholder = ui.readyPlaceholder
 	ui.status = status
 
-	// Initialize compact mode from config
+	// 从配置初始化紧凑模式
 	ui.forceCompactMode = com.Config().Options.TUI.CompactMode
 
-	// set onboarding state defaults
+	// 设置引导状态默认值
 	ui.onboarding.yesInitializeSelected = true
 
 	desiredState := uiLanding
@@ -308,20 +307,20 @@ func New(com *common.Common) *UI {
 		desiredState = uiInitialize
 	}
 
-	// set initial state
+	// 设置初始状态
 	ui.setState(desiredState, desiredFocus)
 
 	opts := com.Config().Options
 
-	// disable indeterminate progress bar
+	// 禁用不确定进度条
 	ui.progressBarEnabled = opts.Progress == nil || *opts.Progress
-	// enable transparent mode
+	// 启用透明模式
 	ui.isTransparent = opts.TUI.Transparent != nil && *opts.TUI.Transparent
 
 	return ui
 }
 
-// Init initializes the UI model.
+// Init 初始化UI模型
 func (m *UI) Init() tea.Cmd {
 	var cmds []tea.Cmd
 	if m.state == uiOnboarding {
@@ -329,50 +328,50 @@ func (m *UI) Init() tea.Cmd {
 			cmds = append(cmds, cmd)
 		}
 	}
-	// load the user commands async
+	// 异步加载用户命令
 	cmds = append(cmds, m.loadCustomCommands())
-	// load prompt history async
+	// 异步加载提示历史记录
 	cmds = append(cmds, m.loadPromptHistory())
 	return tea.Batch(cmds...)
 }
 
-// setState changes the UI state and focus.
+// setState 更改UI状态和焦点
 func (m *UI) setState(state uiState, focus uiFocusState) {
 	if state == uiLanding {
-		// Always turn off compact mode when going to landing
+		// 进入登陆页面时始终关闭紧凑模式
 		m.isCompact = false
 	}
 	m.state = state
 	m.focus = focus
-	// Changing the state may change layout, so update it.
+	// 更改状态可能会更改布局，因此更新它
 	m.updateLayoutAndSize()
 }
 
-// loadCustomCommands loads the custom commands asynchronously.
+// loadCustomCommands 异步加载自定义命令
 func (m *UI) loadCustomCommands() tea.Cmd {
 	return func() tea.Msg {
 		customCommands, err := commands.LoadCustomCommands(m.com.Config())
 		if err != nil {
-			slog.Error("Failed to load custom commands", "error", err)
+			slog.Error("加载自定义命令失败", "error", err)
 		}
 		return userCommandsLoadedMsg{Commands: customCommands}
 	}
 }
 
-// loadMCPrompts loads the MCP prompts asynchronously.
+// loadMCPrompts 异步加载MCP提示
 func (m *UI) loadMCPrompts() tea.Msg {
 	prompts, err := commands.LoadMCPPrompts()
 	if err != nil {
-		slog.Error("Failed to load MCP prompts", "error", err)
+		slog.Error("加载MCP提示失败", "error", err)
 	}
 	if prompts == nil {
-		// flag them as loaded even if there is none or an error
+		// 即使没有提示或出错，也标记为已加载
 		prompts = []commands.MCPPrompt{}
 	}
 	return mcpPromptsLoadedMsg{Prompts: prompts}
 }
 
-// Update handles updates to the UI model.
+// Update 处理UI模型的更新
 func (m *UI) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 	if m.hasSession() && m.isAgentBusy() {
@@ -382,11 +381,11 @@ func (m *UI) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.updateLayoutAndSize()
 		}
 	}
-	// Update terminal capabilities
+	// 更新终端能力
 	m.caps.Update(msg)
 	switch msg := msg.(type) {
 	case tea.EnvMsg:
-		// Is this Windows Terminal?
+		// 这是Windows Terminal吗？
 		if !m.sendProgressBar {
 			m.sendProgressBar = slices.Contains(msg, "WT_SESSION")
 		}
@@ -408,14 +407,14 @@ func (m *UI) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cmds = append(cmds, cmd)
 		}
 		if hasInProgressTodo(m.session.Todos) {
-			// only start spinner if there is an in-progress todo
+			// 仅当有进行中的待办事项时才启动旋转器
 			if m.isAgentBusy() {
 				m.todoIsSpinning = true
 				cmds = append(cmds, m.todoSpinner.Tick)
 			}
 			m.updateLayoutAndSize()
 		}
-		// Reload prompt history for the new session.
+		// 为新会话重新加载提示历史记录
 		m.historyReset()
 		cmds = append(cmds, m.loadPromptHistory())
 		m.updateLayoutAndSize()
@@ -484,12 +483,12 @@ func (m *UI) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 	case pubsub.Event[message.Message]:
-		// Check if this is a child session message for an agent tool.
+		// 检查这是否是智能体工具的子会话消息
 		if m.session == nil {
 			break
 		}
 		if msg.Payload.SessionID != m.session.ID {
-			// This might be a child session message from an agent tool.
+			// 这可能是来自智能体工具的子会话消息
 			if cmd := m.handleChildSessionMessage(msg); cmd != nil {
 				cmds = append(cmds, cmd)
 			}
@@ -503,16 +502,16 @@ func (m *UI) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case pubsub.DeletedEvent:
 			m.chat.RemoveMessage(msg.Payload.ID)
 		}
-		// start the spinner if there is a new message
+		// 如果有新消息则启动旋转器
 		if hasInProgressTodo(m.session.Todos) && m.isAgentBusy() && !m.todoIsSpinning {
 			m.todoIsSpinning = true
 			cmds = append(cmds, m.todoSpinner.Tick)
 		}
-		// stop the spinner if the agent is not busy anymore
+		// 如果智能体不再忙碌则停止旋转器
 		if m.todoIsSpinning && !m.isAgentBusy() {
 			m.todoIsSpinning = false
 		}
-		// there is a number of things that could change the pills here so we want to re-render
+		// 这里有很多事情可能会改变药丸，所以我们想要重新渲染
 		m.renderPills()
 	case pubsub.Event[history.File]:
 		cmds = append(cmds, m.handleFileEvent(msg.Payload))
@@ -542,7 +541,7 @@ func (m *UI) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.isCanceling = false
 	case tea.TerminalVersionMsg:
 		termVersion := strings.ToLower(msg.Name)
-		// Only enable progress bar for the following terminals.
+		// 仅对以下终端启用进度条
 		if !m.sendProgressBar {
 			m.sendProgressBar = strings.Contains(termVersion, "ghostty")
 		}
@@ -553,16 +552,16 @@ func (m *UI) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyboardEnhancementsMsg:
 		m.keyenh = msg
 		if msg.SupportsKeyDisambiguation() {
-			m.keyMap.Models.SetHelp("ctrl+m", "models")
-			m.keyMap.Editor.Newline.SetHelp("shift+enter", "newline")
+			m.keyMap.Models.SetHelp("ctrl+m", "模型")
+			m.keyMap.Editor.Newline.SetHelp("shift+enter", "换行")
 		}
 	case copyChatHighlightMsg:
 		cmds = append(cmds, m.copyChatHighlight())
 	case DelayedClickMsg:
-		// Handle delayed single-click action (e.g., expansion).
+		// 处理延迟单击操作（例如，展开）
 		m.chat.HandleDelayedClick(msg)
 	case tea.MouseClickMsg:
-		// Pass mouse events to dialogs first if any are open.
+		// 如果打开了对话框，首先将鼠标事件传递给对话框
 		if m.dialog.HasDialogs() {
 			m.dialog.Update(msg)
 			return m, tea.Batch(cmds...)
@@ -575,7 +574,7 @@ func (m *UI) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch m.state {
 		case uiChat:
 			x, y := msg.X, msg.Y
-			// Adjust for chat area position
+			// 调整聊天区域位置
 			x -= m.layout.main.Min.X
 			y -= m.layout.main.Min.Y
 			if !image.Pt(msg.X, msg.Y).In(m.layout.sidebar) {
@@ -589,7 +588,7 @@ func (m *UI) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 	case tea.MouseMotionMsg:
-		// Pass mouse events to dialogs first if any are open.
+		// 如果打开了对话框，首先将鼠标事件传递给对话框
 		if m.dialog.HasDialogs() {
 			m.dialog.Update(msg)
 			return m, tea.Batch(cmds...)
@@ -620,14 +619,14 @@ func (m *UI) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 			x, y := msg.X, msg.Y
-			// Adjust for chat area position
+			// 调整聊天区域位置
 			x -= m.layout.main.Min.X
 			y -= m.layout.main.Min.Y
 			m.chat.HandleMouseDrag(x, y)
 		}
 
 	case tea.MouseReleaseMsg:
-		// Pass mouse events to dialogs first if any are open.
+		// 如果打开了对话框，首先将鼠标事件传递给对话框
 		if m.dialog.HasDialogs() {
 			m.dialog.Update(msg)
 			return m, tea.Batch(cmds...)
@@ -636,7 +635,7 @@ func (m *UI) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch m.state {
 		case uiChat:
 			x, y := msg.X, msg.Y
-			// Adjust for chat area position
+			// 调整聊天区域位置
 			x -= m.layout.main.Min.X
 			y -= m.layout.main.Min.Y
 			if m.chat.HandleMouseUp(x, y) && m.chat.HasHighlight() {
@@ -649,13 +648,13 @@ func (m *UI) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 	case tea.MouseWheelMsg:
-		// Pass mouse events to dialogs first if any are open.
+		// 如果打开了对话框，首先将鼠标事件传递给对话框
 		if m.dialog.HasDialogs() {
 			m.dialog.Update(msg)
 			return m, tea.Batch(cmds...)
 		}
 
-		// Otherwise handle mouse wheel for chat.
+		// 否则为聊天处理鼠标滚轮
 		switch m.state {
 		case uiChat:
 			switch msg.Button {
@@ -689,7 +688,7 @@ func (m *UI) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	case spinner.TickMsg:
 		if m.dialog.HasDialogs() {
-			// route to dialog
+			// 路由到对话框
 			if cmd := m.handleDialogMsg(msg); cmd != nil {
 				cmds = append(cmds, cmd)
 			}
@@ -734,7 +733,7 @@ func (m *UI) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	case uv.KittyGraphicsEvent:
 		if !bytes.HasPrefix(msg.Payload, []byte("OK")) {
-			slog.Warn("Unexpected Kitty graphics response",
+			slog.Warn("意外的Kitty图形响应",
 				"response", string(msg.Payload),
 				"options", msg.Options)
 		}
@@ -746,31 +745,30 @@ func (m *UI) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
-	// This logic gets triggered on any message type, but should it?
+	// 此逻辑在任何消息类型上触发，但应该触发吗？
 	switch m.focus {
 	case uiFocusMain:
 	case uiFocusEditor:
-		// Textarea placeholder logic
+		// 文本区域占位符逻辑
 		if m.isAgentBusy() {
 			m.textarea.Placeholder = m.workingPlaceholder
 		} else {
 			m.textarea.Placeholder = m.readyPlaceholder
 		}
 		if m.com.App.Permissions.SkipRequests() {
-			m.textarea.Placeholder = "Yolo mode!"
+			m.textarea.Placeholder = "Yolo模式！"
 		}
 	}
 
-	// at this point this can only handle [message.Attachment] message, and we
-	// should return all cmds anyway.
+	// 此时这只能处理 [message.Attachment] 消息，我们应该返回所有命令
 	_ = m.attachments.Update(msg)
 	return m, tea.Batch(cmds...)
 }
 
-// setSessionMessages sets the messages for the current session in the chat
+// setSessionMessages 为当前会话的聊天设置消息
 func (m *UI) setSessionMessages(msgs []message.Message) tea.Cmd {
 	var cmds []tea.Cmd
-	// Build tool result map to link tool calls with their results
+	// 构建工具结果映射以链接工具调用及其结果
 	msgPtrs := make([]*message.Message, len(msgs))
 	for i := range msgs {
 		msgPtrs[i] = &msgs[i]
@@ -780,7 +778,7 @@ func (m *UI) setSessionMessages(msgs []message.Message) tea.Cmd {
 		m.lastUserMessageTime = msgPtrs[0].CreatedAt
 	}
 
-	// Add messages to chat with linked tool results
+	// 添加消息到聊天，并链接工具结果
 	items := make([]chat.MessageItem, 0, len(msgs)*2)
 	for _, msg := range msgPtrs {
 		switch msg.Role {
@@ -798,11 +796,10 @@ func (m *UI) setSessionMessages(msgs []message.Message) tea.Cmd {
 		}
 	}
 
-	// Load nested tool calls for agent/agentic_fetch tools.
+	// 为智能体/agentic_fetch工具加载嵌套工具调用
 	m.loadNestedToolCalls(items)
 
-	// If the user switches between sessions while the agent is working we want
-	// to make sure the animations are shown.
+	// 如果用户在智能体工作时切换会话，我们要确保显示动画
 	for _, item := range items {
 		if animatable, ok := item.(chat.Animatable); ok {
 			if cmd := animatable.StartAnimation(); cmd != nil {
@@ -819,7 +816,7 @@ func (m *UI) setSessionMessages(msgs []message.Message) tea.Cmd {
 	return tea.Batch(cmds...)
 }
 
-// loadNestedToolCalls recursively loads nested tool calls for agent/agentic_fetch tools.
+// loadNestedToolCalls 递归加载智能体/agentic_fetch工具的嵌套工具调用
 func (m *UI) loadNestedToolCalls(items []chat.MessageItem) {
 	for _, item := range items {
 		nestedContainer, ok := item.(chat.NestedToolContainer)
@@ -834,29 +831,29 @@ func (m *UI) loadNestedToolCalls(items []chat.MessageItem) {
 		tc := toolItem.ToolCall()
 		messageID := toolItem.MessageID()
 
-		// Get the agent tool session ID.
+		// 获取智能体工具会话ID
 		agentSessionID := m.com.App.Sessions.CreateAgentToolSessionID(messageID, tc.ID)
 
-		// Fetch nested messages.
+		// 获取嵌套消息
 		nestedMsgs, err := m.com.App.Messages.List(context.Background(), agentSessionID)
 		if err != nil || len(nestedMsgs) == 0 {
 			continue
 		}
 
-		// Build tool result map for nested messages.
+		// 为嵌套消息构建工具结果映射
 		nestedMsgPtrs := make([]*message.Message, len(nestedMsgs))
 		for i := range nestedMsgs {
 			nestedMsgPtrs[i] = &nestedMsgs[i]
 		}
 		nestedToolResultMap := chat.BuildToolResultMap(nestedMsgPtrs)
 
-		// Extract nested tool items.
+		// 提取嵌套工具项
 		var nestedTools []chat.ToolMessageItem
 		for _, nestedMsg := range nestedMsgPtrs {
 			nestedItems := chat.ExtractMessageItems(m.com.Styles, nestedMsg, nestedToolResultMap)
 			for _, nestedItem := range nestedItems {
 				if nestedToolItem, ok := nestedItem.(chat.ToolMessageItem); ok {
-					// Mark nested tools as simple (compact) rendering.
+					// 将嵌套工具标记为简单（紧凑）渲染
 					if simplifiable, ok := nestedToolItem.(chat.Compactable); ok {
 						simplifiable.SetCompact(true)
 					}
@@ -865,27 +862,27 @@ func (m *UI) loadNestedToolCalls(items []chat.MessageItem) {
 			}
 		}
 
-		// Recursively load nested tool calls for any agent tools within.
+		// 递归加载任何智能体工具内的嵌套工具调用
 		nestedMessageItems := make([]chat.MessageItem, len(nestedTools))
 		for i, nt := range nestedTools {
 			nestedMessageItems[i] = nt
 		}
 		m.loadNestedToolCalls(nestedMessageItems)
 
-		// Set nested tools on the parent.
+		// 在父项上设置嵌套工具
 		nestedContainer.SetNestedTools(nestedTools)
 	}
 }
 
-// appendSessionMessage appends a new message to the current session in the chat
-// if the message is a tool result it will update the corresponding tool call message
+// appendSessionMessage 将新消息追加到当前会话的聊天中
+// 如果消息是工具结果，它将更新相应的工具调用消息
 func (m *UI) appendSessionMessage(msg message.Message) tea.Cmd {
 	var cmds []tea.Cmd
 	atBottom := m.chat.list.AtBottom()
 
 	existing := m.chat.MessageItem(msg.ID)
 	if existing != nil {
-		// message already exists, skip
+		// 消息已存在，跳过
 		return nil
 	}
 
@@ -932,7 +929,7 @@ func (m *UI) appendSessionMessage(msg message.Message) tea.Cmd {
 		for _, tr := range msg.ToolResults() {
 			toolItem := m.chat.MessageItem(tr.ToolCallID)
 			if toolItem == nil {
-				// we should have an item!
+				// 我们应该有一个项！
 				continue
 			}
 			if toolMsgItem, ok := toolItem.(chat.ToolMessageItem); ok {
@@ -966,9 +963,9 @@ func (m *UI) handleClickFocus(msg tea.MouseClickMsg) (cmd tea.Cmd) {
 	return cmd
 }
 
-// updateSessionMessage updates an existing message in the current session in the chat
-// when an assistant message is updated it may include updated tool calls as well
-// that is why we need to handle creating/updating each tool call message too
+// updateSessionMessage 更新当前会话聊天中的现有消息
+// 当助手消息更新时，它可能还包括更新的工具调用
+// 这就是为什么我们需要处理创建/更新每个工具调用消息
 func (m *UI) updateSessionMessage(msg message.Message) tea.Cmd {
 	var cmds []tea.Cmd
 	existingItem := m.chat.MessageItem(msg.ID)
@@ -981,7 +978,7 @@ func (m *UI) updateSessionMessage(msg message.Message) tea.Cmd {
 	}
 
 	shouldRenderAssistant := chat.ShouldRenderAssistantMessage(&msg)
-	// if the message of the assistant does not have any  response just tool calls we need to remove it
+	// 如果助手消息没有任何响应，只有工具调用，我们需要删除它
 	if !shouldRenderAssistant && len(msg.ToolCalls()) > 0 && existingItem != nil {
 		m.chat.RemoveMessage(msg.ID)
 		if infoItem := m.chat.MessageItem(chat.AssistantInfoID(msg.ID)); infoItem != nil {
@@ -1001,8 +998,8 @@ func (m *UI) updateSessionMessage(msg message.Message) tea.Cmd {
 		existingToolItem := m.chat.MessageItem(tc.ID)
 		if toolItem, ok := existingToolItem.(chat.ToolMessageItem); ok {
 			existingToolCall := toolItem.ToolCall()
-			// only update if finished state changed or input changed
-			// to avoid clearing the cache
+			// 仅在完成状态更改或输入更改时更新
+			// 以避免清除缓存
 			if (tc.Finished && !existingToolCall.Finished) || tc.Input != existingToolCall.Input {
 				toolItem.SetToolCall(tc)
 			}
@@ -1030,24 +1027,24 @@ func (m *UI) updateSessionMessage(msg message.Message) tea.Cmd {
 	return tea.Batch(cmds...)
 }
 
-// handleChildSessionMessage handles messages from child sessions (agent tools).
+// handleChildSessionMessage 处理来自子会话（智能体工具）的消息
 func (m *UI) handleChildSessionMessage(event pubsub.Event[message.Message]) tea.Cmd {
 	var cmds []tea.Cmd
 
 	atBottom := m.chat.list.AtBottom()
-	// Only process messages with tool calls or results.
+	// 仅处理具有工具调用或结果的消息
 	if len(event.Payload.ToolCalls()) == 0 && len(event.Payload.ToolResults()) == 0 {
 		return nil
 	}
 
-	// Check if this is an agent tool session and parse it.
+	// 检查这是否是智能体工具会话并解析它
 	childSessionID := event.Payload.SessionID
 	_, toolCallID, ok := m.com.App.Sessions.ParseAgentToolSessionID(childSessionID)
 	if !ok {
 		return nil
 	}
 
-	// Find the parent agent tool item.
+	// 查找父智能体工具项
 	var agentItem chat.NestedToolContainer
 	for i := 0; i < m.chat.Len(); i++ {
 		item := m.chat.MessageItem(toolCallID)
@@ -1057,8 +1054,8 @@ func (m *UI) handleChildSessionMessage(event pubsub.Event[message.Message]) tea.
 		if agent, ok := item.(chat.NestedToolContainer); ok {
 			if toolMessageItem, ok := item.(chat.ToolMessageItem); ok {
 				if toolMessageItem.ToolCall().ID == toolCallID {
-					// Verify this agent belongs to the correct parent message.
-					// We can't directly check parentMessageID on the item, so we trust the session parsing.
+					// 验证此智能体属于正确的父消息
+					// 我们无法直接检查项上的parentMessageID，所以我们信任会话解析
 					agentItem = agent
 					break
 				}
@@ -1070,10 +1067,10 @@ func (m *UI) handleChildSessionMessage(event pubsub.Event[message.Message]) tea.
 		return nil
 	}
 
-	// Get existing nested tools.
+	// 获取现有的嵌套工具
 	nestedTools := agentItem.NestedTools()
 
-	// Update or create nested tool calls.
+	// 更新或创建嵌套工具调用
 	for _, tc := range event.Payload.ToolCalls() {
 		found := false
 		for _, existingTool := range nestedTools {
@@ -1084,7 +1081,7 @@ func (m *UI) handleChildSessionMessage(event pubsub.Event[message.Message]) tea.
 			}
 		}
 		if !found {
-			// Create a new nested tool item.
+			// 创建新的嵌套工具项
 			nestedItem := chat.NewToolMessageItem(m.com.Styles, event.Payload.ID, tc, nil, false)
 			if simplifiable, ok := nestedItem.(chat.Compactable); ok {
 				simplifiable.SetCompact(true)
@@ -1098,7 +1095,7 @@ func (m *UI) handleChildSessionMessage(event pubsub.Event[message.Message]) tea.
 		}
 	}
 
-	// Update nested tool results.
+	// 更新嵌套工具结果
 	for _, tr := range event.Payload.ToolResults() {
 		for _, nestedTool := range nestedTools {
 			if nestedTool.ToolCall().ID == tr.ToolCallID {
@@ -1108,10 +1105,10 @@ func (m *UI) handleChildSessionMessage(event pubsub.Event[message.Message]) tea.
 		}
 	}
 
-	// Update the agent item with the new nested tools.
+	// 使用新的嵌套工具更新智能体项
 	agentItem.SetNestedTools(nestedTools)
 
-	// Update the chat so it updates the index map for animations to work as expected
+	// 更新聊天，以便它更新索引映射以使动画按预期工作
 	m.chat.UpdateNestedToolIDs(toolCallID)
 
 	if atBottom {
@@ -1133,7 +1130,7 @@ func (m *UI) handleDialogMsg(msg tea.Msg) tea.Cmd {
 	isOnboarding := m.state == uiOnboarding
 
 	switch msg := action.(type) {
-	// Generic dialog messages
+	// 通用对话框消息
 	case dialog.ActionClose:
 		if isOnboarding && m.dialog.ContainsDialog(dialog.ModelsID) {
 			break
@@ -1159,19 +1156,19 @@ func (m *UI) handleDialogMsg(msg tea.Msg) tea.Cmd {
 			cmds = append(cmds, msg.Cmd)
 		}
 
-	// Session dialog messages
+	// 会话对话框消息
 	case dialog.ActionSelectSession:
 		m.dialog.CloseDialog(dialog.SessionsID)
 		cmds = append(cmds, m.loadSession(msg.Session.ID))
 
-	// Open dialog message
+	// 打开对话框消息
 	case dialog.ActionOpenDialog:
 		m.dialog.CloseDialog(dialog.CommandsID)
 		if cmd := m.openDialog(msg.DialogID); cmd != nil {
 			cmds = append(cmds, cmd)
 		}
 
-	// Command dialog messages
+	// 命令对话框消息
 	case dialog.ActionToggleYoloMode:
 		yolo := !m.com.App.Permissions.SkipRequests()
 		m.com.App.Permissions.SetSkipRequests(yolo)
@@ -1179,7 +1176,7 @@ func (m *UI) handleDialogMsg(msg tea.Msg) tea.Cmd {
 		m.dialog.CloseDialog(dialog.CommandsID)
 	case dialog.ActionNewSession:
 		if m.isAgentBusy() {
-			cmds = append(cmds, util.ReportWarn("Agent is busy, please wait before starting a new session..."))
+			cmds = append(cmds, util.ReportWarn("智能体忙碌，请等待后再开始新会话..."))
 			break
 		}
 		if cmd := m.newSession(); cmd != nil {
@@ -1188,7 +1185,7 @@ func (m *UI) handleDialogMsg(msg tea.Msg) tea.Cmd {
 		m.dialog.CloseDialog(dialog.CommandsID)
 	case dialog.ActionSummarize:
 		if m.isAgentBusy() {
-			cmds = append(cmds, util.ReportWarn("Agent is busy, please wait before summarizing session..."))
+			cmds = append(cmds, util.ReportWarn("智能体忙碌，请等待后再总结会话..."))
 			break
 		}
 		cmds = append(cmds, func() tea.Msg {
@@ -1204,7 +1201,7 @@ func (m *UI) handleDialogMsg(msg tea.Msg) tea.Cmd {
 		m.dialog.CloseDialog(dialog.CommandsID)
 	case dialog.ActionExternalEditor:
 		if m.isAgentBusy() {
-			cmds = append(cmds, util.ReportWarn("Agent is working, please wait..."))
+			cmds = append(cmds, util.ReportWarn("智能体正在工作，请等待..."))
 			break
 		}
 		cmds = append(cmds, m.openEditor(m.textarea.Value()))
@@ -1216,12 +1213,12 @@ func (m *UI) handleDialogMsg(msg tea.Msg) tea.Cmd {
 		cmds = append(cmds, func() tea.Msg {
 			cfg := m.com.Config()
 			if cfg == nil {
-				return util.ReportError(errors.New("configuration not found"))()
+				return util.ReportError(errors.New("未找到配置"))()
 			}
 
 			agentCfg, ok := cfg.Agents[config.AgentCoder]
 			if !ok {
-				return util.ReportError(errors.New("agent configuration not found"))()
+				return util.ReportError(errors.New("未找到智能体配置"))()
 			}
 
 			currentModel := cfg.Models[agentCfg.Model]
@@ -1234,14 +1231,14 @@ func (m *UI) handleDialogMsg(msg tea.Msg) tea.Cmd {
 			if currentModel.Think {
 				status = "enabled"
 			}
-			return util.NewInfoMsg("Thinking mode " + status)
+			return util.NewInfoMsg("思考模式 " + status)
 		})
 		m.dialog.CloseDialog(dialog.CommandsID)
 	case dialog.ActionQuit:
 		cmds = append(cmds, tea.Quit)
 	case dialog.ActionInitializeProject:
 		if m.isAgentBusy() {
-			cmds = append(cmds, util.ReportWarn("Agent is busy, please wait before summarizing session..."))
+			cmds = append(cmds, util.ReportWarn("智能体忙碌，请等待后再总结会话..."))
 			break
 		}
 		cmds = append(cmds, m.initializeProject())
@@ -1249,13 +1246,13 @@ func (m *UI) handleDialogMsg(msg tea.Msg) tea.Cmd {
 
 	case dialog.ActionSelectModel:
 		if m.isAgentBusy() {
-			cmds = append(cmds, util.ReportWarn("Agent is busy, please wait..."))
+			cmds = append(cmds, util.ReportWarn("智能体忙碌，请等待..."))
 			break
 		}
 
 		cfg := m.com.Config()
 		if cfg == nil {
-			cmds = append(cmds, util.ReportError(errors.New("configuration not found")))
+			cmds = append(cmds, util.ReportError(errors.New("未找到配置")))
 			break
 		}
 
@@ -1265,7 +1262,7 @@ func (m *UI) handleDialogMsg(msg tea.Msg) tea.Cmd {
 			isConfigured = func() bool { _, ok := cfg.Providers.Get(providerID); return ok }
 		)
 
-		// Attempt to import GitHub Copilot tokens from VSCode if available.
+		// 如果可用，尝试从VSCode导入GitHub Copilot令牌
 		if isCopilot && !isConfigured() && !msg.ReAuthenticate {
 			m.com.Config().ImportCopilot()
 		}
@@ -1281,7 +1278,7 @@ func (m *UI) handleDialogMsg(msg tea.Msg) tea.Cmd {
 		if err := cfg.UpdatePreferredModel(msg.ModelType, msg.Model); err != nil {
 			cmds = append(cmds, util.ReportError(err))
 		} else if _, ok := cfg.Models[config.SelectedModelTypeSmall]; !ok {
-			// Ensure small model is set is unset.
+			// 确保小模型已设置
 			smallModel := m.com.App.GetDefaultSmallModel(providerID)
 			if err := cfg.UpdatePreferredModel(config.SelectedModelTypeSmall, smallModel); err != nil {
 				cmds = append(cmds, util.ReportError(err))
@@ -1293,7 +1290,7 @@ func (m *UI) handleDialogMsg(msg tea.Msg) tea.Cmd {
 				return util.ReportError(err)
 			}
 
-			modelMsg := fmt.Sprintf("%s model changed to %s", msg.ModelType, msg.Model.Model)
+			modelMsg := fmt.Sprintf("%s 模型已更改为 %s", msg.ModelType, msg.Model.Model)
 
 			return util.NewInfoMsg(modelMsg)
 		})
@@ -1311,19 +1308,19 @@ func (m *UI) handleDialogMsg(msg tea.Msg) tea.Cmd {
 		}
 	case dialog.ActionSelectReasoningEffort:
 		if m.isAgentBusy() {
-			cmds = append(cmds, util.ReportWarn("Agent is busy, please wait..."))
+			cmds = append(cmds, util.ReportWarn("智能体忙碌，请等待..."))
 			break
 		}
 
 		cfg := m.com.Config()
 		if cfg == nil {
-			cmds = append(cmds, util.ReportError(errors.New("configuration not found")))
+			cmds = append(cmds, util.ReportError(errors.New("未找到配置")))
 			break
 		}
 
 		agentCfg, ok := cfg.Agents[config.AgentCoder]
 		if !ok {
-			cmds = append(cmds, util.ReportError(errors.New("agent configuration not found")))
+			cmds = append(cmds, util.ReportError(errors.New("未找到智能体配置")))
 			break
 		}
 
@@ -1336,7 +1333,7 @@ func (m *UI) handleDialogMsg(msg tea.Msg) tea.Cmd {
 
 		cmds = append(cmds, func() tea.Msg {
 			m.com.App.UpdateAgentModel(context.TODO())
-			return util.NewInfoMsg("Reasoning effort set to " + msg.Effort)
+			return util.NewInfoMsg("推理努力设置为 " + msg.Effort)
 		})
 		m.dialog.CloseDialog(dialog.ReasoningID)
 	case dialog.ActionPermissionResponse:
@@ -1368,10 +1365,10 @@ func (m *UI) handleDialogMsg(msg tea.Msg) tea.Cmd {
 			m.dialog.CloseFrontDialog()
 			argsDialog := dialog.NewArguments(
 				m.com,
-				"Custom Command Arguments",
+				"自定义命令参数",
 				"",
 				msg.Arguments,
-				msg, // Pass the action as the result
+				msg, // 将操作作为结果传递
 			)
 			m.dialog.OpenDialog(argsDialog)
 			break
@@ -1387,14 +1384,14 @@ func (m *UI) handleDialogMsg(msg tea.Msg) tea.Cmd {
 			m.dialog.CloseFrontDialog()
 			title := msg.Title
 			if title == "" {
-				title = "MCP Prompt Arguments"
+				title = "MCP提示参数"
 			}
 			argsDialog := dialog.NewArguments(
 				m.com,
 				title,
 				msg.Description,
 				msg.Arguments,
-				msg, // Pass the action as the result
+				msg, // 将操作作为结果传递
 			)
 			m.dialog.OpenDialog(argsDialog)
 			break
@@ -1407,7 +1404,7 @@ func (m *UI) handleDialogMsg(msg tea.Msg) tea.Cmd {
 	return tea.Batch(cmds...)
 }
 
-// substituteArgs replaces $ARG_NAME placeholders in content with actual values.
+// substituteArgs 用实际值替换内容中的$ARG_NAME占位符
 func substituteArgs(content string, args map[string]string) string {
 	for name, value := range args {
 		placeholder := "$" + name
@@ -1493,7 +1490,7 @@ func (m *UI) handleKeyPressMsg(msg tea.KeyPressMsg) tea.Cmd {
 			}
 		case key.Matches(msg, m.keyMap.Suspend):
 			if m.isAgentBusy() {
-				cmds = append(cmds, util.ReportWarn("Agent is busy, please wait..."))
+				cmds = append(cmds, util.ReportWarn("智能体忙碌，请等待..."))
 				return true
 			}
 			cmds = append(cmds, tea.Suspend)
@@ -1503,7 +1500,7 @@ func (m *UI) handleKeyPressMsg(msg tea.KeyPressMsg) tea.Cmd {
 	}
 
 	if key.Matches(msg, m.keyMap.Quit) && !m.dialog.ContainsDialog(dialog.QuitID) {
-		// Always handle quit keys first
+		// 始终先处理退出键
 		if cmd := m.openQuitDialog(); cmd != nil {
 			cmds = append(cmds, cmd)
 		}
@@ -1511,12 +1508,12 @@ func (m *UI) handleKeyPressMsg(msg tea.KeyPressMsg) tea.Cmd {
 		return tea.Batch(cmds...)
 	}
 
-	// Route all messages to dialog if one is open.
+	// 如果对话框打开，将所有消息路由到对话框
 	if m.dialog.HasDialogs() {
 		return m.handleDialogMsg(msg)
 	}
 
-	// Handle cancel key when agent is busy.
+	// 当智能体忙碌时处理取消键
 	if key.Matches(msg, m.keyMap.Chat.Cancel) {
 		if m.isAgentBusy() {
 			if cmd := m.cancelAgent(); cmd != nil {
@@ -1535,7 +1532,7 @@ func (m *UI) handleKeyPressMsg(msg tea.KeyPressMsg) tea.Cmd {
 	case uiChat, uiLanding:
 		switch m.focus {
 		case uiFocusEditor:
-			// Handle completions if open.
+			// 如果自动完成打开，则处理
 			if m.completionsOpen {
 				if msg, ok := m.completions.Update(msg); ok {
 					switch msg := msg.(type) {
@@ -1572,12 +1569,12 @@ func (m *UI) handleKeyPressMsg(msg tea.KeyPressMsg) tea.Cmd {
 			case key.Matches(msg, m.keyMap.Editor.SendMessage):
 				value := m.textarea.Value()
 				if before, ok := strings.CutSuffix(value, "\\"); ok {
-					// If the last character is a backslash, remove it and add a newline.
+					// 如果最后一个字符是反斜杠，则删除它并添加换行符
 					m.textarea.SetValue(before)
 					break
 				}
 
-				// Otherwise, send the message
+				// 否则，发送消息
 				m.textarea.Reset()
 
 				value = strings.TrimSpace(value)
@@ -1600,7 +1597,7 @@ func (m *UI) handleKeyPressMsg(msg tea.KeyPressMsg) tea.Cmd {
 					break
 				}
 				if m.isAgentBusy() {
-					cmds = append(cmds, util.ReportWarn("Agent is busy, please wait before starting a new session..."))
+					cmds = append(cmds, util.ReportWarn("智能体忙碌，请等待后再开始新会话..."))
 					break
 				}
 				if cmd := m.newSession(); cmd != nil {
@@ -1615,7 +1612,7 @@ func (m *UI) handleKeyPressMsg(msg tea.KeyPressMsg) tea.Cmd {
 				}
 			case key.Matches(msg, m.keyMap.Editor.OpenEditor):
 				if m.isAgentBusy() {
-					cmds = append(cmds, util.ReportWarn("Agent is working, please wait..."))
+					cmds = append(cmds, util.ReportWarn("智能体正在工作，请等待..."))
 					break
 				}
 				cmds = append(cmds, m.openEditor(m.textarea.Value()))
@@ -1646,17 +1643,17 @@ func (m *UI) handleKeyPressMsg(msg tea.KeyPressMsg) tea.Cmd {
 				}
 			default:
 				if handleGlobalKeys(msg) {
-					// Handle global keys first before passing to textarea.
+					// 在传递给文本区域之前先处理全局键
 					break
 				}
 
-				// Check for @ trigger before passing to textarea.
+				// 在传递给文本区域之前检查@触发器
 				curValue := m.textarea.Value()
 				curIdx := len(curValue)
 
-				// Trigger completions on @.
+				// 在@上触发自动完成
 				if msg.String() == "@" && !m.completionsOpen {
-					// Only show if beginning of prompt or after whitespace.
+					// 仅在提示开头或空白字符之后显示
 					if curIdx == 0 || (curIdx > 0 && isWhitespace(curValue[curIdx-1])) {
 						m.completionsOpen = true
 						m.completionsQuery = ""
@@ -1667,7 +1664,7 @@ func (m *UI) handleKeyPressMsg(msg tea.KeyPressMsg) tea.Cmd {
 					}
 				}
 
-				// remove the details if they are open when user starts typing
+				// 如果用户开始输入时详情打开，则移除详情
 				if m.detailsOpen {
 					m.detailsOpen = false
 					m.updateLayoutAndSize()
@@ -1677,23 +1674,23 @@ func (m *UI) handleKeyPressMsg(msg tea.KeyPressMsg) tea.Cmd {
 				m.textarea = ta
 				cmds = append(cmds, cmd)
 
-				// Any text modification becomes the current draft.
+				// 任何文本修改都成为当前草稿
 				m.updateHistoryDraft(curValue)
 
-				// After updating textarea, check if we need to filter completions.
-				// Skip filtering on the initial @ keystroke since items are loading async.
+				// 更新文本区域后，检查是否需要过滤自动完成
+				// 跳过初始@按键的过滤，因为项目正在异步加载
 				if m.completionsOpen && msg.String() != "@" {
 					newValue := m.textarea.Value()
 					newIdx := len(newValue)
 
-					// Close completions if cursor moved before start.
+					// 如果光标在开始之前移动，则关闭自动完成
 					if newIdx <= m.completionsStartIndex {
 						m.closeCompletions()
 					} else if msg.String() == "space" {
-						// Close on space.
+						// 在空格时关闭
 						m.closeCompletions()
 					} else {
-						// Extract current word and filter.
+						// 提取当前单词并过滤
 						word := m.textareaWord()
 						if strings.HasPrefix(word, "@") {
 							m.completionsQuery = word[1:]
@@ -1715,7 +1712,7 @@ func (m *UI) handleKeyPressMsg(msg tea.KeyPressMsg) tea.Cmd {
 					break
 				}
 				if m.isAgentBusy() {
-					cmds = append(cmds, util.ReportWarn("Agent is busy, please wait before starting a new session..."))
+					cmds = append(cmds, util.ReportWarn("智能体忙碌，请等待后再开始新会话..."))
 					break
 				}
 				m.focus = uiFocusEditor
@@ -1801,7 +1798,7 @@ func (m *UI) handleKeyPressMsg(msg tea.KeyPressMsg) tea.Cmd {
 	return tea.Batch(cmds...)
 }
 
-// drawHeader draws the header section of the UI.
+// drawHeader 绘制UI的头部区域
 func (m *UI) drawHeader(scr uv.Screen, area uv.Rectangle) {
 	m.header.drawHeader(
 		scr,
@@ -1813,7 +1810,7 @@ func (m *UI) drawHeader(scr uv.Screen, area uv.Rectangle) {
 	)
 }
 
-// Draw implements [uv.Drawable] and draws the UI model.
+// Draw 实现 [uv.Drawable] 并绘制UI模型
 func (m *UI) Draw(scr uv.Screen, area uv.Rectangle) *tea.Cursor {
 	layout := m.generateLayout(area.Dx(), area.Dy())
 
@@ -1822,15 +1819,15 @@ func (m *UI) Draw(scr uv.Screen, area uv.Rectangle) *tea.Cursor {
 		m.updateSize()
 	}
 
-	// Clear the screen first
+	// 首先清除屏幕
 	screen.Clear(scr)
 
 	switch m.state {
 	case uiOnboarding:
 		m.drawHeader(scr, layout.header)
 
-		// NOTE: Onboarding flow will be rendered as dialogs below, but
-		// positioned at the bottom left of the screen.
+		// 注意：引导流程将在下面作为对话框渲染，
+		// 但位于屏幕的左下角
 
 	case uiInitialize:
 		m.drawHeader(scr, layout.header)
@@ -1865,7 +1862,7 @@ func (m *UI) Draw(scr uv.Screen, area uv.Rectangle) *tea.Cursor {
 		editor := uv.NewStyledString(m.renderEditorView(editorWidth))
 		editor.Draw(scr, layout.editor)
 
-		// Draw details overlay in compact mode when open
+		// 在紧凑模式下打开时绘制详情覆盖层
 		if m.isCompact && m.detailsOpen {
 			m.drawSessionDetails(scr, layout.sessionDetails)
 		}
@@ -1873,11 +1870,11 @@ func (m *UI) Draw(scr uv.Screen, area uv.Rectangle) *tea.Cursor {
 
 	isOnboarding := m.state == uiOnboarding
 
-	// Add status and help layer
+	// 添加状态和帮助层
 	m.status.SetHideHelp(isOnboarding)
 	m.status.Draw(scr, layout.status)
 
-	// Draw completions popup if open
+	// 如果打开，绘制自动完成弹出窗口
 	if !isOnboarding && m.completionsOpen && m.completions.HasItems() {
 		w, h := m.completions.Size()
 		x := m.completionsPositionStart.X
@@ -1897,7 +1894,7 @@ func (m *UI) Draw(scr uv.Screen, area uv.Rectangle) *tea.Cursor {
 		})
 	}
 
-	// Debugging rendering (visually see when the tui rerenders)
+	// 调试渲染（视觉上查看tui何时重新渲染）
 	if os.Getenv("CRUSH_UI_DEBUG") == "true" {
 		debugView := lipgloss.NewStyle().Background(lipgloss.ANSIColor(rand.Intn(256))).Width(4).Height(2)
 		debug := uv.NewStyledString(debugView.String())
@@ -1907,9 +1904,8 @@ func (m *UI) Draw(scr uv.Screen, area uv.Rectangle) *tea.Cursor {
 		})
 	}
 
-	// This needs to come last to overlay on top of everything. We always pass
-	// the full screen bounds because the dialogs will position themselves
-	// accordingly.
+	// 这需要放在最后以覆盖在所有内容之上。我们始终传递
+	// 完整的屏幕边界，因为对话框会相应地定位自己
 	if m.dialog.HasDialogs() {
 		return m.dialog.Draw(scr, scr.Bounds())
 	}
@@ -1917,19 +1913,19 @@ func (m *UI) Draw(scr uv.Screen, area uv.Rectangle) *tea.Cursor {
 	switch m.focus {
 	case uiFocusEditor:
 		if m.layout.editor.Dy() <= 0 {
-			// Don't show cursor if editor is not visible
+			// 如果编辑器不可见，不显示光标
 			return nil
 		}
 		if m.detailsOpen && m.isCompact {
-			// Don't show cursor if details overlay is open
+			// 如果详情覆盖层打开，不显示光标
 			return nil
 		}
 
 		if m.textarea.Focused() {
 			cur := m.textarea.Cursor()
-			cur.X++ // Adjust for app margins
+			cur.X++ // 调整应用程序边距
 			cur.Y += m.layout.editor.Min.Y
-			// Offset for attachment row if present.
+			// 如果存在附件行，则偏移
 			if len(m.attachments.List()) > 0 {
 				cur.Y++
 			}
@@ -1939,7 +1935,7 @@ func (m *UI) Draw(scr uv.Screen, area uv.Rectangle) *tea.Cursor {
 	return nil
 }
 
-// View renders the UI model's view.
+// View 渲染UI模型的视图
 func (m *UI) View() tea.View {
 	var v tea.View
 	v.AltScreen = true
@@ -1952,10 +1948,10 @@ func (m *UI) View() tea.View {
 	canvas := uv.NewScreenBuffer(m.width, m.height)
 	v.Cursor = m.Draw(canvas, canvas.Bounds())
 
-	content := strings.ReplaceAll(canvas.Render(), "\r\n", "\n") // normalize newlines
+	content := strings.ReplaceAll(canvas.Render(), "\r\n", "\n") // 规范化换行符
 	contentLines := strings.Split(content, "\n")
 	for i, line := range contentLines {
-		// Trim trailing spaces for concise rendering
+		// 去除尾随空格以简洁渲染
 		contentLines[i] = strings.TrimRight(line, " ")
 	}
 
@@ -1963,43 +1959,42 @@ func (m *UI) View() tea.View {
 
 	v.Content = content
 	if m.progressBarEnabled && m.sendProgressBar && m.isAgentBusy() {
-		// HACK: use a random percentage to prevent ghostty from hiding it
-		// after a timeout.
+		// HACK: 使用随机百分比以防止ghostty在超时后隐藏它
 		v.ProgressBar = tea.NewProgressBar(tea.ProgressBarIndeterminate, rand.Intn(100))
 	}
 
 	return v
 }
 
-// ShortHelp implements [help.KeyMap].
+// ShortHelp 实现 [help.KeyMap]
 func (m *UI) ShortHelp() []key.Binding {
 	var binds []key.Binding
 	k := &m.keyMap
 	tab := k.Tab
 	commands := k.Commands
 	if m.focus == uiFocusEditor && m.textarea.Value() == "" {
-		commands.SetHelp("/ or ctrl+p", "commands")
+		commands.SetHelp("/ or ctrl+p", "命令")
 	}
 
 	switch m.state {
 	case uiInitialize:
 		binds = append(binds, k.Quit)
 	case uiChat:
-		// Show cancel binding if agent is busy.
+		// 如果智能体忙碌，显示取消绑定
 		if m.isAgentBusy() {
 			cancelBinding := k.Chat.Cancel
 			if m.isCanceling {
-				cancelBinding.SetHelp("esc", "press again to cancel")
+				cancelBinding.SetHelp("esc", "再次按下取消")
 			} else if m.com.App.AgentCoordinator.QueuedPrompts(m.session.ID) > 0 {
-				cancelBinding.SetHelp("esc", "clear queue")
+				cancelBinding.SetHelp("esc", "清除队列")
 			}
 			binds = append(binds, cancelBinding)
 		}
 
 		if m.focus == uiFocusEditor {
-			tab.SetHelp("tab", "focus chat")
+			tab.SetHelp("tab", "聚焦聊天")
 		} else {
-			tab.SetHelp("tab", "focus editor")
+			tab.SetHelp("tab", "聚焦编辑器")
 		}
 
 		binds = append(binds,
@@ -2026,7 +2021,7 @@ func (m *UI) ShortHelp() []key.Binding {
 			}
 		}
 	default:
-		// TODO: other states
+		// TODO: 其他状态
 		// if m.session == nil {
 		// no session selected
 		binds = append(binds,
@@ -2044,7 +2039,7 @@ func (m *UI) ShortHelp() []key.Binding {
 	return binds
 }
 
-// FullHelp implements [help.KeyMap].
+// FullHelp 实现 [help.KeyMap]
 func (m *UI) FullHelp() [][]key.Binding {
 	var binds [][]key.Binding
 	k := &m.keyMap
@@ -2054,7 +2049,7 @@ func (m *UI) FullHelp() [][]key.Binding {
 	hasSession := m.hasSession()
 	commands := k.Commands
 	if m.focus == uiFocusEditor && m.textarea.Value() == "" {
-		commands.SetHelp("/ or ctrl+p", "commands")
+		commands.SetHelp("/ or ctrl+p", "命令")
 	}
 
 	switch m.state {
@@ -2064,13 +2059,13 @@ func (m *UI) FullHelp() [][]key.Binding {
 				k.Quit,
 			})
 	case uiChat:
-		// Show cancel binding if agent is busy.
+		// 如果智能体忙碌，显示取消绑定
 		if m.isAgentBusy() {
 			cancelBinding := k.Chat.Cancel
 			if m.isCanceling {
-				cancelBinding.SetHelp("esc", "press again to cancel")
+				cancelBinding.SetHelp("esc", "再次按下取消")
 			} else if m.com.App.AgentCoordinator.QueuedPrompts(m.session.ID) > 0 {
-				cancelBinding.SetHelp("esc", "clear queue")
+				cancelBinding.SetHelp("esc", "清除队列")
 			}
 			binds = append(binds, []key.Binding{cancelBinding})
 		}
@@ -2078,9 +2073,9 @@ func (m *UI) FullHelp() [][]key.Binding {
 		mainBinds := []key.Binding{}
 		tab := k.Tab
 		if m.focus == uiFocusEditor {
-			tab.SetHelp("tab", "focus chat")
+			tab.SetHelp("tab", "聚焦聊天")
 		} else {
-			tab.SetHelp("tab", "focus editor")
+			tab.SetHelp("tab", "聚焦编辑器")
 		}
 
 		mainBinds = append(mainBinds,
@@ -2182,7 +2177,7 @@ func (m *UI) FullHelp() [][]key.Binding {
 	return binds
 }
 
-// toggleCompactMode toggles compact mode between uiChat and uiChatCompact states.
+// toggleCompactMode 在uiChat和uiChatCompact状态之间切换紧凑模式
 func (m *UI) toggleCompactMode() tea.Cmd {
 	m.forceCompactMode = !m.forceCompactMode
 
@@ -2196,9 +2191,9 @@ func (m *UI) toggleCompactMode() tea.Cmd {
 	return nil
 }
 
-// updateLayoutAndSize updates the layout and sizes of UI components.
+// updateLayoutAndSize 更新UI组件的布局和大小
 func (m *UI) updateLayoutAndSize() {
-	// Determine if we should be in compact mode
+	// 确定我们是否应该处于紧凑模式
 	if m.state == uiChat {
 		if m.forceCompactMode {
 			m.isCompact = true
@@ -2215,9 +2210,9 @@ func (m *UI) updateLayoutAndSize() {
 	m.updateSize()
 }
 
-// updateSize updates the sizes of UI components based on the current layout.
+// updateSize 根据当前布局更新UI组件的大小
 func (m *UI) updateSize() {
-	// Set status width
+	// 设置状态宽度
 	m.status.SetWidth(m.layout.status.Dx())
 
 	m.chat.SetSize(m.layout.main.Dx(), m.layout.main.Dy())
@@ -2225,7 +2220,7 @@ func (m *UI) updateSize() {
 	m.textarea.SetHeight(m.layout.editor.Dy())
 	m.renderPills()
 
-	// Handle different app states
+	// 处理不同的应用程序状态
 	switch m.state {
 	case uiChat:
 		if !m.isCompact {
@@ -2234,19 +2229,19 @@ func (m *UI) updateSize() {
 	}
 }
 
-// generateLayout calculates the layout rectangles for all UI components based
-// on the current UI state and terminal dimensions.
+// generateLayout 根据当前UI状态和终端尺寸
+// 计算所有UI组件的布局矩形
 func (m *UI) generateLayout(w, h int) uiLayout {
-	// The screen area we're working with
+	// 我们正在使用的屏幕区域
 	area := image.Rect(0, 0, w, h)
 
-	// The help height
+	// 帮助高度
 	helpHeight := 1
-	// The editor height
+	// 编辑器高度
 	editorHeight := 5
-	// The sidebar width
+	// 侧边栏宽度
 	sidebarWidth := 30
-	// The header height
+	// 头部高度
 	const landingHeaderHeight = 4
 
 	var helpKeyMap help.KeyMap = m
@@ -2256,7 +2251,7 @@ func (m *UI) generateLayout(w, h int) uiLayout {
 		}
 	}
 
-	// Add app margins
+	// 添加应用程序边距
 	appRect, helpRect := layout.SplitVertical(area, layout.Fixed(area.Dy()-helpHeight))
 	appRect.Min.Y += 1
 	appRect.Max.Y -= 1
@@ -2265,7 +2260,7 @@ func (m *UI) generateLayout(w, h int) uiLayout {
 	appRect.Max.X -= 1
 
 	if slices.Contains([]uiState{uiOnboarding, uiInitialize, uiLanding}, m.state) {
-		// extra padding on left and right for these states
+		// 为这些状态在左右两侧添加额外的填充
 		appRect.Min.X += 1
 		appRect.Max.X -= 1
 	}
@@ -2275,10 +2270,10 @@ func (m *UI) generateLayout(w, h int) uiLayout {
 		status: helpRect,
 	}
 
-	// Handle different app states
+	// 处理不同的应用程序状态
 	switch m.state {
 	case uiOnboarding, uiInitialize:
-		// Layout
+		// 布局
 		//
 		// header
 		// ------
@@ -2291,18 +2286,18 @@ func (m *UI) generateLayout(w, h int) uiLayout {
 		uiLayout.main = mainRect
 
 	case uiLanding:
-		// Layout
+		// 布局
 		//
-		// header
+		// 头部
 		// ------
-		// main
+		// 主体
 		// ------
-		// editor
+		// 编辑器
 		// ------
-		// help
+		// 帮助
 		headerRect, mainRect := layout.SplitVertical(appRect, layout.Fixed(landingHeaderHeight))
 		mainRect, editorRect := layout.SplitVertical(mainRect, layout.Fixed(mainRect.Dy()-editorHeight))
-		// Remove extra padding from editor (but keep it for header and main)
+		// 从编辑器中移除额外填充（但为头部和主体保留）
 		editorRect.Min.X -= 1
 		editorRect.Max.X += 1
 		uiLayout.header = headerRect
@@ -2311,25 +2306,25 @@ func (m *UI) generateLayout(w, h int) uiLayout {
 
 	case uiChat:
 		if m.isCompact {
-			// Layout
+			// 布局
 			//
-			// compact-header
+			// 紧凑头部
 			// ------
-			// main
+			// 主体
 			// ------
-			// editor
+			// 编辑器
 			// ------
-			// help
+			// 帮助
 			const compactHeaderHeight = 1
 			headerRect, mainRect := layout.SplitVertical(appRect, layout.Fixed(compactHeaderHeight))
-			detailsHeight := min(sessionDetailsMaxHeight, area.Dy()-1) // One row for the header
+			detailsHeight := min(sessionDetailsMaxHeight, area.Dy()-1) // 头部的一行
 			sessionDetailsArea, _ := layout.SplitVertical(appRect, layout.Fixed(detailsHeight))
 			uiLayout.sessionDetails = sessionDetailsArea
-			uiLayout.sessionDetails.Min.Y += compactHeaderHeight // adjust for header
-			// Add one line gap between header and main content
+			uiLayout.sessionDetails.Min.Y += compactHeaderHeight // 调整头部
+			// 在头部和主体内容之间添加一行间隙
 			mainRect.Min.Y += 1
 			mainRect, editorRect := layout.SplitVertical(mainRect, layout.Fixed(mainRect.Dy()-editorHeight))
-			mainRect.Max.X -= 1 // Add padding right
+			mainRect.Max.X -= 1 // 添加右侧填充
 			uiLayout.header = headerRect
 			pillsHeight := m.pillsAreaHeight()
 			if pillsHeight > 0 {
@@ -2340,24 +2335,24 @@ func (m *UI) generateLayout(w, h int) uiLayout {
 			} else {
 				uiLayout.main = mainRect
 			}
-			// Add bottom margin to main
+			// 为主体添加底部边距
 			uiLayout.main.Max.Y -= 1
 			uiLayout.editor = editorRect
 		} else {
-			// Layout
+			// 布局
 			//
 			// ------|---
-			// main  |
-			// ------| side
-			// editor|
+			// 主体  |
+			// ------| 侧边栏
+			// 编辑器|
 			// ----------
-			// help
+			// 帮助
 
 			mainRect, sideRect := layout.SplitHorizontal(appRect, layout.Fixed(appRect.Dx()-sidebarWidth))
-			// Add padding left
+			// 添加左侧填充
 			sideRect.Min.X += 1
 			mainRect, editorRect := layout.SplitVertical(mainRect, layout.Fixed(mainRect.Dy()-editorHeight))
-			mainRect.Max.X -= 1 // Add padding right
+			mainRect.Max.X -= 1 // 添加右侧填充
 			uiLayout.sidebar = sideRect
 			pillsHeight := m.pillsAreaHeight()
 			if pillsHeight > 0 {
@@ -2368,14 +2363,14 @@ func (m *UI) generateLayout(w, h int) uiLayout {
 			} else {
 				uiLayout.main = mainRect
 			}
-			// Add bottom margin to main
+			// 为主体添加底部边距
 			uiLayout.main.Max.Y -= 1
 			uiLayout.editor = editorRect
 		}
 	}
 
 	if !uiLayout.editor.Empty() {
-		// Add editor margins 1 top and bottom
+		// 添加编辑器上下边距1
 		if len(m.attachments.List()) == 0 {
 			uiLayout.editor.Min.Y += 1
 		}
@@ -2385,33 +2380,33 @@ func (m *UI) generateLayout(w, h int) uiLayout {
 	return uiLayout
 }
 
-// uiLayout defines the positioning of UI elements.
+// uiLayout 定义UI元素的定位
 type uiLayout struct {
-	// area is the overall available area.
+	// area 是整体可用区域
 	area uv.Rectangle
 
-	// header is the header shown in special cases
-	// e.x when the sidebar is collapsed
-	// or when in the landing page
-	// or in init/config
+	// header 是在特殊情况下显示的头部
+	// 例如当侧边栏折叠时
+	// 或在着陆页面时
+	// 或在初始化/配置时
 	header uv.Rectangle
 
-	// main is the area for the main pane. (e.x chat, configure, landing)
+	// main 是主面板的区域（例如聊天、配置、着陆页面）
 	main uv.Rectangle
 
-	// pills is the area for the pills panel.
+	// pills 是药丸面板的区域
 	pills uv.Rectangle
 
-	// editor is the area for the editor pane.
+	// editor 是编辑器面板的区域
 	editor uv.Rectangle
 
-	// sidebar is the area for the sidebar.
+	// sidebar 是侧边栏的区域
 	sidebar uv.Rectangle
 
-	// status is the area for the status view.
+	// status 是状态视图的区域
 	status uv.Rectangle
 
-	// session details is the area for the session details overlay in compact mode.
+	// session details 是紧凑模式下会话详情覆盖层的区域
 	sessionDetails uv.Rectangle
 }
 
@@ -2444,7 +2439,7 @@ func (m *UI) openEditor(value string) tea.Cmd {
 			return util.ReportError(err)
 		}
 		if len(content) == 0 {
-			return util.ReportWarn("Message is empty")
+			return util.ReportWarn("消息为空")
 		}
 		os.Remove(tmpfile.Name())
 		return openEditorMsg{
@@ -2453,8 +2448,7 @@ func (m *UI) openEditor(value string) tea.Cmd {
 	})
 }
 
-// setEditorPrompt configures the textarea prompt function based on whether
-// yolo mode is enabled.
+// setEditorPrompt 根据是否启用了yolo模式配置文本区域提示函数
 func (m *UI) setEditorPrompt(yolo bool) {
 	if yolo {
 		m.textarea.SetPromptFunc(4, m.yoloPromptFunc)
@@ -2463,8 +2457,8 @@ func (m *UI) setEditorPrompt(yolo bool) {
 	m.textarea.SetPromptFunc(4, m.normalPromptFunc)
 }
 
-// normalPromptFunc returns the normal editor prompt style ("  > " on first
-// line, "::: " on subsequent lines).
+// normalPromptFunc 返回正常的编辑器提示样式（第一行"  > "，
+// 后续行"::: "）
 func (m *UI) normalPromptFunc(info textarea.PromptInfo) string {
 	t := m.com.Styles
 	if info.LineNumber == 0 {
@@ -2479,8 +2473,8 @@ func (m *UI) normalPromptFunc(info textarea.PromptInfo) string {
 	return t.EditorPromptNormalBlurred.Render()
 }
 
-// yoloPromptFunc returns the yolo mode editor prompt style with warning icon
-// and colored dots.
+// yoloPromptFunc 返回yolo模式编辑器提示样式，带有警告图标
+// 和彩色点
 func (m *UI) yoloPromptFunc(info textarea.PromptInfo) string {
 	t := m.com.Styles
 	if info.LineNumber == 0 {
@@ -2496,7 +2490,7 @@ func (m *UI) yoloPromptFunc(info textarea.PromptInfo) string {
 	return t.EditorPromptYoloDotsBlurred.Render()
 }
 
-// closeCompletions closes the completions popup and resets state.
+// closeCompletions 关闭自动完成弹出窗口并重置状态
 func (m *UI) closeCompletions() {
 	m.completionsOpen = false
 	m.completionsQuery = ""
@@ -2504,8 +2498,8 @@ func (m *UI) closeCompletions() {
 	m.completions.Close()
 }
 
-// insertCompletionText replaces the @query in the textarea with the given text.
-// Returns false if the replacement cannot be performed.
+// insertCompletionText 用给定文本替换文本区域中的@query
+// 如果无法执行替换，则返回false
 func (m *UI) insertCompletionText(text string) bool {
 	value := m.textarea.Value()
 	if m.completionsStartIndex > len(value) {
@@ -2521,8 +2515,8 @@ func (m *UI) insertCompletionText(text string) bool {
 	return true
 }
 
-// insertFileCompletion inserts the selected file path into the textarea,
-// replacing the @query, and adds the file as an attachment.
+// insertFileCompletion 将选定的文件路径插入到文本区域中，
+// 替换@query，并将文件添加为附件
 func (m *UI) insertFileCompletion(path string) tea.Cmd {
 	if !m.insertCompletionText(path) {
 		return nil
@@ -2532,7 +2526,7 @@ func (m *UI) insertFileCompletion(path string) tea.Cmd {
 		absPath, _ := filepath.Abs(path)
 
 		if m.hasSession() {
-			// Skip attachment if file was already read and hasn't been modified.
+			// 如果文件已被读取且未被修改，则跳过附件
 			lastRead := m.com.App.FileTracker.LastReadTime(context.Background(), m.session.ID, absPath)
 			if !lastRead.IsZero() {
 				if info, err := os.Stat(path); err == nil && !info.ModTime().After(lastRead) {
@@ -2545,10 +2539,10 @@ func (m *UI) insertFileCompletion(path string) tea.Cmd {
 
 		m.sessionFileReads = append(m.sessionFileReads, absPath)
 
-		// Add file as attachment.
+		// 将文件添加为附件
 		content, err := os.ReadFile(path)
 		if err != nil {
-			// If it fails, let the LLM handle it later.
+			// 如果失败，让LLM稍后处理
 			return nil
 		}
 
@@ -2561,8 +2555,8 @@ func (m *UI) insertFileCompletion(path string) tea.Cmd {
 	}
 }
 
-// insertMCPResourceCompletion inserts the selected resource into the textarea,
-// replacing the @query, and adds the resource as an attachment.
+// insertMCPResourceCompletion 将选定的资源插入到文本区域中，
+// 替换@query，并将资源添加为附件
 func (m *UI) insertMCPResourceCompletion(item completions.ResourceCompletionValue) tea.Cmd {
 	displayText := item.Title
 	if displayText == "" {
@@ -2581,7 +2575,7 @@ func (m *UI) insertMCPResourceCompletion(item completions.ResourceCompletionValu
 			item.URI,
 		)
 		if err != nil {
-			slog.Warn("Failed to read MCP resource", "uri", item.URI, "error", err)
+			slog.Warn("读取MCP资源失败", "uri", item.URI, "error", err)
 			return nil
 		}
 		if len(contents) == 0 {
@@ -2616,7 +2610,7 @@ func (m *UI) insertMCPResourceCompletion(item completions.ResourceCompletionValu
 	}
 }
 
-// completionsPosition returns the X and Y position for the completions popup.
+// completionsPosition 返回自动完成弹出窗口的X和Y位置
 func (m *UI) completionsPosition() image.Point {
 	cur := m.textarea.Cursor()
 	if cur == nil {
@@ -2631,59 +2625,59 @@ func (m *UI) completionsPosition() image.Point {
 	}
 }
 
-// textareaWord returns the current word at the cursor position.
+// textareaWord 返回光标位置处的当前单词
 func (m *UI) textareaWord() string {
 	return m.textarea.Word()
 }
 
-// isWhitespace returns true if the byte is a whitespace character.
+// isWhitespace 如果字节是空白字符，则返回true
 func isWhitespace(b byte) bool {
 	return b == ' ' || b == '\t' || b == '\n' || b == '\r'
 }
 
-// isAgentBusy returns true if the agent coordinator exists and is currently
-// busy processing a request.
+// isAgentBusy 如果智能体协调器存在且当前
+// 忙于处理请求，则返回true
 func (m *UI) isAgentBusy() bool {
 	return m.com.App != nil &&
 		m.com.App.AgentCoordinator != nil &&
 		m.com.App.AgentCoordinator.IsBusy()
 }
 
-// hasSession returns true if there is an active session with a valid ID.
+// hasSession 如果存在具有有效ID的活动会话，则返回true
 func (m *UI) hasSession() bool {
 	return m.session != nil && m.session.ID != ""
 }
 
-// mimeOf detects the MIME type of the given content.
+// mimeOf 检测给定内容的MIME类型
 func mimeOf(content []byte) string {
 	mimeBufferSize := min(512, len(content))
 	return http.DetectContentType(content[:mimeBufferSize])
 }
 
 var readyPlaceholders = [...]string{
-	"Ready!",
-	"Ready...",
-	"Ready?",
-	"Ready for instructions",
+	"就绪！",
+	"就绪...",
+	"就绪？",
+	"准备接收指令",
 }
 
 var workingPlaceholders = [...]string{
-	"Working!",
-	"Working...",
+	"工作中！",
+	"工作中...",
 	"Brrrrr...",
 	"Prrrrrrrr...",
-	"Processing...",
-	"Thinking...",
+	"处理中...",
+	"思考中...",
 }
 
-// randomizePlaceholders selects random placeholder text for the textarea's
-// ready and working states.
+// randomizePlaceholders 为文本区域的就绪和工作状态
+// 选择随机占位符文本
 func (m *UI) randomizePlaceholders() {
 	m.workingPlaceholder = workingPlaceholders[rand.Intn(len(workingPlaceholders))]
 	m.readyPlaceholder = readyPlaceholders[rand.Intn(len(readyPlaceholders))]
 }
 
-// renderEditorView renders the editor view with attachments if any.
+// renderEditorView 渲染编辑器视图，如果有附件则包含附件
 func (m *UI) renderEditorView(width int) string {
 	if len(m.attachments.List()) == 0 {
 		return m.textarea.View()
@@ -2695,20 +2689,20 @@ func (m *UI) renderEditorView(width int) string {
 	)
 }
 
-// cacheSidebarLogo renders and caches the sidebar logo at the specified width.
+// cacheSidebarLogo 渲染并缓存指定宽度的侧边栏logo
 func (m *UI) cacheSidebarLogo(width int) {
 	m.sidebarLogo = renderLogo(m.com.Styles, true, width)
 }
 
-// sendMessage sends a message with the given content and attachments.
+// sendMessage 发送具有给定内容和附件的消息
 func (m *UI) sendMessage(content string, attachments ...message.Attachment) tea.Cmd {
 	if m.com.App.AgentCoordinator == nil {
-		return util.ReportError(fmt.Errorf("coder agent is not initialized"))
+		return util.ReportError(fmt.Errorf("编码器智能体未初始化"))
 	}
 
 	var cmds []tea.Cmd
 	if !m.hasSession() {
-		newSession, err := m.com.App.Sessions.Create(context.Background(), "New Session")
+		newSession, err := m.com.App.Sessions.Create(context.Background(), "新会话")
 		if err != nil {
 			return util.ReportError(err)
 		}
@@ -2731,7 +2725,7 @@ func (m *UI) sendMessage(content string, attachments ...message.Attachment) tea.
 		return nil
 	})
 
-	// Capture session ID to avoid race with main goroutine updating m.session.
+	// 捕获会话ID以避免与主goroutine更新m.session竞争
 	sessionID := m.session.ID
 	cmds = append(cmds, func() tea.Msg {
 		_, err := m.com.App.AgentCoordinator.Run(context.Background(), sessionID, content, attachments...)
@@ -2753,16 +2747,16 @@ func (m *UI) sendMessage(content string, attachments ...message.Attachment) tea.
 
 const cancelTimerDuration = 2 * time.Second
 
-// cancelTimerCmd creates a command that expires the cancel timer.
+// cancelTimerCmd 创建一个使取消计时器过期的命令
 func cancelTimerCmd() tea.Cmd {
 	return tea.Tick(cancelTimerDuration, func(time.Time) tea.Msg {
 		return cancelTimerExpiredMsg{}
 	})
 }
 
-// cancelAgent handles the cancel key press. The first press sets isCanceling to true
-// and starts a timer. The second press (before the timer expires) actually
-// cancels the agent.
+// cancelAgent 处理取消键按下。第一次按下将isCanceling设置为true
+// 并启动计时器。第二次按下（在计时器过期之前）实际
+// 取消智能体
 func (m *UI) cancelAgent() tea.Cmd {
 	if !m.hasSession() {
 		return nil
@@ -2774,27 +2768,27 @@ func (m *UI) cancelAgent() tea.Cmd {
 	}
 
 	if m.isCanceling {
-		// Second escape press - actually cancel the agent.
+		// 第二次按下escape键 - 实际取消智能体
 		m.isCanceling = false
 		coordinator.Cancel(m.session.ID)
-		// Stop the spinning todo indicator.
+		// 停止旋转的todo指示器
 		m.todoIsSpinning = false
 		m.renderPills()
 		return nil
 	}
 
-	// Check if there are queued prompts - if so, clear the queue.
+	// 检查是否有排队的提示 - 如果有，则清除队列
 	if coordinator.QueuedPrompts(m.session.ID) > 0 {
 		coordinator.ClearQueue(m.session.ID)
 		return nil
 	}
 
-	// First escape press - set canceling state and start timer.
+	// 第一次按下escape键 - 设置取消状态并启动计时器
 	m.isCanceling = true
 	return cancelTimerCmd()
 }
 
-// openDialog opens a dialog by its ID.
+// openDialog 通过ID打开对话框
 func (m *UI) openDialog(id string) tea.Cmd {
 	var cmds []tea.Cmd
 	switch id {
@@ -2819,16 +2813,16 @@ func (m *UI) openDialog(id string) tea.Cmd {
 			cmds = append(cmds, cmd)
 		}
 	default:
-		// Unknown dialog
+		// 未知对话框
 		break
 	}
 	return tea.Batch(cmds...)
 }
 
-// openQuitDialog opens the quit confirmation dialog.
+// openQuitDialog 打开退出确认对话框
 func (m *UI) openQuitDialog() tea.Cmd {
 	if m.dialog.ContainsDialog(dialog.QuitID) {
-		// Bring to front
+		// 带到前面
 		m.dialog.BringToFront(dialog.QuitID)
 		return nil
 	}
@@ -2838,10 +2832,10 @@ func (m *UI) openQuitDialog() tea.Cmd {
 	return nil
 }
 
-// openModelsDialog opens the models dialog.
+// openModelsDialog 打开模型对话框
 func (m *UI) openModelsDialog() tea.Cmd {
 	if m.dialog.ContainsDialog(dialog.ModelsID) {
-		// Bring to front
+		// 带到前面
 		m.dialog.BringToFront(dialog.ModelsID)
 		return nil
 	}
@@ -2857,10 +2851,10 @@ func (m *UI) openModelsDialog() tea.Cmd {
 	return nil
 }
 
-// openCommandsDialog opens the commands dialog.
+// openCommandsDialog 打开命令对话框
 func (m *UI) openCommandsDialog() tea.Cmd {
 	if m.dialog.ContainsDialog(dialog.CommandsID) {
-		// Bring to front
+		// 带到前面
 		m.dialog.BringToFront(dialog.CommandsID)
 		return nil
 	}
@@ -2880,7 +2874,7 @@ func (m *UI) openCommandsDialog() tea.Cmd {
 	return nil
 }
 
-// openReasoningDialog opens the reasoning effort dialog.
+// openReasoningDialog 打开推理努力对话框
 func (m *UI) openReasoningDialog() tea.Cmd {
 	if m.dialog.ContainsDialog(dialog.ReasoningID) {
 		m.dialog.BringToFront(dialog.ReasoningID)
@@ -2896,12 +2890,12 @@ func (m *UI) openReasoningDialog() tea.Cmd {
 	return nil
 }
 
-// openSessionsDialog opens the sessions dialog. If the dialog is already open,
-// it brings it to the front. Otherwise, it will list all the sessions and open
-// the dialog.
+// openSessionsDialog 打开会话对话框。如果对话框已经打开，
+// 它会将其带到前面。否则，它将列出所有会话并打开
+// 对话框
 func (m *UI) openSessionsDialog() tea.Cmd {
 	if m.dialog.ContainsDialog(dialog.SessionsID) {
-		// Bring to front
+		// 带到前面
 		m.dialog.BringToFront(dialog.SessionsID)
 		return nil
 	}
@@ -2920,10 +2914,10 @@ func (m *UI) openSessionsDialog() tea.Cmd {
 	return nil
 }
 
-// openFilesDialog opens the file picker dialog.
+// openFilesDialog 打开文件选择器对话框
 func (m *UI) openFilesDialog() tea.Cmd {
 	if m.dialog.ContainsDialog(dialog.FilePickerID) {
-		// Bring to front
+		// 带到前面
 		m.dialog.BringToFront(dialog.FilePickerID)
 		return nil
 	}
@@ -2935,12 +2929,12 @@ func (m *UI) openFilesDialog() tea.Cmd {
 	return cmd
 }
 
-// openPermissionsDialog opens the permissions dialog for a permission request.
+// openPermissionsDialog 为权限请求打开权限对话框
 func (m *UI) openPermissionsDialog(perm permission.PermissionRequest) tea.Cmd {
-	// Close any existing permissions dialog first.
+	// 首先关闭任何现有的权限对话框
 	m.dialog.CloseDialog(dialog.PermissionsID)
 
-	// Get diff mode from config.
+	// 从配置获取差异模式
 	var opts []dialog.PermissionsOption
 	if diffMode := m.com.Config().Options.TUI.DiffMode; diffMode != "" {
 		opts = append(opts, dialog.WithDiffMode(diffMode == "split"))
@@ -2951,7 +2945,7 @@ func (m *UI) openPermissionsDialog(perm permission.PermissionRequest) tea.Cmd {
 	return nil
 }
 
-// handlePermissionNotification updates tool items when permission state changes.
+// handlePermissionNotification 当权限状态改变时更新工具项
 func (m *UI) handlePermissionNotification(notification permission.PermissionNotification) {
 	toolItem := m.chat.MessageItem(notification.ToolCallID)
 	if toolItem == nil {
@@ -2967,9 +2961,9 @@ func (m *UI) handlePermissionNotification(notification permission.PermissionNoti
 	}
 }
 
-// newSession clears the current session state and prepares for a new session.
-// The actual session creation happens when the user sends their first message.
-// Returns a command to reload prompt history.
+// newSession 清除当前会话状态并准备新会话
+// 实际的会话创建发生在用户发送第一条消息时
+// 返回重新加载提示历史的命令
 func (m *UI) newSession() tea.Cmd {
 	if !m.hasSession() {
 		return nil
@@ -2995,7 +2989,7 @@ func (m *UI) newSession() tea.Cmd {
 	)
 }
 
-// handlePasteMsg handles a paste message.
+// handlePasteMsg 处理粘贴消息
 func (m *UI) handlePasteMsg(msg tea.PasteMsg) tea.Cmd {
 	if m.dialog.HasDialogs() {
 		return m.handleDialogMsg(msg)
@@ -3009,7 +3003,7 @@ func (m *UI) handlePasteMsg(msg tea.PasteMsg) tea.Cmd {
 		return func() tea.Msg {
 			content := []byte(msg.Content)
 			if int64(len(content)) > common.MaxAttachmentSize {
-				return util.ReportWarn("Paste is too big (>5mb)")
+				return util.ReportWarn("粘贴内容过大（>5MB）")
 			}
 			name := fmt.Sprintf("paste_%d.txt", m.pasteIdx())
 			mimeBufferSize := min(512, len(content))
@@ -3023,9 +3017,9 @@ func (m *UI) handlePasteMsg(msg tea.PasteMsg) tea.Cmd {
 		}
 	}
 
-	// Attempt to parse pasted content as file paths. If possible to parse,
-	// all files exist and are valid, add as attachments.
-	// Otherwise, paste as text.
+	// 尝试将粘贴的内容解析为文件路径。如果可以解析，
+	// 所有文件都存在且有效，则添加为附件
+	// 否则，作为文本粘贴
 	paths := fsext.ParsePastedFiles(msg.Content)
 	allExistsAndValid := func() bool {
 		if len(paths) == 0 {
@@ -3063,7 +3057,7 @@ func (m *UI) handlePasteMsg(msg tea.PasteMsg) tea.Cmd {
 	return tea.Batch(cmds...)
 }
 
-// handleFilePathPaste handles a pasted file path.
+// handleFilePathPaste 处理粘贴的文件路径
 func (m *UI) handleFilePathPaste(path string) tea.Cmd {
 	return func() tea.Msg {
 		fileInfo, err := os.Stat(path)
@@ -3071,10 +3065,10 @@ func (m *UI) handleFilePathPaste(path string) tea.Cmd {
 			return util.ReportError(err)
 		}
 		if fileInfo.IsDir() {
-			return util.ReportWarn("Cannot attach a directory")
+			return util.ReportWarn("不能附加目录")
 		}
 		if fileInfo.Size() > common.MaxAttachmentSize {
-			return util.ReportWarn("File is too big (>5mb)")
+			return util.ReportWarn("文件过大（>5MB）")
 		}
 
 		content, err := os.ReadFile(path)
@@ -3094,15 +3088,15 @@ func (m *UI) handleFilePathPaste(path string) tea.Cmd {
 	}
 }
 
-// pasteImageFromClipboard reads image data from the system clipboard and
-// creates an attachment. If no image data is found, it falls back to
-// interpreting clipboard text as a file path.
+// pasteImageFromClipboard 从系统剪贴板读取图像数据并
+// 创建附件。如果未找到图像数据，则回退到
+// 将剪贴板文本解释为文件路径
 func (m *UI) pasteImageFromClipboard() tea.Msg {
 	imageData, err := readClipboard(clipboardFormatImage)
 	if int64(len(imageData)) > common.MaxAttachmentSize {
 		return util.InfoMsg{
 			Type: util.InfoTypeError,
-			Msg:  "File too large, max 5MB",
+			Msg:  "文件过大，最大5MB",
 		}
 	}
 	name := fmt.Sprintf("paste_%d.png", m.pasteIdx())
@@ -3117,13 +3111,13 @@ func (m *UI) pasteImageFromClipboard() tea.Msg {
 
 	textData, textErr := readClipboard(clipboardFormatText)
 	if textErr != nil || len(textData) == 0 {
-		return util.NewInfoMsg("Clipboard is empty or does not contain an image")
+		return util.NewInfoMsg("剪贴板为空或不包含图像")
 	}
 
 	path := strings.TrimSpace(string(textData))
 	path = strings.ReplaceAll(path, "\\ ", " ")
 	if _, statErr := os.Stat(path); statErr != nil {
-		return util.NewInfoMsg("Clipboard does not contain an image or valid file path")
+		return util.NewInfoMsg("剪贴板不包含图像或有效的文件路径")
 	}
 
 	lowerPath := strings.ToLower(path)
@@ -3135,20 +3129,20 @@ func (m *UI) pasteImageFromClipboard() tea.Msg {
 		}
 	}
 	if !isAllowed {
-		return util.NewInfoMsg("File type is not a supported image format")
+		return util.NewInfoMsg("文件类型不是支持的图像格式")
 	}
 
 	fileInfo, statErr := os.Stat(path)
 	if statErr != nil {
 		return util.InfoMsg{
 			Type: util.InfoTypeError,
-			Msg:  fmt.Sprintf("Unable to read file: %v", statErr),
+			Msg:  fmt.Sprintf("无法读取文件: %v", statErr),
 		}
 	}
 	if fileInfo.Size() > common.MaxAttachmentSize {
 		return util.InfoMsg{
 			Type: util.InfoTypeError,
-			Msg:  "File too large, max 5MB",
+			Msg:  "文件过大，最大5MB",
 		}
 	}
 
@@ -3156,7 +3150,7 @@ func (m *UI) pasteImageFromClipboard() tea.Msg {
 	if readErr != nil {
 		return util.InfoMsg{
 			Type: util.InfoTypeError,
-			Msg:  fmt.Sprintf("Unable to read file: %v", readErr),
+			Msg:  fmt.Sprintf("无法读取文件: %v", readErr),
 		}
 	}
 
@@ -3185,7 +3179,7 @@ func (m *UI) pasteIdx() int {
 	return result + 1
 }
 
-// drawSessionDetails draws the session details in compact mode.
+// drawSessionDetails 在紧凑模式下绘制会话详情
 func (m *UI) drawSessionDetails(scr uv.Screen, area uv.Rectangle) {
 	if m.session == nil {
 		return
@@ -3215,7 +3209,7 @@ func (m *UI) drawSessionDetails(scr uv.Screen, area uv.Rectangle) {
 
 	const maxSectionWidth = 50
 	sectionWidth := min(maxSectionWidth, width/3-2) // account for 2 spaces
-	maxItemsPerSection := remainingHeight - 3       // Account for section title and spacing
+	maxItemsPerSection := remainingHeight - 3       // 为节标题和间距预留空间
 
 	lspSection := m.lspInfo(sectionWidth, maxItemsPerSection, false)
 	mcpSection := m.mcpInfo(sectionWidth, maxItemsPerSection, false)
@@ -3239,7 +3233,7 @@ func (m *UI) runMCPPrompt(clientID, promptID string, arguments map[string]string
 	load := func() tea.Msg {
 		prompt, err := commands.GetMCPPrompt(m.com.Config(), clientID, promptID, arguments)
 		if err != nil {
-			// TODO: make this better
+			// TODO: 改进这个
 			return util.ReportError(err)()
 		}
 
@@ -3300,7 +3294,7 @@ func (m *UI) copyChatHighlight() tea.Cmd {
 	text := m.chat.HighlightContent()
 	return common.CopyToClipboardWithCallback(
 		text,
-		"Selected text copied to clipboard",
+		"选中的文本已复制到剪贴板",
 		func() tea.Msg {
 			m.chat.ClearMouse()
 			return nil
@@ -3308,7 +3302,7 @@ func (m *UI) copyChatHighlight() tea.Cmd {
 	)
 }
 
-// renderLogo renders the Crush logo with the given styles and dimensions.
+// renderLogo 使用给定的样式和尺寸渲染Crush logo
 func renderLogo(t *styles.Styles, compact bool, width int) string {
 	return logo.Render(t, version.Version, compact, logo.Opts{
 		FieldColor:   t.LogoFieldColor,

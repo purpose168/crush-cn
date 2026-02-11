@@ -10,61 +10,61 @@ import (
 
 // Dialog sizing constants.
 const (
-	// defaultDialogMaxWidth is the maximum width for standard dialogs.
+	// defaultDialogMaxWidth 是标准对话框的最大宽度。
 	defaultDialogMaxWidth = 120
-	// defaultDialogHeight is the default height for standard dialogs.
+	// defaultDialogHeight 是标准对话框的默认高度。
 	defaultDialogHeight = 30
-	// titleContentHeight is the height of the title content line.
+	// titleContentHeight 是标题内容行的高度。
 	titleContentHeight = 1
-	// inputContentHeight is the height of the input content line.
+	// inputContentHeight 是输入内容行的高度。
 	inputContentHeight = 1
 )
 
-// CloseKey is the default key binding to close dialogs.
+// CloseKey 是关闭对话框的默认键绑定。
 var CloseKey = key.NewBinding(
 	key.WithKeys("esc", "alt+esc"),
-	key.WithHelp("esc", "exit"),
+	key.WithHelp("esc", "退出"),
 )
 
-// Action represents an action taken in a dialog after handling a message.
+// Action 表示在对话框中处理消息后执行的操作。
 type Action any
 
-// Dialog is a component that can be displayed on top of the UI.
+// Dialog 是一个可以显示在 UI 顶部的组件。
 type Dialog interface {
-	// ID returns the unique identifier of the dialog.
+	// ID 返回对话框的唯一标识符。
 	ID() string
-	// HandleMsg processes a message and returns an action. An [Action] can be
-	// anything and the caller is responsible for handling it appropriately.
+	// HandleMsg 处理消息并返回操作。[Action] 可以是任何内容，
+	// 调用者负责适当地处理它。
 	HandleMsg(msg tea.Msg) Action
-	// Draw draws the dialog onto the provided screen within the specified area
-	// and returns the desired cursor position on the screen.
+	// Draw 在提供的屏幕上绘制对话框，在指定区域内，
+	// 并返回屏幕上所需的光标位置。
 	Draw(scr uv.Screen, area uv.Rectangle) *tea.Cursor
 }
 
-// LoadingDialog is a dialog that can show a loading state.
+// LoadingDialog 是一个可以显示加载状态的对话框。
 type LoadingDialog interface {
 	StartLoading() tea.Cmd
 	StopLoading()
 }
 
-// Overlay manages multiple dialogs as an overlay.
+// Overlay 将多个对话框作为覆盖层进行管理。
 type Overlay struct {
 	dialogs []Dialog
 }
 
-// NewOverlay creates a new [Overlay] instance.
+// NewOverlay 创建一个新的 [Overlay] 实例。
 func NewOverlay(dialogs ...Dialog) *Overlay {
 	return &Overlay{
 		dialogs: dialogs,
 	}
 }
 
-// HasDialogs checks if there are any active dialogs.
+// HasDialogs 检查是否有任何活动对话框。
 func (d *Overlay) HasDialogs() bool {
 	return len(d.dialogs) > 0
 }
 
-// ContainsDialog checks if a dialog with the specified ID exists.
+// ContainsDialog 检查是否存在具有指定 ID 的对话框。
 func (d *Overlay) ContainsDialog(dialogID string) bool {
 	for _, dialog := range d.dialogs {
 		if dialog.ID() == dialogID {
@@ -74,12 +74,12 @@ func (d *Overlay) ContainsDialog(dialogID string) bool {
 	return false
 }
 
-// OpenDialog opens a new dialog to the stack.
+// OpenDialog 向堆栈中打开一个新对话框。
 func (d *Overlay) OpenDialog(dialog Dialog) {
 	d.dialogs = append(d.dialogs, dialog)
 }
 
-// CloseDialog closes the dialog with the specified ID from the stack.
+// CloseDialog 从堆栈中关闭具有指定 ID 的对话框。
 func (d *Overlay) CloseDialog(dialogID string) {
 	for i, dialog := range d.dialogs {
 		if dialog.ID() == dialogID {
@@ -89,7 +89,7 @@ func (d *Overlay) CloseDialog(dialogID string) {
 	}
 }
 
-// CloseFrontDialog closes the front dialog in the stack.
+// CloseFrontDialog 关闭堆栈中的前面对话框。
 func (d *Overlay) CloseFrontDialog() {
 	if len(d.dialogs) == 0 {
 		return
@@ -97,7 +97,7 @@ func (d *Overlay) CloseFrontDialog() {
 	d.removeDialog(len(d.dialogs) - 1)
 }
 
-// Dialog returns the dialog with the specified ID, or nil if not found.
+// Dialog 返回具有指定 ID 的对话框，如果未找到则返回 nil。
 func (d *Overlay) Dialog(dialogID string) Dialog {
 	for _, dialog := range d.dialogs {
 		if dialog.ID() == dialogID {
@@ -107,7 +107,7 @@ func (d *Overlay) Dialog(dialogID string) Dialog {
 	return nil
 }
 
-// DialogLast returns the front dialog, or nil if there are no dialogs.
+// DialogLast 返回前面对话框，如果没有对话框则返回 nil。
 func (d *Overlay) DialogLast() Dialog {
 	if len(d.dialogs) == 0 {
 		return nil
@@ -115,11 +115,11 @@ func (d *Overlay) DialogLast() Dialog {
 	return d.dialogs[len(d.dialogs)-1]
 }
 
-// BringToFront brings the dialog with the specified ID to the front.
+// BringToFront 将具有指定 ID 的对话框带到前面。
 func (d *Overlay) BringToFront(dialogID string) {
 	for i, dialog := range d.dialogs {
 		if dialog.ID() == dialogID {
-			// Move the dialog to the end of the slice
+			// 将对话框移动到切片的末尾
 			d.dialogs = append(d.dialogs[:i], d.dialogs[i+1:]...)
 			d.dialogs = append(d.dialogs, dialog)
 			return
@@ -127,13 +127,13 @@ func (d *Overlay) BringToFront(dialogID string) {
 	}
 }
 
-// Update handles dialog updates.
+// Update 处理对话框更新。
 func (d *Overlay) Update(msg tea.Msg) tea.Msg {
 	if len(d.dialogs) == 0 {
 		return nil
 	}
 
-	idx := len(d.dialogs) - 1 // active dialog is the last one
+	idx := len(d.dialogs) - 1 // 活动对话框是最后一个
 	dialog := d.dialogs[idx]
 	if dialog == nil {
 		return nil
@@ -142,8 +142,7 @@ func (d *Overlay) Update(msg tea.Msg) tea.Msg {
 	return dialog.HandleMsg(msg)
 }
 
-// StartLoading starts the loading state for the front dialog if it
-// implements [LoadingDialog].
+// StartLoading 为前面对话框启动加载状态（如果它实现了 [LoadingDialog]）。
 func (d *Overlay) StartLoading() tea.Cmd {
 	dialog := d.DialogLast()
 	if ld, ok := dialog.(LoadingDialog); ok {
@@ -152,8 +151,7 @@ func (d *Overlay) StartLoading() tea.Cmd {
 	return nil
 }
 
-// StopLoading stops the loading state for the front dialog if it
-// implements [LoadingDialog].
+// StopLoading 为前面对话框停止加载状态（如果它实现了 [LoadingDialog]）。
 func (d *Overlay) StopLoading() {
 	dialog := d.DialogLast()
 	if ld, ok := dialog.(LoadingDialog); ok {
@@ -161,8 +159,8 @@ func (d *Overlay) StopLoading() {
 	}
 }
 
-// DrawCenterCursor draws the given string view centered in the screen area and
-// adjusts the cursor position accordingly.
+// DrawCenterCursor 在屏幕区域中绘制居中的给定字符串视图，
+// 并相应地调整光标位置。
 func DrawCenterCursor(scr uv.Screen, area uv.Rectangle, view string, cur *tea.Cursor) {
 	width, height := lipgloss.Size(view)
 	center := common.CenterRect(area, width, height)
@@ -173,18 +171,17 @@ func DrawCenterCursor(scr uv.Screen, area uv.Rectangle, view string, cur *tea.Cu
 	uv.NewStyledString(view).Draw(scr, center)
 }
 
-// DrawCenter draws the given string view centered in the screen area.
+// DrawCenter 在屏幕区域中绘制居中的给定字符串视图。
 func DrawCenter(scr uv.Screen, area uv.Rectangle, view string) {
 	DrawCenterCursor(scr, area, view, nil)
 }
 
-// DrawOnboarding draws the given string view centered in the screen area.
+// DrawOnboarding 在屏幕区域中绘制居中的给定字符串视图。
 func DrawOnboarding(scr uv.Screen, area uv.Rectangle, view string) {
 	DrawOnboardingCursor(scr, area, view, nil)
 }
 
-// DrawOnboardingCursor draws the given string view positioned at the bottom
-// left area of the screen.
+// DrawOnboardingCursor 在屏幕的底部左侧区域绘制给定字符串视图。
 func DrawOnboardingCursor(scr uv.Screen, area uv.Rectangle, view string, cur *tea.Cursor) {
 	width, height := lipgloss.Size(view)
 	bottomLeft := common.BottomLeftRect(area, width, height)
@@ -195,7 +192,7 @@ func DrawOnboardingCursor(scr uv.Screen, area uv.Rectangle, view string, cur *te
 	uv.NewStyledString(view).Draw(scr, bottomLeft)
 }
 
-// Draw renders the overlay and its dialogs.
+// Draw 渲染覆盖层及其对话框。
 func (d *Overlay) Draw(scr uv.Screen, area uv.Rectangle) *tea.Cursor {
 	var cur *tea.Cursor
 	for _, dialog := range d.dialogs {
@@ -204,7 +201,7 @@ func (d *Overlay) Draw(scr uv.Screen, area uv.Rectangle) *tea.Cursor {
 	return cur
 }
 
-// removeDialog removes a dialog from the stack.
+// removeDialog 从堆栈中移除对话框。
 func (d *Overlay) removeDialog(idx int) {
 	if idx < 0 || idx >= len(d.dialogs) {
 		return

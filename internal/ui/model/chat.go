@@ -16,53 +16,49 @@ import (
 	"github.com/clipperhouse/uax29/v2/words"
 )
 
-// Constants for multi-click detection.
+// 多点击检测常量
 const (
-	doubleClickThreshold = 400 * time.Millisecond // 0.4s is typical double-click threshold
-	clickTolerance       = 2                      // x,y tolerance for double/tripple click
+	doubleClickThreshold = 400 * time.Millisecond // 0.4秒是典型的双击阈值
+	clickTolerance       = 2                      // 双击/三击的x,y坐标容差
 )
 
-// DelayedClickMsg is sent after the double-click threshold to trigger a
-// single-click action (like expansion) if no double-click occurred.
+// DelayedClickMsg 在双击阈值后发送，如果没有发生双击，则触发单击操作（如展开）
 type DelayedClickMsg struct {
-	ClickID int
-	ItemIdx int
-	X, Y    int
+	ClickID int // 点击ID，用于区分不同的点击操作
+	ItemIdx int // 点击的项索引
+	X, Y    int // 点击的坐标位置
 }
 
-// Chat represents the chat UI model that handles chat interactions and
-// messages.
+// Chat 表示处理聊天交互和消息的聊天UI模型
 type Chat struct {
 	com      *common.Common
 	list     *list.List
-	idInxMap map[string]int // Map of message IDs to their indices in the list
+	idInxMap map[string]int // 消息ID到列表中索引的映射
 
-	// Animation visibility optimization: track animations paused due to items
-	// being scrolled out of view. When items become visible again, their
-	// animations are restarted.
+	// 动画可见性优化：跟踪因项被滚动出视图而暂停的动画
+	// 当项再次可见时，重新启动它们的动画
 	pausedAnimations map[string]struct{}
 
-	// Mouse state
+	// 鼠标状态
 	mouseDown     bool
-	mouseDownItem int // Item index where mouse was pressed
-	mouseDownX    int // X position in item content (character offset)
-	mouseDownY    int // Y position in item (line offset)
-	mouseDragItem int // Current item index being dragged over
-	mouseDragX    int // Current X in item content
-	mouseDragY    int // Current Y in item
+	mouseDownItem int // 鼠标按下的项索引
+	mouseDownX    int // 项内容中的X位置（字符偏移量）
+	mouseDownY    int // 项中的Y位置（行偏移量）
+	mouseDragItem int // 当前被拖动的项索引
+	mouseDragX    int // 当前项内容中的X位置
+	mouseDragY    int // 当前项中的Y位置
 
-	// Click tracking for double/triple clicks
-	lastClickTime time.Time
-	lastClickX    int
-	lastClickY    int
-	clickCount    int
+	// 双击/三击点击跟踪
+	lastClickTime time.Time // 上次点击时间
+	lastClickX    int       // 上次点击X坐标
+	lastClickY    int       // 上次点击Y坐标
+	clickCount    int       // 点击次数
 
-	// Pending single click action (delayed to detect double-click)
-	pendingClickID int // Incremented on each click to invalidate old pending clicks
+	// 待处理的单击操作（延迟以检测双击）
+	pendingClickID int // 每次点击递增，使旧的待处理点击失效
 }
 
-// NewChat creates a new instance of [Chat] that handles chat interactions and
-// messages.
+// NewChat 创建一个新的[Chat]实例，用于处理聊天交互和消息
 func NewChat(com *common.Common) *Chat {
 	c := &Chat{
 		com:              com,
@@ -79,31 +75,31 @@ func NewChat(com *common.Common) *Chat {
 	return c
 }
 
-// Height returns the height of the chat view port.
+// Height 返回聊天视图端口的高度
 func (m *Chat) Height() int {
 	return m.list.Height()
 }
 
-// Draw renders the chat UI component to the screen and the given area.
+// Draw 将聊天UI组件渲染到屏幕和指定区域
 func (m *Chat) Draw(scr uv.Screen, area uv.Rectangle) {
 	uv.NewStyledString(m.list.Render()).Draw(scr, area)
 }
 
-// SetSize sets the size of the chat view port.
+// SetSize 设置聊天视图端口的大小
 func (m *Chat) SetSize(width, height int) {
 	m.list.SetSize(width, height)
-	// Anchor to bottom if we were at the bottom.
+	// 如果之前在底部，则保持在底部
 	if m.list.AtBottom() {
 		m.list.ScrollToBottom()
 	}
 }
 
-// Len returns the number of items in the chat list.
+// Len 返回聊天列表中的项数
 func (m *Chat) Len() int {
 	return m.list.Len()
 }
 
-// SetMessages sets the chat messages to the provided list of message items.
+// SetMessages 将聊天消息设置为提供的消息项列表
 func (m *Chat) SetMessages(msgs ...chat.MessageItem) {
 	m.idInxMap = make(map[string]int)
 	m.pausedAnimations = make(map[string]struct{})
@@ -111,7 +107,7 @@ func (m *Chat) SetMessages(msgs ...chat.MessageItem) {
 	items := make([]list.Item, len(msgs))
 	for i, msg := range msgs {
 		m.idInxMap[msg.ID()] = i
-		// Register nested tool IDs for tools that contain nested tools.
+		// 为包含嵌套工具的工具注册嵌套工具ID
 		if container, ok := msg.(chat.NestedToolContainer); ok {
 			for _, nested := range container.NestedTools() {
 				m.idInxMap[nested.ID()] = i
@@ -123,13 +119,13 @@ func (m *Chat) SetMessages(msgs ...chat.MessageItem) {
 	m.list.ScrollToBottom()
 }
 
-// AppendMessages appends a new message item to the chat list.
+// AppendMessages 将新的消息项追加到聊天列表
 func (m *Chat) AppendMessages(msgs ...chat.MessageItem) {
 	items := make([]list.Item, len(msgs))
 	indexOffset := m.list.Len()
 	for i, msg := range msgs {
 		m.idInxMap[msg.ID()] = indexOffset + i
-		// Register nested tool IDs for tools that contain nested tools.
+		// 为包含嵌套工具的工具注册嵌套工具ID
 		if container, ok := msg.(chat.NestedToolContainer); ok {
 			for _, nested := range container.NestedTools() {
 				m.idInxMap[nested.ID()] = indexOffset + i
@@ -140,8 +136,8 @@ func (m *Chat) AppendMessages(msgs ...chat.MessageItem) {
 	m.list.AppendItems(items...)
 }
 
-// UpdateNestedToolIDs updates the ID map for nested tools within a container.
-// Call this after modifying nested tools to ensure animations work correctly.
+// UpdateNestedToolIDs 更新容器内嵌套工具的ID映射
+// 在修改嵌套工具后调用此方法，以确保动画正常工作
 func (m *Chat) UpdateNestedToolIDs(containerID string) {
 	idx, ok := m.idInxMap[containerID]
 	if !ok {
@@ -158,15 +154,15 @@ func (m *Chat) UpdateNestedToolIDs(containerID string) {
 		return
 	}
 
-	// Register all nested tool IDs to point to the container's index.
+	// 注册所有嵌套工具ID，使其指向容器的索引
 	for _, nested := range container.NestedTools() {
 		m.idInxMap[nested.ID()] = idx
 	}
 }
 
-// Animate animates items in the chat list. Only propagates animation messages
-// to visible items to save CPU. When items are not visible, their animation ID
-// is tracked so it can be restarted when they become visible again.
+// Animate 对聊天列表中的项进行动画处理
+// 仅将动画消息传播到可见项以节省CPU资源
+// 当项不可见时，跟踪其动画ID，以便在项再次可见时重新启动动画
 func (m *Chat) Animate(msg anim.StepMsg) tea.Cmd {
 	idx, ok := m.idInxMap[msg.ID]
 	if !ok {
@@ -178,24 +174,23 @@ func (m *Chat) Animate(msg anim.StepMsg) tea.Cmd {
 		return nil
 	}
 
-	// Check if item is currently visible.
+	// 检查项当前是否可见
 	startIdx, endIdx := m.list.VisibleItemIndices()
 	isVisible := idx >= startIdx && idx <= endIdx
 
 	if !isVisible {
-		// Item not visible - pause animation by not propagating.
-		// Track it so we can restart when it becomes visible.
+		// 项不可见 - 通过不传播消息来暂停动画
+		// 跟踪动画ID，以便在项可见时重新启动
 		m.pausedAnimations[msg.ID] = struct{}{}
 		return nil
 	}
 
-	// Item is visible - remove from paused set and animate.
+	// 项可见 - 从暂停集合中移除并执行动画
 	delete(m.pausedAnimations, msg.ID)
 	return animatable.Animate(msg)
 }
 
-// RestartPausedVisibleAnimations restarts animations for items that were paused
-// due to being scrolled out of view but are now visible again.
+// RestartPausedVisibleAnimations 重新启动因滚动出视图而暂停但现在再次可见的项的动画
 func (m *Chat) RestartPausedVisibleAnimations() tea.Cmd {
 	if len(m.pausedAnimations) == 0 {
 		return nil
@@ -207,13 +202,13 @@ func (m *Chat) RestartPausedVisibleAnimations() tea.Cmd {
 	for id := range m.pausedAnimations {
 		idx, ok := m.idInxMap[id]
 		if !ok {
-			// Item no longer exists.
+			// 项已不存在
 			delete(m.pausedAnimations, id)
 			continue
 		}
 
 		if idx >= startIdx && idx <= endIdx {
-			// Item is now visible - restart its animation.
+			// 项现在可见 - 重新启动其动画
 			if animatable, ok := m.list.ItemAt(idx).(chat.Animatable); ok {
 				if cmd := animatable.StartAnimation(); cmd != nil {
 					cmds = append(cmds, cmd)
@@ -229,49 +224,46 @@ func (m *Chat) RestartPausedVisibleAnimations() tea.Cmd {
 	return tea.Batch(cmds...)
 }
 
-// Focus sets the focus state of the chat component.
+// Focus 设置聊天组件的聚焦状态
 func (m *Chat) Focus() {
 	m.list.Focus()
 }
 
-// Blur removes the focus state from the chat component.
+// Blur 移除聊天组件的聚焦状态
 func (m *Chat) Blur() {
 	m.list.Blur()
 }
 
-// ScrollToTopAndAnimate scrolls the chat view to the top and returns a command to restart
-// any paused animations that are now visible.
+// ScrollToTopAndAnimate 将聊天视图滚动到顶部，并返回一个命令以重新启动现在可见的任何暂停动画
 func (m *Chat) ScrollToTopAndAnimate() tea.Cmd {
 	m.list.ScrollToTop()
 	return m.RestartPausedVisibleAnimations()
 }
 
-// ScrollToBottomAndAnimate scrolls the chat view to the bottom and returns a command to
-// restart any paused animations that are now visible.
+// ScrollToBottomAndAnimate 将聊天视图滚动到底部，并返回一个命令以重新启动现在可见的任何暂停动画
 func (m *Chat) ScrollToBottomAndAnimate() tea.Cmd {
 	m.list.ScrollToBottom()
 	return m.RestartPausedVisibleAnimations()
 }
 
-// ScrollByAndAnimate scrolls the chat view by the given number of line deltas and returns
-// a command to restart any paused animations that are now visible.
+// ScrollByAndAnimate 将聊天视图滚动指定行数，并返回一个命令以重新启动现在可见的任何暂停动画
 func (m *Chat) ScrollByAndAnimate(lines int) tea.Cmd {
 	m.list.ScrollBy(lines)
 	return m.RestartPausedVisibleAnimations()
 }
 
-// ScrollToSelectedAndAnimate scrolls the chat view to the selected item and returns a
-// command to restart any paused animations that are now visible.
+// ScrollToSelectedAndAnimate 将聊天视图滚动到选中项，并返回一个命令以重新启动现在可见的任何暂停动画
 func (m *Chat) ScrollToSelectedAndAnimate() tea.Cmd {
 	m.list.ScrollToSelected()
 	return m.RestartPausedVisibleAnimations()
 }
 
-// SelectedItemInView returns whether the selected item is currently in view.
+// SelectedItemInView 返回选中项当前是否在视图中
 func (m *Chat) SelectedItemInView() bool {
 	return m.list.SelectedItemInView()
 }
 
+// isSelectable 判断指定索引的项是否可选中
 func (m *Chat) isSelectable(index int) bool {
 	item := m.list.ItemAt(index)
 	if item == nil {
@@ -281,7 +273,7 @@ func (m *Chat) isSelectable(index int) bool {
 	return ok
 }
 
-// SetSelected sets the selected message index in the chat list.
+// SetSelected 设置聊天列表中选中的消息索引
 func (m *Chat) SetSelected(index int) {
 	m.list.SetSelected(index)
 	if index < 0 || index >= m.list.Len() {
@@ -294,8 +286,7 @@ func (m *Chat) SetSelected(index int) {
 		if m.list.SelectNext() {
 			continue
 		}
-		// If we're at the end and the last item isn't selectable, walk backwards
-		// to find the nearest selectable item.
+		// 如果我们在末尾且最后一项不可选中，则向后查找最近的可选中项
 		for {
 			if !m.list.SelectPrev() {
 				return
@@ -307,7 +298,7 @@ func (m *Chat) SetSelected(index int) {
 	}
 }
 
-// SelectPrev selects the previous message in the chat list.
+// SelectPrev 选择聊天列表中的上一条消息
 func (m *Chat) SelectPrev() {
 	for {
 		if !m.list.SelectPrev() {
@@ -319,7 +310,7 @@ func (m *Chat) SelectPrev() {
 	}
 }
 
-// SelectNext selects the next message in the chat list.
+// SelectNext 选择聊天列表中的下一条消息
 func (m *Chat) SelectNext() {
 	for {
 		if !m.list.SelectNext() {
@@ -331,7 +322,7 @@ func (m *Chat) SelectNext() {
 	}
 }
 
-// SelectFirst selects the first message in the chat list.
+// SelectFirst 选择聊天列表中的第一条消息
 func (m *Chat) SelectFirst() {
 	if !m.list.SelectFirst() {
 		return
@@ -349,7 +340,7 @@ func (m *Chat) SelectFirst() {
 	}
 }
 
-// SelectLast selects the last message in the chat list.
+// SelectLast 选择聊天列表中的最后一条消息
 func (m *Chat) SelectLast() {
 	if !m.list.SelectLast() {
 		return
@@ -367,7 +358,7 @@ func (m *Chat) SelectLast() {
 	}
 }
 
-// SelectFirstInView selects the first message currently in view.
+// SelectFirstInView 选择当前视图中的第一条消息
 func (m *Chat) SelectFirstInView() {
 	startIdx, endIdx := m.list.VisibleItemIndices()
 	for i := startIdx; i <= endIdx; i++ {
@@ -378,7 +369,7 @@ func (m *Chat) SelectFirstInView() {
 	}
 }
 
-// SelectLastInView selects the last message currently in view.
+// SelectLastInView 选择当前视图中的最后一条消息
 func (m *Chat) SelectLastInView() {
 	startIdx, endIdx := m.list.VisibleItemIndices()
 	for i := endIdx; i >= startIdx; i-- {
@@ -389,7 +380,7 @@ func (m *Chat) SelectLastInView() {
 	}
 }
 
-// ClearMessages removes all messages from the chat list.
+// ClearMessages 清除聊天列表中的所有消息
 func (m *Chat) ClearMessages() {
 	m.idInxMap = make(map[string]int)
 	m.pausedAnimations = make(map[string]struct{})
@@ -397,31 +388,31 @@ func (m *Chat) ClearMessages() {
 	m.ClearMouse()
 }
 
-// RemoveMessage removes a message from the chat list by its ID.
+// RemoveMessage 根据ID从聊天列表中删除消息
 func (m *Chat) RemoveMessage(id string) {
 	idx, ok := m.idInxMap[id]
 	if !ok {
 		return
 	}
 
-	// Remove from list
+	// 从列表中删除
 	m.list.RemoveItem(idx)
 
-	// Remove from index map
+	// 从索引映射中删除
 	delete(m.idInxMap, id)
 
-	// Rebuild index map for all items after the removed one
+	// 重建删除项之后所有项的索引映射
 	for i := idx; i < m.list.Len(); i++ {
 		if item, ok := m.list.ItemAt(i).(chat.MessageItem); ok {
 			m.idInxMap[item.ID()] = i
 		}
 	}
 
-	// Clean up any paused animations for this message
+	// 清理此消息的任何暂停动画
 	delete(m.pausedAnimations, id)
 }
 
-// MessageItem returns the message item with the given ID, or nil if not found.
+// MessageItem 返回具有给定ID的消息项，如果未找到则返回nil
 func (m *Chat) MessageItem(id string) chat.MessageItem {
 	idx, ok := m.idInxMap[id]
 	if !ok {
@@ -434,7 +425,7 @@ func (m *Chat) MessageItem(id string) chat.MessageItem {
 	return item
 }
 
-// ToggleExpandedSelectedItem expands the selected message item if it is expandable.
+// ToggleExpandedSelectedItem 如果选中的消息项可展开，则切换其展开状态
 func (m *Chat) ToggleExpandedSelectedItem() {
 	if expandable, ok := m.list.SelectedItem().(chat.Expandable); ok {
 		if !expandable.ToggleExpanded() {
@@ -446,7 +437,7 @@ func (m *Chat) ToggleExpandedSelectedItem() {
 	}
 }
 
-// HandleKeyMsg handles key events for the chat component.
+// HandleKeyMsg 处理聊天组件的键盘事件
 func (m *Chat) HandleKeyMsg(key tea.KeyMsg) (bool, tea.Cmd) {
 	if m.list.Focused() {
 		if handler, ok := m.list.SelectedItem().(chat.KeyEventHandler); ok {
@@ -456,10 +447,9 @@ func (m *Chat) HandleKeyMsg(key tea.KeyMsg) (bool, tea.Cmd) {
 	return false, nil
 }
 
-// HandleMouseDown handles mouse down events for the chat component.
-// It detects single, double, and triple clicks for text selection.
-// Returns whether the click was handled and an optional command for delayed
-// single-click actions.
+// HandleMouseDown 处理聊天组件的鼠标按下事件
+// 它检测单击、双击和三击以进行文本选择
+// 返回是否处理了点击以及用于延迟单击操作的可选命令
 func (m *Chat) HandleMouseDown(x, y int) (bool, tea.Cmd) {
 	if m.list.Len() == 0 {
 		return false, nil
@@ -473,11 +463,11 @@ func (m *Chat) HandleMouseDown(x, y int) (bool, tea.Cmd) {
 		return false, nil
 	}
 
-	// Increment pending click ID to invalidate any previous pending clicks.
+	// 递增待处理点击ID，使任何先前的待处理点击失效
 	m.pendingClickID++
 	clickID := m.pendingClickID
 
-	// Detect multi-click (double/triple)
+	// 检测多点击（双击/三击）
 	now := time.Now()
 	if now.Sub(m.lastClickTime) <= doubleClickThreshold &&
 		abs(x-m.lastClickX) <= clickTolerance &&
@@ -490,14 +480,14 @@ func (m *Chat) HandleMouseDown(x, y int) (bool, tea.Cmd) {
 	m.lastClickX = x
 	m.lastClickY = y
 
-	// Select the item that was clicked
+	// 选择被点击的项
 	m.list.SetSelected(itemIdx)
 
 	var cmd tea.Cmd
 
 	switch m.clickCount {
 	case 1:
-		// Single click - start selection and schedule delayed click action.
+		// 单击 - 开始选择并安排延迟点击操作
 		m.mouseDown = true
 		m.mouseDownItem = itemIdx
 		m.mouseDownX = x
@@ -506,8 +496,8 @@ func (m *Chat) HandleMouseDown(x, y int) (bool, tea.Cmd) {
 		m.mouseDragX = x
 		m.mouseDragY = itemY
 
-		// Schedule delayed click action (e.g., expansion) after a short delay.
-		// If a double-click occurs, the clickID will be invalidated.
+		// 安排延迟点击操作（如展开）在短延迟后执行
+		// 如果发生双击，clickID将失效
 		cmd = tea.Tick(doubleClickThreshold, func(t time.Time) tea.Msg {
 			return DelayedClickMsg{
 				ClickID: clickID,
@@ -517,36 +507,35 @@ func (m *Chat) HandleMouseDown(x, y int) (bool, tea.Cmd) {
 			}
 		})
 	case 2:
-		// Double click - select word (no delayed action)
+		// 双击 - 选择单词（无延迟操作）
 		m.selectWord(itemIdx, x, itemY)
 	case 3:
-		// Triple click - select line (no delayed action)
+		// 三击 - 选择行（无延迟操作）
 		m.selectLine(itemIdx, itemY)
-		m.clickCount = 0 // Reset after triple click
+		m.clickCount = 0 // 三击后重置
 	}
 
 	return true, cmd
 }
 
-// HandleDelayedClick handles a delayed single-click action (like expansion).
-// It only executes if the click ID matches (i.e., no double-click occurred)
-// and no text selection was made (drag to select).
+// HandleDelayedClick 处理延迟的单击操作（如展开）
+// 仅在点击ID匹配（即未发生双击）且未进行文本选择（拖动选择）时执行
 func (m *Chat) HandleDelayedClick(msg DelayedClickMsg) bool {
-	// Ignore if this click was superseded by a newer click (double/triple).
+	// 如果此点击被较新的点击（双击/三击）取代，则忽略
 	if msg.ClickID != m.pendingClickID {
 		return false
 	}
 
-	// Don't expand if user dragged to select text.
+	// 如果用户拖动选择了文本，则不展开
 	if m.HasHighlight() {
 		return false
 	}
 
-	// Execute the click action (e.g., expansion).
+	// 执行点击操作（如展开）
 	selectedItem := m.list.SelectedItem()
 	if clickable, ok := selectedItem.(list.MouseClickable); ok {
 		handled := clickable.HandleMouseClick(ansi.MouseButton1, msg.X, msg.Y)
-		// Toggle expansion if applicable.
+		// 如果适用，切换展开状态
 		if expandable, ok := selectedItem.(chat.Expandable); ok {
 			if !expandable.ToggleExpanded() {
 				m.list.ScrollToIndex(m.list.Selected())
@@ -561,7 +550,7 @@ func (m *Chat) HandleDelayedClick(msg DelayedClickMsg) bool {
 	return false
 }
 
-// HandleMouseUp handles mouse up events for the chat component.
+// HandleMouseUp 处理聊天组件的鼠标释放事件
 func (m *Chat) HandleMouseUp(x, y int) bool {
 	if !m.mouseDown {
 		return false
@@ -571,7 +560,7 @@ func (m *Chat) HandleMouseUp(x, y int) bool {
 	return true
 }
 
-// HandleMouseDrag handles mouse drag events for the chat component.
+// HandleMouseDrag 处理聊天组件的鼠标拖动事件
 func (m *Chat) HandleMouseDrag(x, y int) bool {
 	if !m.mouseDown {
 		return false
@@ -593,14 +582,14 @@ func (m *Chat) HandleMouseDrag(x, y int) bool {
 	return true
 }
 
-// HasHighlight returns whether there is currently highlighted content.
+// HasHighlight 返回当前是否有高亮内容
 func (m *Chat) HasHighlight() bool {
 	startItemIdx, startLine, startCol, endItemIdx, endLine, endCol := m.getHighlightRange()
 	return startItemIdx >= 0 && endItemIdx >= 0 && (startLine != endLine || startCol != endCol)
 }
 
-// HighlightContent returns the currently highlighted content based on the mouse
-// selection. It returns an empty string if no content is highlighted.
+// HighlightContent 根据鼠标选择返回当前高亮的内容
+// 如果没有内容被高亮，则返回空字符串
 func (m *Chat) HighlightContent() string {
 	startItemIdx, startLine, startCol, endItemIdx, endLine, endCol := m.getHighlightRange()
 	if startItemIdx < 0 || endItemIdx < 0 || startLine == endLine && startCol == endCol {
@@ -634,7 +623,7 @@ func (m *Chat) HighlightContent() string {
 	return strings.TrimSpace(sb.String())
 }
 
-// ClearMouse clears the current mouse interaction state.
+// ClearMouse 清除当前鼠标交互状态
 func (m *Chat) ClearMouse() {
 	m.mouseDown = false
 	m.mouseDownItem = -1
@@ -643,36 +632,36 @@ func (m *Chat) ClearMouse() {
 	m.lastClickX = 0
 	m.lastClickY = 0
 	m.clickCount = 0
-	m.pendingClickID++ // Invalidate any pending delayed click
+	m.pendingClickID++ // 使任何待处理的延迟点击失效
 }
 
-// applyHighlightRange applies the current highlight range to the chat items.
+// applyHighlightRange 将当前高亮范围应用于聊天项
 func (m *Chat) applyHighlightRange(idx, selectedIdx int, item list.Item) list.Item {
 	if hi, ok := item.(list.Highlightable); ok {
-		// Apply highlight
+		// 应用高亮
 		startItemIdx, startLine, startCol, endItemIdx, endLine, endCol := m.getHighlightRange()
 		sLine, sCol, eLine, eCol := -1, -1, -1, -1
 		if idx >= startItemIdx && idx <= endItemIdx {
 			if idx == startItemIdx && idx == endItemIdx {
-				// Single item selection
+				// 单项选择
 				sLine = startLine
 				sCol = startCol
 				eLine = endLine
 				eCol = endCol
 			} else if idx == startItemIdx {
-				// First item - from start position to end of item
+				// 第一项 - 从起始位置到项末尾
 				sLine = startLine
 				sCol = startCol
 				eLine = -1
 				eCol = -1
 			} else if idx == endItemIdx {
-				// Last item - from start of item to end position
+				// 最后一项 - 从项开头到结束位置
 				sLine = 0
 				sCol = 0
 				eLine = endLine
 				eCol = endCol
 			} else {
-				// Middle item - fully highlighted
+				// 中间项 - 完全高亮
 				sLine = 0
 				sCol = 0
 				eLine = -1
@@ -687,7 +676,7 @@ func (m *Chat) applyHighlightRange(idx, selectedIdx int, item list.Item) list.It
 	return item
 }
 
-// getHighlightRange returns the current highlight range.
+// getHighlightRange 返回当前高亮范围
 func (m *Chat) getHighlightRange() (startItemIdx, startLine, startCol, endItemIdx, endLine, endCol int) {
 	if m.mouseDownItem < 0 {
 		return -1, -1, -1, -1, -1, -1
@@ -696,13 +685,13 @@ func (m *Chat) getHighlightRange() (startItemIdx, startLine, startCol, endItemId
 	downItemIdx := m.mouseDownItem
 	dragItemIdx := m.mouseDragItem
 
-	// Determine selection direction
+	// 确定选择方向
 	draggingDown := dragItemIdx > downItemIdx ||
 		(dragItemIdx == downItemIdx && m.mouseDragY > m.mouseDownY) ||
 		(dragItemIdx == downItemIdx && m.mouseDragY == m.mouseDownY && m.mouseDragX >= m.mouseDownX)
 
 	if draggingDown {
-		// Normal forward selection
+		// 正常正向选择
 		startItemIdx = downItemIdx
 		startLine = m.mouseDownY
 		startCol = m.mouseDownX
@@ -710,7 +699,7 @@ func (m *Chat) getHighlightRange() (startItemIdx, startLine, startCol, endItemId
 		endLine = m.mouseDragY
 		endCol = m.mouseDragX
 	} else {
-		// Backward selection (dragging up)
+		// 反向选择（向上拖动）
 		startItemIdx = dragItemIdx
 		startLine = m.mouseDragY
 		startCol = m.mouseDragX
@@ -722,14 +711,14 @@ func (m *Chat) getHighlightRange() (startItemIdx, startLine, startCol, endItemId
 	return startItemIdx, startLine, startCol, endItemIdx, endLine, endCol
 }
 
-// selectWord selects the word at the given position within an item.
+// selectWord 选择项中指定位置的单词
 func (m *Chat) selectWord(itemIdx, x, itemY int) {
 	item := m.list.ItemAt(itemIdx)
 	if item == nil {
 		return
 	}
 
-	// Get the rendered content for this item
+	// 获取此项目的渲染内容
 	var rendered string
 	if rr, ok := item.(list.RawRenderable); ok {
 		rendered = rr.RawRender(m.list.Width())
@@ -742,8 +731,8 @@ func (m *Chat) selectWord(itemIdx, x, itemY int) {
 		return
 	}
 
-	// Adjust x for the item's left padding (border + padding) to get content column.
-	// The mouse x is in viewport space, but we need content space for boundary detection.
+	// 调整x坐标以考虑项的左侧填充（边框+内边距），获取内容列
+	// 鼠标x坐标在视口空间中，但我们需要内容空间进行边界检测
 	offset := chat.MessageLeftPaddingTotal
 	contentX := x - offset
 	if contentX < 0 {
@@ -753,7 +742,7 @@ func (m *Chat) selectWord(itemIdx, x, itemY int) {
 	line := ansi.Strip(lines[itemY])
 	startCol, endCol := findWordBoundaries(line, contentX)
 	if startCol == endCol {
-		// No word found at position, fallback to single click behavior
+		// 在该位置未找到单词，回退到单击行为
 		m.mouseDown = true
 		m.mouseDownItem = itemIdx
 		m.mouseDownX = x
@@ -764,8 +753,8 @@ func (m *Chat) selectWord(itemIdx, x, itemY int) {
 		return
 	}
 
-	// Set selection to the word boundaries (convert back to viewport space).
-	// Keep mouseDown true so HandleMouseUp triggers the copy.
+	// 将选择设置为单词边界（转换回视口空间）
+	// 保持mouseDown为true，以便HandleMouseUp触发复制操作
 	m.mouseDown = true
 	m.mouseDownItem = itemIdx
 	m.mouseDownX = startCol + offset
@@ -775,14 +764,14 @@ func (m *Chat) selectWord(itemIdx, x, itemY int) {
 	m.mouseDragY = itemY
 }
 
-// selectLine selects the entire line at the given position within an item.
+// selectLine 选择项中指定位置的整行
 func (m *Chat) selectLine(itemIdx, itemY int) {
 	item := m.list.ItemAt(itemIdx)
 	if item == nil {
 		return
 	}
 
-	// Get the rendered content for this item
+	// 获取此项目的渲染内容
 	var rendered string
 	if rr, ok := item.(list.RawRenderable); ok {
 		rendered = rr.RawRender(m.list.Width())
@@ -795,13 +784,13 @@ func (m *Chat) selectLine(itemIdx, itemY int) {
 		return
 	}
 
-	// Get line length (stripped of ANSI codes) and account for padding.
-	// SetHighlight will subtract the offset, so we need to add it here.
+	// 获取行长度（去除ANSI代码）并考虑填充
+	// SetHighlight会减去偏移量，因此我们需要在这里添加它
 	offset := chat.MessageLeftPaddingTotal
 	lineLen := ansi.StringWidth(lines[itemY])
 
-	// Set selection to the entire line.
-	// Keep mouseDown true so HandleMouseUp triggers the copy.
+	// 将选择设置为整行
+	// 保持mouseDown为true，以便HandleMouseUp触发复制操作
 	m.mouseDown = true
 	m.mouseDownItem = itemIdx
 	m.mouseDownX = 0
@@ -811,8 +800,8 @@ func (m *Chat) selectLine(itemIdx, itemY int) {
 	m.mouseDragY = itemY
 }
 
-// findWordBoundaries finds the start and end column of the word at the given column.
-// Returns (startCol, endCol) where endCol is exclusive.
+// findWordBoundaries 查找给定列中单词的起始和结束列
+// 返回 (startCol, endCol)，其中 endCol 是排他的
 func findWordBoundaries(line string, col int) (startCol, endCol int) {
 	if line == "" || col < 0 {
 		return 0, 0
@@ -822,9 +811,9 @@ func findWordBoundaries(line string, col int) (startCol, endCol int) {
 	for i.Next() {
 	}
 
-	// Segment the line into words using UAX#29.
-	lineCol := 0 // tracks the visited column widths
-	lastCol := 0 // tracks the start of the current token
+	// 使用UAX#29将行分割为单词
+	lineCol := 0 // 跟踪已访问的列宽度
+	lastCol := 0 // 跟踪当前令牌的起始位置
 	iter := words.FromString(line)
 	for iter.Next() {
 		token := iter.Value()
@@ -834,17 +823,17 @@ func findWordBoundaries(line string, col int) (startCol, endCol int) {
 		graphemeEnd := lineCol + tokenWidth
 		lineCol += tokenWidth
 
-		// If clicked before this token, return the previous token boundaries.
+		// 如果在此令牌之前点击，返回前一个令牌的边界
 		if col < graphemeStart {
 			return lastCol, lastCol
 		}
 
-		// Update lastCol to the end of this token for next iteration.
+		// 更新lastCol为此令牌的末尾，用于下一次迭代
 		lastCol = graphemeEnd
 
-		// If clicked within this token, return its boundaries.
+		// 如果在此令牌内点击，返回其边界
 		if col >= graphemeStart && col < graphemeEnd {
-			// If clicked on whitespace, return empty selection.
+			// 如果点击在空白区域，返回空选择
 			if strings.TrimSpace(token) == "" {
 				return col, col
 			}
@@ -855,7 +844,7 @@ func findWordBoundaries(line string, col int) (startCol, endCol int) {
 	return col, col
 }
 
-// abs returns the absolute value of an integer.
+// abs 返回整数的绝对值
 func abs(x int) int {
 	if x < 0 {
 		return -x

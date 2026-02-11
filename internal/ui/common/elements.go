@@ -12,37 +12,35 @@ import (
 	"github.com/charmbracelet/x/ansi"
 )
 
-// PrettyPath formats a file path with home directory shortening and applies
-// muted styling.
+// PrettyPath 格式化文件路径，使用主目录缩写并应用静音样式。
 func PrettyPath(t *styles.Styles, path string, width int) string {
 	formatted := home.Short(path)
 	return t.Muted.Width(width).Render(formatted)
 }
 
-// ModelContextInfo contains token usage and cost information for a model.
+// ModelContextInfo 包含模型的令牌使用和成本信息。
 type ModelContextInfo struct {
 	ContextUsed  int64
 	ModelContext int64
 	Cost         float64
 }
 
-// ModelInfo renders model information including name, provider, reasoning
-// settings, and optional context usage/cost.
+// ModelInfo 渲染模型信息，包括名称、提供商、推理设置和可选的上下文使用/成本。
 func ModelInfo(t *styles.Styles, modelName, providerName, reasoningInfo string, context *ModelContextInfo, width int) string {
 	modelIcon := t.Subtle.Render(styles.ModelIcon)
 	modelName = t.Base.Render(modelName)
 
-	// Build first line with model name and optionally provider on the same line
+	// 构建第一行，包含模型名称和可选的提供商在同一行
 	var firstLine string
 	if providerName != "" {
 		providerInfo := t.Muted.Render(fmt.Sprintf("via %s", providerName))
 		modelWithProvider := fmt.Sprintf("%s %s %s", modelIcon, modelName, providerInfo)
 
-		// Check if it fits on one line
+		// 检查是否适合一行
 		if lipgloss.Width(modelWithProvider) <= width {
 			firstLine = modelWithProvider
 		} else {
-			// If it doesn't fit, put provider on next line
+			// 如果不适合，将提供商放在下一行
 			firstLine = fmt.Sprintf("%s %s", modelIcon, modelName)
 		}
 	} else {
@@ -51,7 +49,7 @@ func ModelInfo(t *styles.Styles, modelName, providerName, reasoningInfo string, 
 
 	parts := []string{firstLine}
 
-	// If provider didn't fit on first line, add it as second line
+	// 如果提供商不适合第一行，将其作为第二行添加
 	if providerName != "" && !strings.Contains(firstLine, "via") {
 		providerInfo := fmt.Sprintf("via %s", providerName)
 		parts = append(parts, t.Muted.PaddingLeft(2).Render(providerInfo))
@@ -71,8 +69,7 @@ func ModelInfo(t *styles.Styles, modelName, providerName, reasoningInfo string, 
 	)
 }
 
-// formatTokensAndCost formats token usage and cost with appropriate units
-// (K/M) and percentage of context window.
+// formatTokensAndCost 格式化令牌使用和成本，使用适当的单位（K/M）和上下文窗口的百分比。
 func formatTokensAndCost(t *styles.Styles, tokens, contextWindow int64, cost float64) string {
 	var formattedTokens string
 	switch {
@@ -105,19 +102,17 @@ func formatTokensAndCost(t *styles.Styles, tokens, contextWindow int64, cost flo
 	return fmt.Sprintf("%s %s", formattedTokens, formattedCost)
 }
 
-// StatusOpts defines options for rendering a status line with icon, title,
-// description, and optional extra content.
+// StatusOpts 定义渲染状态行的选项，包括图标、标题、描述和可选的额外内容。
 type StatusOpts struct {
-	Icon             string // if empty no icon will be shown
+	Icon             string // 如果为空，则不显示图标
 	Title            string
 	TitleColor       color.Color
 	Description      string
 	DescriptionColor color.Color
-	ExtraContent     string // additional content to append after the description
+	ExtraContent     string // 在描述后追加的额外内容
 }
 
-// Status renders a status line with icon, title, description, and extra
-// content. The description is truncated if it exceeds the available width.
+// Status 渲染一个状态行，包括图标、标题、描述和额外内容。如果描述超过可用宽度，则截断。
 func Status(t *styles.Styles, opts StatusOpts, width int) string {
 	icon := opts.Icon
 	title := opts.Title
@@ -152,8 +147,7 @@ func Status(t *styles.Styles, opts StatusOpts, width int) string {
 	return strings.Join(content, " ")
 }
 
-// Section renders a section header with a title and a horizontal line filling
-// the remaining width.
+// Section 渲染一个节标题，带有标题和填充剩余宽度的水平线。
 func Section(t *styles.Styles, text string, width int, info ...string) string {
 	char := styles.SectionSeparator
 	length := lipgloss.Width(text) + 1
@@ -175,8 +169,7 @@ func Section(t *styles.Styles, text string, width int, info ...string) string {
 	return text
 }
 
-// DialogTitle renders a dialog title with a decorative line filling the
-// remaining width.
+// DialogTitle 渲染一个对话框标题，带有填充剩余宽度的装饰线。
 func DialogTitle(t *styles.Styles, title string, width int, fromColor, toColor color.Color) string {
 	char := "╱"
 	length := lipgloss.Width(title) + 1

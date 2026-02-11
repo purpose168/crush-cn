@@ -13,13 +13,13 @@ import (
 
 var _ chroma.Formatter = chromaFormatter{}
 
-// chromaFormatter is a custom formatter for Chroma that uses Lip Gloss for
-// foreground styling, while keeping a forced background color.
+// chromaFormatter 是一个用于Chroma的自定义格式化器，它使用Lip Gloss进行
+// 前景样式设置，同时保持强制背景色。
 type chromaFormatter struct {
 	bgColor color.Color
 }
 
-// Format implements the chroma.Formatter interface.
+// Format 实现chroma.Formatter接口。
 func (c chromaFormatter) Format(w io.Writer, style *chroma.Style, it chroma.Iterator) error {
 	for token := it(); token != chroma.EOF; token = it() {
 		value := strings.TrimRight(token.Value, "\n")

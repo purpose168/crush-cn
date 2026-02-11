@@ -17,17 +17,17 @@ import (
 	"github.com/sahilm/fuzzy"
 )
 
-// ListItem represents a selectable and searchable item in a dialog list.
+// ListItem 表示对话框列表中可选择和可搜索的项目。
 type ListItem interface {
 	list.FilterableItem
 	list.Focusable
 	list.MatchSettable
 
-	// ID returns the unique identifier of the item.
+	// ID 返回项目的唯一标识符。
 	ID() string
 }
 
-// SessionItem wraps a [session.Session] to implement the [ListItem] interface.
+// SessionItem 包装一个[session.Session]以实现[ListItem]接口。
 type SessionItem struct {
 	session.Session
 	t                *styles.Styles
@@ -40,40 +40,40 @@ type SessionItem struct {
 
 var _ ListItem = &SessionItem{}
 
-// Filter returns the filterable value of the session.
+// Filter 返回会话的可过滤值。
 func (s *SessionItem) Filter() string {
 	return s.Title
 }
 
-// ID returns the unique identifier of the session.
+// ID 返回会话的唯一标识符。
 func (s *SessionItem) ID() string {
 	return s.Session.ID
 }
 
-// SetMatch sets the fuzzy match for the session item.
+// SetMatch 设置会话项目的模糊匹配。
 func (s *SessionItem) SetMatch(m fuzzy.Match) {
 	s.cache = nil
 	s.m = m
 }
 
-// InputValue returns the updated title value
+// InputValue 返回更新的标题值
 func (s *SessionItem) InputValue() string {
 	return s.updateTitleInput.Value()
 }
 
-// HandleInput forwards input message to the update title input
+// HandleInput 将输入消息转发到更新标题输入
 func (s *SessionItem) HandleInput(msg tea.Msg) tea.Cmd {
 	var cmd tea.Cmd
 	s.updateTitleInput, cmd = s.updateTitleInput.Update(msg)
 	return cmd
 }
 
-// Cursor returns the cursor of the update title input
+// Cursor 返回更新标题输入的光标
 func (s *SessionItem) Cursor() *tea.Cursor {
 	return s.updateTitleInput.Cursor()
 }
 
-// Render returns the string representation of the session item.
+// Render 返回会话项目的字符串表示。
 func (s *SessionItem) Render(width int) string {
 	info := humanize.Time(time.Unix(s.UpdatedAt, 0))
 	styles := ListItemStyles{
@@ -150,11 +150,10 @@ func renderItem(t ListItemStyles, title string, info string, focused bool, width
 			if start > lastPos {
 				parts = append(parts, ansi.Cut(title, lastPos, start))
 			}
-			// NOTE: We're using [ansi.Style] here instead of [lipglosStyle]
-			// because we can control the underline start and stop more
-			// precisely via [ansi.AttrUnderline] and [ansi.AttrNoUnderline]
-			// which only affect the underline attribute without interfering
-			// with other style
+			// 注意：我们在这里使用[ansi.Style]而不是[lipgloss.Style]
+			// 因为我们可以通过[ansi.AttrUnderline]和[ansi.AttrNoUnderline]
+			// 更精确地控制下划线的开始和停止
+			// 这些只影响下划线属性而不会干扰其他样式
 			parts = append(parts,
 				ansi.NewStyle().Underline(true).String(),
 				ansi.Cut(title, start, stop+1),
@@ -174,7 +173,7 @@ func renderItem(t ListItemStyles, title string, info string, focused bool, width
 	return content
 }
 
-// SetFocused sets the focus state of the session item.
+// SetFocused 设置会话项目的焦点状态。
 func (s *SessionItem) SetFocused(focused bool) {
 	if s.focused != focused {
 		s.cache = nil
@@ -182,8 +181,8 @@ func (s *SessionItem) SetFocused(focused bool) {
 	s.focused = focused
 }
 
-// sessionItems takes a slice of [session.Session]s and convert them to a slice
-// of [ListItem]s.
+// sessionItems 接受一个[session.Session]切片并将它们转换为
+// [ListItem]切片。
 func sessionItems(t *styles.Styles, mode sessionsMode, sessions ...session.Session) []list.FilterableItem {
 	items := make([]list.FilterableItem, len(sessions))
 	for i, s := range sessions {

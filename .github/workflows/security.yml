@@ -1,92 +1,112 @@
-name: "security"
+# 安全扫描工作流配置文件
+name: "security"  # 工作流名称：安全
 
+# 触发条件
 on:
-  pull_request:
+  pull_request:  # 当创建 PR 时
   push:
-    branches: [main]
+    branches: [main]  # 当推送到 main 分支时
   schedule:
-    - cron: "0 2 * * *"
+    - cron: "0 2 * * *"  # 每天凌晨 2 点执行
 
+# 权限配置
 permissions:
-  contents: read
+  contents: read  # 只读访问仓库内容
 
+# 并发控制
 concurrency:
-  group: security-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  group: security-${{ github.event.pull_request.number || github.ref }}  # 工作流组名称
+  cancel-in-progress: true  # 取消正在进行的相同工作流
 
+# 任务定义
 jobs:
-  codeql:
-    runs-on: ubuntu-latest
+  codeql:  # CodeQL 代码分析任务
+    runs-on: ubuntu-latest  # 运行环境：Ubuntu 最新版
     strategy:
-      fail-fast: false
+      fail-fast: false  # 非快速失败（一个语言失败不影响其他语言）
       matrix:
-        language: ["go", "actions"]
+        language: ["go", "actions"]  # 分析的语言：Go 和 GitHub Actions
     permissions:
-      actions: read
-      contents: read
-      pull-requests: read
-      security-events: write
+      actions: read  # 读取操作权限
+      contents: read  # 读取仓库内容权限
+      pull-requests: read  # 读取 PR 权限
+      security-events: write  # 写入安全事件权限
     steps:
+      # 检出代码
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          persist-credentials: false
+          persist-credentials: false  # 不持久化凭证
+      # 初始化 CodeQL
       - uses: github/codeql-action/init@45cbd0c69e560cd9e7cd7f8c32362050c9b7ded2 # v4.32.2
         with:
-          languages: ${{ matrix.language }}
+          languages: ${{ matrix.language }}  # 分析的语言
+      # 自动构建代码
       - uses: github/codeql-action/autobuild@45cbd0c69e560cd9e7cd7f8c32362050c9b7ded2 # v4.32.2
+      # 分析代码
       - uses: github/codeql-action/analyze@45cbd0c69e560cd9e7cd7f8c32362050c9b7ded2 # v4.32.2
 
-  grype:
-    runs-on: ubuntu-latest
+  grype:  # Grype 依赖扫描任务
+    runs-on: ubuntu-latest  # 运行环境：Ubuntu 最新版
     permissions:
-      security-events: write
-      actions: read
-      contents: read
+      security-events: write  # 写入安全事件权限
+      actions: read  # 读取操作权限
+      contents: read  # 读取仓库内容权限
     steps:
+      # 检出代码
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          persist-credentials: false
+          persist-credentials: false  # 不持久化凭证
+      # 使用 Anchore Grype 扫描依赖
       - uses: anchore/scan-action@7037fa011853d5a11690026fb85feee79f4c946c # v7.3.2
-        id: scan
+        id: scan  # 步骤 ID
         with:
-          path: "."
-          fail-build: true
-          severity-cutoff: critical
+          path: "."  # 扫描路径
+          fail-build: true  # 发现漏洞时构建失败
+          severity-cutoff: critical  # 严重程度阈值：严重
+      # 上传 SARIF 格式的扫描结果
       - uses: github/codeql-action/upload-sarif@45cbd0c69e560cd9e7cd7f8c32362050c9b7ded2 # v4.32.2
         with:
-          sarif_file: ${{ steps.scan.outputs.sarif }}
+          sarif_file: ${{ steps.scan.outputs.sarif }}  # 扫描结果文件
 
-  govulncheck:
-    runs-on: ubuntu-latest
+  govulncheck:  # Go 漏洞检查任务
+    runs-on: ubuntu-latest  # 运行环境：Ubuntu 最新版
     permissions:
-      security-events: write
-      contents: read
+      security-events: write  # 写入安全事件权限
+      contents: read  # 读取仓库内容权限
     steps:
+      # 检出代码
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          persist-credentials: false
+          persist-credentials: false  # 不持久化凭证
+      # 设置 Go 环境
       - uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6.2.0
         with:
           go-version: 1.26.0-rc.1 # change to "stable" once Go 1.26 is released
+      # 安装 govulncheck 工具
       - name: Install govulncheck
         run: go install golang.org/x/vuln/cmd/govulncheck@latest
+      # 运行 govulncheck 扫描
       - name: Run govulncheck
         run: |
           govulncheck -C . -format sarif ./... > results.sarif
+      # 上传 SARIF 格式的扫描结果
       - uses: github/codeql-action/upload-sarif@45cbd0c69e560cd9e7cd7f8c32362050c9b7ded2 # v4.32.2
         with:
-          sarif_file: results.sarif
+          sarif_file: results.sarif  # 扫描结果文件
 
-  dependency-review:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+  dependency-review:  # 依赖审查任务
+    runs-on: ubuntu-latest  # 运行环境：Ubuntu 最新版
+    if: github.event_name == 'pull_request'  # 仅在 PR 事件时运行
     permissions:
-      contents: read
+      contents: read  # 读取仓库内容权限
     steps:
+      # 检出代码
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          persist-credentials: false
+          persist-credentials: false  # 不持久化凭证
+      # 运行依赖审查
       - uses: actions/dependency-review-action@3c4e3dcb1aa7874d2c16be7d79418e9b7efd6261 # v4.8.2
         with:
-          fail-on-severity: critical
+          fail-on-severity: critical  # 发现严重漏洞时构建失败
+          # 允许的许可证
           allow-licenses: BSD-2-Clause, BSD-3-Clause, MIT, Apache-2.0, MPL-2.0, ISC, LicenseRef-scancode-google-patent-license-golang

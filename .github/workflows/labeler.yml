@@ -1,30 +1,42 @@
-name: labeler
+# 标签自动分类工作流配置文件
+name: labeler  # 工作流名称：标签器
 
+# 触发条件
 on:
   issues:
-    types: [opened]
+    types: [opened]  # 当 issue 被打开时
   pull_request_target:
-    types: [opened]
+    types: [opened]  # 当 PR 被打开时
   workflow_dispatch:
+    # 手动触发配置
     inputs:
       issue-number:
-        description: "Issue/PR #"
-        required: true
-        type: string
+        description: "Issue/PR #"  # 输入描述：Issue 或 PR 编号
+        required: true  # 必须输入
+        type: string  # 输入类型：字符串
 
+# 权限配置
 permissions:
-  issues: write
-  contents: read
+  issues: write  # 写入 issue 权限
+  contents: read  # 只读访问仓库内容
 
+# 任务定义
 jobs:
-  triage:
-    runs-on: ubuntu-latest
+  triage:  # 分类任务
+    runs-on: ubuntu-latest  # 运行环境：Ubuntu 最新版
     steps:
+      # 使用 GitHub issue 标签器 Action
       - uses: github/issue-labeler@c1b0f9f52a63158c4adc09425e858e87b32e9685 # v3.4
         with:
+          # 配置文件路径
           configuration-path: .github/labeler.yml
+          # 禁用版本化正则表达式
           enable-versioned-regex: 0
+          # 包含标题进行匹配
           include-title: 1
+          # 不包含正文进行匹配
           include-body: 0
+          # GitHub 令牌
           repo-token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          # Issue/PR 编号：优先使用手动输入，其次是 issue 编号，最后是 PR 编号
           issue-number: ${{ github.event.inputs.issue-number || github.event.issue.number || github.event.pull_request.number }}

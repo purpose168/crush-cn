@@ -6,56 +6,54 @@ import (
 	"github.com/charmbracelet/x/ansi"
 )
 
-// Item represents a single item in the lazy-loaded list.
+// Item 表示懒加载列表中的单个项目。
 type Item interface {
-	// Render returns the string representation of the item for the given
-	// width.
+	// Render 返回给定宽度的项目的字符串表示。
 	Render(width int) string
 }
 
-// RawRenderable represents an item that can provide a raw rendering
-// without additional styling.
+// RawRenderable 表示一个可以提供原始渲染
+// 而无需额外样式的项目。
 type RawRenderable interface {
-	// RawRender returns the raw rendered string without any additional
-	// styling.
+	// RawRender 返回没有任何额外样式的原始渲染字符串。
 	RawRender(width int) string
 }
 
-// Focusable represents an item that can be aware of focus state changes.
+// Focusable 表示一个可以感知焦点状态变化的项目。
 type Focusable interface {
-	// SetFocused sets the focus state of the item.
+	// SetFocused 设置项目的焦点状态。
 	SetFocused(focused bool)
 }
 
-// Highlightable represents an item that can highlight a portion of its content.
+// Highlightable 表示一个可以高亮其内容一部分的项目。
 type Highlightable interface {
-	// SetHighlight highlights the content from the given start to end
-	// positions. Use -1 for no highlight.
+	// SetHighlight 从给定的起始到结束位置高亮内容。
+	// 使用-1表示不进行高亮。
 	SetHighlight(startLine, startCol, endLine, endCol int)
-	// Highlight returns the current highlight positions within the item.
+	// Highlight 返回项目中的当前高亮位置。
 	Highlight() (startLine, startCol, endLine, endCol int)
 }
 
-// MouseClickable represents an item that can handle mouse click events.
+// MouseClickable 表示一个可以处理鼠标点击事件的项目。
 type MouseClickable interface {
-	// HandleMouseClick processes a mouse click event at the given coordinates.
-	// It returns true if the event was handled, false otherwise.
+	// HandleMouseClick 处理给定坐标处的鼠标点击事件。
+	// 如果事件被处理则返回true，否则返回false。
 	HandleMouseClick(btn ansi.MouseButton, x, y int) bool
 }
 
-// SpacerItem is a spacer item that adds vertical space in the list.
+// SpacerItem 是一个间隔项目，它在列表中添加垂直空间。
 type SpacerItem struct {
 	Height int
 }
 
-// NewSpacerItem creates a new [SpacerItem] with the specified height.
+// NewSpacerItem 创建一个具有指定高度的新[SpacerItem]。
 func NewSpacerItem(height int) *SpacerItem {
 	return &SpacerItem{
 		Height: max(0, height-1),
 	}
 }
 
-// Render implements the Item interface for [SpacerItem].
+// Render 为[SpacerItem]实现Item接口。
 func (s *SpacerItem) Render(width int) string {
 	return strings.Repeat("\n", s.Height)
 }

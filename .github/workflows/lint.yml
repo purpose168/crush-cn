@@ -1,12 +1,20 @@
-name: lint
-on:
-  push:
-  pull_request:
+# 代码 lint 工作流配置文件
+name: lint  # 工作流名称：lint
 
+# 触发条件
+on:
+  push:  # 当推送代码时
+  pull_request:  # 当创建 PR 时
+
+# 任务定义
 jobs:
-  lint:
+  lint:  # lint 任务
+    # 复用 charmbracelet/meta 仓库的 lint 工作流配置
     uses: charmbracelet/meta/.github/workflows/lint.yml@main
     with:
+      # golangci-lint 配置文件路径
       golangci_path: .golangci.yml
+      # golangci-lint 版本
       golangci_version: v2.4
+      # 超时时间
       timeout: 10m

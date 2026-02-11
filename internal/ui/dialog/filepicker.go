@@ -20,10 +20,10 @@ import (
 	uv "github.com/charmbracelet/ultraviolet"
 )
 
-// FilePickerID is the identifier for the FilePicker dialog.
+// FilePickerID 是 FilePicker 对话框的标识符。
 const FilePickerID = "filepicker"
 
-// FilePicker is a dialog that allows users to select files or directories.
+// FilePicker 是一个允许用户选择文件或目录的对话框。
 type FilePicker struct {
 	com *common.Common
 
@@ -33,7 +33,7 @@ type FilePicker struct {
 
 	fp              filepicker.Model
 	help            help.Model
-	previewingImage bool // indicates if an image is being previewed
+	previewingImage bool // 指示是否正在预览图像
 	isTmux          bool
 
 	km struct {
@@ -47,7 +47,7 @@ type FilePicker struct {
 	}
 }
 
-// CellSize returns the cell size used for image rendering.
+// CellSize 返回用于图像渲染的单元格大小。
 func (f *FilePicker) CellSize() fimage.CellSize {
 	return fimage.CellSize{
 		Width:  f.cellSizeW,
@@ -57,7 +57,7 @@ func (f *FilePicker) CellSize() fimage.CellSize {
 
 var _ Dialog = (*FilePicker)(nil)
 
-// NewFilePicker creates a new [FilePicker] dialog.
+// NewFilePicker 创建一个新的 [FilePicker] 对话框。
 func NewFilePicker(com *common.Common) (*FilePicker, tea.Cmd) {
 	f := new(FilePicker)
 	f.com = com
@@ -69,31 +69,31 @@ func NewFilePicker(com *common.Common) (*FilePicker, tea.Cmd) {
 
 	f.km.Select = key.NewBinding(
 		key.WithKeys("enter"),
-		key.WithHelp("enter", "accept"),
+		key.WithHelp("enter", "接受"),
 	)
 	f.km.Down = key.NewBinding(
 		key.WithKeys("down", "j"),
-		key.WithHelp("down/j", "move down"),
+		key.WithHelp("down/j", "向下移动"),
 	)
 	f.km.Up = key.NewBinding(
 		key.WithKeys("up", "k"),
-		key.WithHelp("up/k", "move up"),
+		key.WithHelp("up/k", "向上移动"),
 	)
 	f.km.Forward = key.NewBinding(
 		key.WithKeys("right", "l"),
-		key.WithHelp("right/l", "move forward"),
+		key.WithHelp("right/l", "向前移动"),
 	)
 	f.km.Backward = key.NewBinding(
 		key.WithKeys("left", "h"),
-		key.WithHelp("left/h", "move backward"),
+		key.WithHelp("left/h", "向后移动"),
 	)
 	f.km.Navigate = key.NewBinding(
 		key.WithKeys("right", "l", "left", "h", "up", "k", "down", "j"),
-		key.WithHelp("↑↓←→", "navigate"),
+		key.WithHelp("↑↓←→", "导航"),
 	)
 	f.km.Close = key.NewBinding(
 		key.WithKeys("esc", "alt+esc"),
-		key.WithHelp("esc", "close/exit"),
+		key.WithHelp("esc", "关闭/退出"),
 	)
 
 	fp := filepicker.New()
@@ -110,7 +110,7 @@ func NewFilePicker(com *common.Common) (*FilePicker, tea.Cmd) {
 	return f, f.fp.Init()
 }
 
-// SetImageCapabilities sets the image capabilities for the [FilePicker].
+// SetImageCapabilities 设置 [FilePicker] 的图像功能。
 func (f *FilePicker) SetImageCapabilities(caps *common.Capabilities) {
 	if caps != nil {
 		if caps.SupportsKittyGraphics() {
@@ -121,7 +121,7 @@ func (f *FilePicker) SetImageCapabilities(caps *common.Capabilities) {
 	}
 }
 
-// WorkingDir returns the current working directory of the [FilePicker].
+// WorkingDir 返回 [FilePicker] 的当前工作目录。
 func (f *FilePicker) WorkingDir() string {
 	wd := f.com.Config().WorkingDir()
 	if len(wd) > 0 {
@@ -136,7 +136,7 @@ func (f *FilePicker) WorkingDir() string {
 	return cwd
 }
 
-// ShortHelp returns the short help key bindings for the [FilePicker] dialog.
+// ShortHelp 返回 [FilePicker] 对话框的简短帮助键绑定。
 func (f *FilePicker) ShortHelp() []key.Binding {
 	return []key.Binding{
 		f.km.Navigate,
@@ -145,7 +145,7 @@ func (f *FilePicker) ShortHelp() []key.Binding {
 	}
 }
 
-// FullHelp returns the full help key bindings for the [FilePicker] dialog.
+// FullHelp 返回 [FilePicker] 对话框的完整帮助键绑定。
 func (f *FilePicker) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
 		{
@@ -161,12 +161,12 @@ func (f *FilePicker) FullHelp() [][]key.Binding {
 	}
 }
 
-// ID returns the identifier of the [FilePicker] dialog.
+// ID 返回 [FilePicker] 对话框的标识符。
 func (f *FilePicker) ID() string {
 	return FilePickerID
 }
 
-// HandleMsg updates the [FilePicker] dialog based on the given message.
+// HandleMsg 根据给定消息更新 [FilePicker] 对话框。
 func (f *FilePicker) HandleMsg(msg tea.Msg) Action {
 	var cmds []tea.Cmd
 	switch msg := msg.(type) {
@@ -219,7 +219,7 @@ const (
 	filePickerMinHeight = 10
 )
 
-// Draw renders the [FilePicker] dialog as a string.
+// Draw 将 [FilePicker] 对话框渲染为字符串。
 func (f *FilePicker) Draw(scr uv.Screen, area uv.Rectangle) *tea.Cursor {
 	width := max(0, min(filePickerMinWidth, area.Dx()))
 	height := max(0, min(10, area.Dy()))
@@ -240,7 +240,7 @@ func (f *FilePicker) Draw(scr uv.Screen, area uv.Rectangle) *tea.Cursor {
 	t := f.com.Styles
 	rc := NewRenderContext(t, width)
 	rc.Gap = 1
-	rc.Title = "Add Image"
+	rc.Title = "添加图像"
 	rc.Help = f.help.View(f)
 
 	imgPreview := t.Dialog.ImagePreview.Align(lipgloss.Center).Width(innerWidth).Render(f.imagePreview(imgPrevWidth, imgPrevHeight))
@@ -260,7 +260,7 @@ var (
 	imagePreviewMutex sync.RWMutex
 )
 
-// imagePreview returns the image preview section of the [FilePicker] dialog.
+// imagePreview 返回 [FilePicker] 对话框的图像预览部分。
 func (f *FilePicker) imagePreview(imgPrevWidth, imgPrevHeight int) string {
 	if !f.previewingImage {
 		key := fmt.Sprintf("%dx%d", imgPrevWidth, imgPrevHeight)

@@ -6,30 +6,30 @@ import (
 	"github.com/charmbracelet/crush/internal/ui/styles"
 )
 
-// Scrollbar renders a vertical scrollbar based on content and viewport size.
-// Returns an empty string if content fits within viewport (no scrolling needed).
+// Scrollbar 根据内容和视口大小渲染垂直滚动条。
+// 如果内容适合视口（无需滚动），则返回空字符串。
 func Scrollbar(s *styles.Styles, height, contentSize, viewportSize, offset int) string {
 	if height <= 0 || contentSize <= viewportSize {
 		return ""
 	}
 
-	// Calculate thumb size (minimum 1 character).
+	// 计算滑块大小（最小 1 个字符）。
 	thumbSize := max(1, height*viewportSize/contentSize)
 
-	// Calculate thumb position.
+	// 计算滑块位置。
 	maxOffset := contentSize - viewportSize
 	if maxOffset <= 0 {
 		return ""
 	}
 
-	// Calculate where the thumb starts.
+	// 计算滑块开始的位置。
 	trackSpace := height - thumbSize
 	thumbPos := 0
 	if trackSpace > 0 && maxOffset > 0 {
 		thumbPos = min(trackSpace, offset*trackSpace/maxOffset)
 	}
 
-	// Build the scrollbar.
+	// 构建滚动条。
 	var sb strings.Builder
 	for i := range height {
 		if i > 0 {

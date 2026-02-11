@@ -37,18 +37,17 @@ func hunkToSplit(h *udiff.Hunk) (sh splitHunk) {
 		var sl splitLine
 
 		switch ul.Kind {
-		// For equal lines, add as is
+		// 对于相等的行，原样添加
 		case udiff.Equal:
 			sl.before = &ul
 			sl.after = &ul
 
-		// For inserted lines, set after and keep before as nil
+		// 对于插入的行，设置after并将before保持为nil
 		case udiff.Insert:
 			sl.before = nil
 			sl.after = &ul
 
-		// For deleted lines, set before and loop over the next lines
-		// searching for the equivalent after line.
+		// 对于删除的行，设置before并遍历后续行搜索等效的after行。
 		case udiff.Delete:
 			sl.before = &ul
 

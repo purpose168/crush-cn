@@ -1,36 +1,57 @@
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
 
-name: goreleaser
+# Goreleaser 发布工作流配置文件
+name: goreleaser  # 工作流名称：Goreleaser
 
+# 触发条件：当推送符合语义化版本标签时
 on:
   push:
     tags:
-      - v*.*.*
+      - v*.*.*  # 匹配 vX.Y.Z 格式的标签
 
+# 并发控制
 concurrency:
-  group: goreleaser
-  cancel-in-progress: true
+  group: goreleaser  # 工作流组名称
+  cancel-in-progress: true  # 取消正在进行的相同工作流
 
+# 任务定义
 jobs:
-  goreleaser:
+  goreleaser:  # Goreleaser 任务
+    # 复用 charmbracelet/meta 仓库的 Goreleaser 工作流配置
     uses: charmbracelet/meta/.github/workflows/goreleaser.yml@main
     with:
+      # Go 版本
       go_version: "1.25"
+      # macOS 签名授权文件路径
       macos_sign_entitlements: "./.github/entitlements.plist"
       # XXX: remove it after goreleaser 2.14.
-      goreleaser_version: nightly
+      goreleaser_version: nightly  # Goreleaser 版本：夜间构建版
     secrets:
+      # Docker Hub 用户名
       docker_username: ${{ secrets.DOCKERHUB_USERNAME }}
+      # Docker Hub 令牌
       docker_token: ${{ secrets.DOCKERHUB_TOKEN }}
+      # GitHub 个人访问令牌
       gh_pat: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+      # Goreleaser 密钥
       goreleaser_key: ${{ secrets.GORELEASER_KEY }}
+      # Fury 令牌
       fury_token: ${{ secrets.FURY_TOKEN }}
+      # NFPM GPG 密钥
       nfpm_gpg_key: ${{ secrets.NFPM_GPG_KEY }}
+      # NFPM 密码短语
       nfpm_passphrase: ${{ secrets.NFPM_PASSPHRASE }}
+      # Snapcraft 令牌
       snapcraft_token: ${{ secrets.SNAPCRAFT_TOKEN }}
+      # AUR 密钥
       aur_key: ${{ secrets.AUR_KEY }}
+      # macOS 签名 P12 文件
       macos_sign_p12: ${{ secrets.MACOS_SIGN_P12 }}
+      # macOS 签名密码
       macos_sign_password: ${{ secrets.MACOS_SIGN_PASSWORD }}
+      # macOS 公证发行者 ID
       macos_notary_issuer_id: ${{ secrets.MACOS_NOTARY_ISSUER_ID }}
+      # macOS 公证密钥 ID
       macos_notary_key_id: ${{ secrets.MACOS_NOTARY_KEY_ID }}
+      # macOS 公证密钥
       macos_notary_key: ${{ secrets.MACOS_NOTARY_KEY }}

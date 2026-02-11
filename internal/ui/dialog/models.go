@@ -17,7 +17,7 @@ import (
 	uv "github.com/charmbracelet/ultraviolet"
 )
 
-// ModelType represents the type of model to select.
+// ModelType 表示要选择的模型类型。
 type ModelType int
 
 const (
@@ -25,19 +25,19 @@ const (
 	ModelTypeSmall
 )
 
-// String returns the string representation of the [ModelType].
+// String 返回 [ModelType] 的字符串表示。
 func (mt ModelType) String() string {
 	switch mt {
 	case ModelTypeLarge:
-		return "Large Task"
+		return "大型任务"
 	case ModelTypeSmall:
-		return "Small Task"
+		return "小型任务"
 	default:
-		return "Unknown"
+		return "未知"
 	}
 }
 
-// Config returns the corresponding config model type.
+// Config 返回对应的配置模型类型。
 func (mt ModelType) Config() config.SelectedModelType {
 	switch mt {
 	case ModelTypeLarge:
@@ -49,7 +49,7 @@ func (mt ModelType) Config() config.SelectedModelType {
 	}
 }
 
-// Placeholder returns the input placeholder for the model type.
+// Placeholder 返回模型类型的输入占位符。
 func (mt ModelType) Placeholder() string {
 	switch mt {
 	case ModelTypeLarge:
@@ -62,17 +62,17 @@ func (mt ModelType) Placeholder() string {
 }
 
 const (
-	onboardingModelInputPlaceholder = "Find your fave"
-	largeModelInputPlaceholder      = "Choose a model for large, complex tasks"
-	smallModelInputPlaceholder      = "Choose a model for small, simple tasks"
+	onboardingModelInputPlaceholder = "查找您喜欢的"
+	largeModelInputPlaceholder      = "为大型复杂任务选择模型"
+	smallModelInputPlaceholder      = "为小型简单任务选择模型"
 )
 
-// ModelsID is the identifier for the model selection dialog.
+// ModelsID 是模型选择对话框的标识符。
 const ModelsID = "models"
 
 const defaultModelsDialogMaxWidth = 73
 
-// Models represents a model selection dialog.
+// Models 表示一个模型选择对话框。
 type Models struct {
 	com          *common.Common
 	isOnboarding bool
@@ -96,7 +96,7 @@ type Models struct {
 
 var _ Dialog = (*Models)(nil)
 
-// NewModels creates a new Models dialog.
+// NewModels 创建一个新的 Models 对话框。
 func NewModels(com *common.Common, isOnboarding bool) (*Models, error) {
 	t := com.Styles
 	m := &Models{}
@@ -119,49 +119,49 @@ func NewModels(com *common.Common, isOnboarding bool) (*Models, error) {
 
 	m.keyMap.Tab = key.NewBinding(
 		key.WithKeys("tab", "shift+tab"),
-		key.WithHelp("tab", "toggle type"),
+		key.WithHelp("tab", "切换类型"),
 	)
 	m.keyMap.Select = key.NewBinding(
 		key.WithKeys("enter", "ctrl+y"),
-		key.WithHelp("enter", "confirm"),
+		key.WithHelp("enter", "确认"),
 	)
 	m.keyMap.Edit = key.NewBinding(
 		key.WithKeys("ctrl+e"),
-		key.WithHelp("ctrl+e", "edit"),
+		key.WithHelp("ctrl+e", "编辑"),
 	)
 	m.keyMap.UpDown = key.NewBinding(
 		key.WithKeys("up", "down"),
-		key.WithHelp("↑/↓", "choose"),
+		key.WithHelp("↑/↓", "选择"),
 	)
 	m.keyMap.Next = key.NewBinding(
 		key.WithKeys("down", "ctrl+n"),
-		key.WithHelp("↓", "next item"),
+		key.WithHelp("↓", "下一项"),
 	)
 	m.keyMap.Previous = key.NewBinding(
 		key.WithKeys("up", "ctrl+p"),
-		key.WithHelp("↑", "previous item"),
+		key.WithHelp("↑", "上一项"),
 	)
 	m.keyMap.Close = CloseKey
 
 	providers, err := getFilteredProviders(com.Config())
 	if err != nil {
-		return nil, fmt.Errorf("failed to get providers: %w", err)
+		return nil, fmt.Errorf("无法获取提供者: %w", err)
 	}
 
 	m.providers = providers
 	if err := m.setProviderItems(); err != nil {
-		return nil, fmt.Errorf("failed to set provider items: %w", err)
+		return nil, fmt.Errorf("无法设置提供者项目: %w", err)
 	}
 
 	return m, nil
 }
 
-// ID implements Dialog.
+// ID 实现 Dialog 接口。
 func (m *Models) ID() string {
 	return ModelsID
 }
 
-// HandleMsg implements Dialog.
+// HandleMsg 实现 Dialog 接口。
 func (m *Models) HandleMsg(msg tea.Msg) Action {
 	switch msg := msg.(type) {
 	case tea.KeyPressMsg:
@@ -231,12 +231,12 @@ func (m *Models) HandleMsg(msg tea.Msg) Action {
 	return nil
 }
 
-// Cursor returns the cursor for the dialog.
+// Cursor 返回对话框的光标。
 func (m *Models) Cursor() *tea.Cursor {
 	return InputCursor(m.com.Styles, m.input.Cursor())
 }
 
-// modelTypeRadioView returns the radio view for model type selection.
+// modelTypeRadioView 返回模型类型选择的单选视图。
 func (m *Models) modelTypeRadioView() string {
 	t := m.com.Styles
 	textStyle := t.HalfMuted
@@ -256,7 +256,7 @@ func (m *Models) modelTypeRadioView() string {
 		smallRadio, textStyle.Render(ModelTypeSmall.String()))
 }
 
-// Draw implements [Dialog].
+// Draw 实现 [Dialog] 接口。
 func (m *Models) Draw(scr uv.Screen, area uv.Rectangle) *tea.Cursor {
 	t := m.com.Styles
 	width := max(0, min(defaultModelsDialogMaxWidth, area.Dx()-t.Dialog.View.GetHorizontalBorderSize()))
@@ -272,11 +272,11 @@ func (m *Models) Draw(scr uv.Screen, area uv.Rectangle) *tea.Cursor {
 	m.help.SetWidth(innerWidth)
 
 	rc := NewRenderContext(t, width)
-	rc.Title = "Switch Model"
+	rc.Title = "切换模型"
 	rc.TitleInfo = m.modelTypeRadioView()
 
 	if m.isOnboarding {
-		titleText := t.Dialog.PrimaryText.Render("To start, let's choose a provider and model.")
+		titleText := t.Dialog.PrimaryText.Render("要开始，让我们选择一个提供者和模型。")
 		rc.AddPart(titleText)
 	}
 
@@ -297,7 +297,7 @@ func (m *Models) Draw(scr uv.Screen, area uv.Rectangle) *tea.Cursor {
 		view := rc.Render()
 		DrawOnboardingCursor(scr, area, view, cur)
 
-		// FIXME(@andreynering): Figure it out how to properly fix this
+		// FIXME(@andreynering): 找出如何正确修复这个问题
 		if cur != nil {
 			cur.Y -= 1
 			cur.X -= 1
@@ -309,7 +309,7 @@ func (m *Models) Draw(scr uv.Screen, area uv.Rectangle) *tea.Cursor {
 	return cur
 }
 
-// ShortHelp returns the short help view.
+// ShortHelp 返回简短的帮助视图。
 func (m *Models) ShortHelp() []key.Binding {
 	if m.isOnboarding {
 		return []key.Binding{
@@ -329,7 +329,7 @@ func (m *Models) ShortHelp() []key.Binding {
 	return h
 }
 
-// FullHelp returns the full help view.
+// FullHelp 返回完整的帮助视图。
 func (m *Models) FullHelp() [][]key.Binding {
 	return [][]key.Binding{m.ShortHelp()}
 }
@@ -348,7 +348,7 @@ func (m *Models) isSelectedConfigured() bool {
 	return isConfigured
 }
 
-// setProviderItems sets the provider items in the list.
+// setProviderItems 在列表中设置提供者项目。
 func (m *Models) setProviderItems() error {
 	t := m.com.Styles
 	cfg := m.com.Config()
@@ -358,13 +358,13 @@ func (m *Models) setProviderItems() error {
 	currentModel := cfg.Models[selectedType]
 	recentItems := cfg.RecentModels[selectedType]
 
-	// Track providers already added to avoid duplicates
+	// 跟踪已添加的提供者以避免重复
 	addedProviders := make(map[string]bool)
 
-	// Get a list of known providers to compare against
+	// 获取已知提供者列表以进行比较
 	knownProviders, err := config.Providers(cfg)
 	if err != nil {
-		return fmt.Errorf("failed to get providers: %w", err)
+		return fmt.Errorf("无法获取提供者: %w", err)
 	}
 
 	containsProviderFunc := func(id string) func(p catwalk.Provider) bool {
@@ -373,7 +373,7 @@ func (m *Models) setProviderItems() error {
 		}
 	}
 
-	// itemsMap contains the keys of added model items.
+	// itemsMap 包含已添加的模型项目的键。
 	itemsMap := make(map[string]*ModelItem)
 	groups := []ModelGroup{}
 	for id, p := range cfg.Providers.Seq2() {
@@ -381,12 +381,12 @@ func (m *Models) setProviderItems() error {
 			continue
 		}
 
-		// Check if this provider is not in the known providers list
+		// 检查此提供者是否不在已知提供者列表中
 		if !slices.ContainsFunc(knownProviders, containsProviderFunc(id)) ||
 			!slices.ContainsFunc(m.providers, containsProviderFunc(id)) {
 			provider := p.ToProvider()
 
-			// Add this unknown provider to the list
+			// 将此未知提供者添加到列表
 			name := cmp.Or(p.Name, id)
 
 			addedProviders[id] = true
@@ -406,8 +406,8 @@ func (m *Models) setProviderItems() error {
 		}
 	}
 
-	// Move "Charm Hyper" to first position.
-	// (But still after recent models and custom providers).
+	// 将"Charm Hyper"移动到第一个位置。
+	// （但仍在最近使用的模型和自定义提供者之后）。
 	slices.SortStableFunc(m.providers, func(a, b catwalk.Provider) int {
 		switch {
 		case a.ID == "hyper":
@@ -419,7 +419,7 @@ func (m *Models) setProviderItems() error {
 		}
 	})
 
-	// Now add known providers from the predefined list
+	// 现在从预定义列表中添加已知提供者
 	for _, provider := range m.providers {
 		providerID := string(provider.ID)
 		if addedProviders[providerID] {
@@ -475,7 +475,7 @@ func (m *Models) setProviderItems() error {
 	}
 
 	if len(recentItems) > 0 {
-		recentGroup := NewModelGroup(t, "Recently used", false)
+		recentGroup := NewModelGroup(t, "最近使用", false)
 
 		var validRecentItems []config.SelectedModel
 		for _, recent := range recentItems {
@@ -485,7 +485,7 @@ func (m *Models) setProviderItems() error {
 				continue
 			}
 
-			// Show provider for recent items
+			// 显示最近项目的提供者
 			item = NewModelItem(t, item.prov, item.model, m.modelType, true)
 			item.showProvider = true
 
@@ -497,9 +497,9 @@ func (m *Models) setProviderItems() error {
 		}
 
 		if len(validRecentItems) != len(recentItems) {
-			// FIXME: Does this need to be here? Is it mutating the config during a read?
+			// FIXME: 这需要在这里吗？这是在读取期间修改配置吗？
 			if err := cfg.SetConfigField(fmt.Sprintf("recent_models.%s", selectedType), validRecentItems); err != nil {
-				return fmt.Errorf("failed to update recent models: %w", err)
+				return fmt.Errorf("无法更新最近模型: %w", err)
 			}
 		}
 
@@ -508,12 +508,12 @@ func (m *Models) setProviderItems() error {
 		}
 	}
 
-	// Set model groups in the list.
+	// 在列表中设置模型组。
 	m.list.SetGroups(groups...)
 	m.list.SetSelectedItem(selectedItemID)
 	m.list.ScrollToTop()
 
-	// Update placeholder based on model type
+	// 根据模型类型更新占位符
 	if !m.isOnboarding {
 		m.input.Placeholder = m.modelType.Placeholder()
 	}
@@ -524,7 +524,7 @@ func (m *Models) setProviderItems() error {
 func getFilteredProviders(cfg *config.Config) ([]catwalk.Provider, error) {
 	providers, err := config.Providers(cfg)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get providers: %w", err)
+		return nil, fmt.Errorf("无法获取提供者: %w", err)
 	}
 	var filteredProviders []catwalk.Provider
 	for _, p := range providers {

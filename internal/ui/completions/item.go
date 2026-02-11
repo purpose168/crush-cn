@@ -8,12 +8,12 @@ import (
 	"github.com/sahilm/fuzzy"
 )
 
-// FileCompletionValue represents a file path completion value.
+// FileCompletionValue 表示文件路径补全值。
 type FileCompletionValue struct {
 	Path string
 }
 
-// ResourceCompletionValue represents a MCP resource completion value.
+// ResourceCompletionValue 表示 MCP 资源补全值。
 type ResourceCompletionValue struct {
 	MCPName  string
 	URI      string
@@ -21,7 +21,7 @@ type ResourceCompletionValue struct {
 	MIMEType string
 }
 
-// CompletionItem represents an item in the completions list.
+// CompletionItem 表示补全列表中的一个项目。
 type CompletionItem struct {
 	text    string
 	value   any
@@ -29,13 +29,13 @@ type CompletionItem struct {
 	focused bool
 	cache   map[int]string
 
-	// Styles
+	// 样式
 	normalStyle  lipgloss.Style
 	focusedStyle lipgloss.Style
 	matchStyle   lipgloss.Style
 }
 
-// NewCompletionItem creates a new completion item.
+// NewCompletionItem 创建一个新的补全项目。
 func NewCompletionItem(text string, value any, normalStyle, focusedStyle, matchStyle lipgloss.Style) *CompletionItem {
 	return &CompletionItem{
 		text:         text,
@@ -46,28 +46,28 @@ func NewCompletionItem(text string, value any, normalStyle, focusedStyle, matchS
 	}
 }
 
-// Text returns the display text of the item.
+// Text 返回项目的显示文本。
 func (c *CompletionItem) Text() string {
 	return c.text
 }
 
-// Value returns the value of the item.
+// Value 返回项目的值。
 func (c *CompletionItem) Value() any {
 	return c.value
 }
 
-// Filter implements [list.FilterableItem].
+// Filter 实现 [list.FilterableItem] 接口。
 func (c *CompletionItem) Filter() string {
 	return c.text
 }
 
-// SetMatch implements [list.MatchSettable].
+// SetMatch 实现 [list.MatchSettable] 接口。
 func (c *CompletionItem) SetMatch(m fuzzy.Match) {
 	c.cache = nil
 	c.match = m
 }
 
-// SetFocused implements [list.Focusable].
+// SetFocused 实现 [list.Focusable] 接口。
 func (c *CompletionItem) SetFocused(focused bool) {
 	if c.focused != focused {
 		c.cache = nil
@@ -75,7 +75,7 @@ func (c *CompletionItem) SetFocused(focused bool) {
 	c.focused = focused
 }
 
-// Render implements [list.Item].
+// Render 实现 [list.Item] 接口。
 func (c *CompletionItem) Render(width int) string {
 	return renderItem(
 		c.normalStyle,
@@ -106,13 +106,13 @@ func renderItem(
 		return cached
 	}
 
-	innerWidth := width - 2 // Account for padding
-	// Truncate if needed.
+	innerWidth := width - 2 // 考虑内边距
+	// 如果需要则截断。
 	if ansi.StringWidth(text) > innerWidth {
 		text = ansi.Truncate(text, innerWidth, "…")
 	}
 
-	// Select base style.
+	// 选择基本样式。
 	style := normalStyle
 	matchStyle = matchStyle.Background(style.GetBackground())
 	if focused {
@@ -120,15 +120,15 @@ func renderItem(
 		matchStyle = matchStyle.Background(style.GetBackground())
 	}
 
-	// Render full-width text with background.
+	// 渲染带有背景的完整宽度文本。
 	content := style.Padding(0, 1).Width(width).Render(text)
 
-	// Apply match highlighting using StyleRanges.
+	// 使用 StyleRanges 应用匹配高亮。
 	if len(match.MatchedIndexes) > 0 {
 		var ranges []lipgloss.Range
 		for _, rng := range matchedRanges(match.MatchedIndexes) {
 			start, stop := bytePosToVisibleCharPos(text, rng)
-			// Offset by 1 for the padding space.
+			// 为内边距空格偏移 1
 			ranges = append(ranges, lipgloss.NewRange(start+1, stop+2, matchStyle))
 		}
 		content = lipgloss.StyleRanges(content, ranges...)
@@ -138,7 +138,7 @@ func renderItem(
 	return content
 }
 
-// matchedRanges converts a list of match indexes into contiguous ranges.
+// matchedRanges 将匹配索引列表转换为连续范围。
 func matchedRanges(in []int) [][2]int {
 	if len(in) == 0 {
 		return [][2]int{}
@@ -160,7 +160,7 @@ func matchedRanges(in []int) [][2]int {
 	return out
 }
 
-// bytePosToVisibleCharPos converts byte positions to visible character positions.
+// bytePosToVisibleCharPos 将字节位置转换为可见字符位置。
 func bytePosToVisibleCharPos(str string, rng [2]int) (int, int) {
 	bytePos, byteStart, byteStop := 0, rng[0], rng[1]
 	pos, start, stop := 0, 0, 0
@@ -184,7 +184,7 @@ func bytePosToVisibleCharPos(str string, rng [2]int) (int, int) {
 	return start, stop
 }
 
-// Ensure CompletionItem implements the required interfaces.
+// 确保 CompletionItem 实现所需的接口。
 var (
 	_ list.Item           = (*CompletionItem)(nil)
 	_ list.FilterableItem = (*CompletionItem)(nil)

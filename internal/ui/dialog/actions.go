@@ -18,23 +18,23 @@ import (
 	"github.com/charmbracelet/crush/internal/ui/util"
 )
 
-// ActionClose is a message to close the current dialog.
+// ActionClose 是一个关闭当前对话框的消息。
 type ActionClose struct{}
 
-// ActionQuit is a message to quit the application.
+// ActionQuit 是一个退出应用程序的消息。
 type ActionQuit = tea.QuitMsg
 
-// ActionOpenDialog is a message to open a dialog.
+// ActionOpenDialog 是一个打开对话框的消息。
 type ActionOpenDialog struct {
 	DialogID string
 }
 
-// ActionSelectSession is a message indicating a session has been selected.
+// ActionSelectSession 是一个表示已选择会话的消息。
 type ActionSelectSession struct {
 	Session session.Session
 }
 
-// ActionSelectModel is a message indicating a model has been selected.
+// ActionSelectModel 是一个表示已选择模型的消息。
 type ActionSelectModel struct {
 	Provider       catwalk.Provider
 	Model          config.SelectedModel
@@ -42,7 +42,7 @@ type ActionSelectModel struct {
 	ReAuthenticate bool
 }
 
-// Messages for commands
+// 命令的消息
 type (
 	ActionNewSession        struct{}
 	ActionToggleHelp        struct{}
@@ -50,12 +50,12 @@ type (
 	ActionToggleThinking    struct{}
 	ActionExternalEditor    struct{}
 	ActionToggleYoloMode    struct{}
-	// ActionInitializeProject is a message to initialize a project.
+	// ActionInitializeProject 是一个初始化项目的消息。
 	ActionInitializeProject struct{}
 	ActionSummarize         struct {
 		SessionID string
 	}
-	// ActionSelectReasoningEffort is a message indicating a reasoning effort has been selected.
+	// ActionSelectReasoningEffort 是一个表示已选择推理强度的消息。
 	ActionSelectReasoningEffort struct {
 		Effort string
 	}
@@ -63,34 +63,33 @@ type (
 		Permission permission.PermissionRequest
 		Action     PermissionAction
 	}
-	// ActionRunCustomCommand is a message to run a custom command.
+	// ActionRunCustomCommand 是一个运行自定义命令的消息。
 	ActionRunCustomCommand struct {
 		Content   string
 		Arguments []commands.Argument
-		Args      map[string]string // Actual argument values
+		Args      map[string]string // 实际参数值
 	}
-	// ActionRunMCPPrompt is a message to run a custom command.
+	// ActionRunMCPPrompt 是一个运行自定义命令的消息。
 	ActionRunMCPPrompt struct {
 		Title       string
 		Description string
 		PromptID    string
 		ClientID    string
 		Arguments   []commands.Argument
-		Args        map[string]string // Actual argument values
+		Args        map[string]string // 实际参数值
 	}
 )
 
-// Messages for API key input dialog.
+// API 密钥输入对话框的消息。
 type (
 	ActionChangeAPIKeyState struct {
 		State APIKeyInputState
 	}
 )
 
-// Messages for OAuth2 device flow dialog.
+// OAuth2 设备流程对话框的消息。
 type (
-	// ActionInitiateOAuth is sent when the device auth is initiated
-	// successfully.
+	// ActionInitiateOAuth 在设备认证成功启动时发送。
 	ActionInitiateOAuth struct {
 		DeviceCode      string
 		UserCode        string
@@ -99,31 +98,28 @@ type (
 		Interval        int
 	}
 
-	// ActionCompleteOAuth is sent when the device flow completes successfully.
+	// ActionCompleteOAuth 在设备流程成功完成时发送。
 	ActionCompleteOAuth struct {
 		Token *oauth.Token
 	}
 
-	// ActionOAuthErrored is sent when the device flow encounters an error.
+	// ActionOAuthErrored 在设备流程遇到错误时发送。
 	ActionOAuthErrored struct {
 		Error error
 	}
 )
 
-// ActionCmd represents an action that carries a [tea.Cmd] to be passed to the
-// Bubble Tea program loop.
+// ActionCmd 表示一个携带 [tea.Cmd] 的操作，该命令将被传递到 Bubble Tea 程序循环。
 type ActionCmd struct {
 	Cmd tea.Cmd
 }
 
-// ActionFilePickerSelected is a message indicating a file has been selected in
-// the file picker dialog.
+// ActionFilePickerSelected 是一个表示在文件选择器对话框中已选择文件的消息。
 type ActionFilePickerSelected struct {
 	Path string
 }
 
-// Cmd returns a command that reads the file at path and sends a
-// [message.Attachement] to the program.
+// Cmd 返回一个命令，该命令读取指定路径的文件，并向程序发送 [message.Attachment] 消息。
 func (a ActionFilePickerSelected) Cmd() tea.Cmd {
 	path := a.Path
 	if path == "" {
@@ -134,13 +130,13 @@ func (a ActionFilePickerSelected) Cmd() tea.Cmd {
 		if err != nil {
 			return util.InfoMsg{
 				Type: util.InfoTypeError,
-				Msg:  fmt.Sprintf("unable to read the image: %v", err),
+				Msg:  fmt.Sprintf("无法读取图像：%v", err),
 			}
 		}
 		if isFileLarge {
 			return util.InfoMsg{
 				Type: util.InfoTypeError,
-				Msg:  "file too large, max 5MB",
+				Msg:  "文件过大，最大 5MB",
 			}
 		}
 
@@ -148,7 +144,7 @@ func (a ActionFilePickerSelected) Cmd() tea.Cmd {
 		if err != nil {
 			return util.InfoMsg{
 				Type: util.InfoTypeError,
-				Msg:  fmt.Sprintf("unable to read the image: %v", err),
+				Msg:  fmt.Sprintf("无法读取图像：%v", err),
 			}
 		}
 

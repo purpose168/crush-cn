@@ -1,36 +1,55 @@
-name: "CLA Assistant"
+# CLA Assistant 工作流配置文件
+name: "CLA Assistant"  # 工作流名称：贡献者许可协议助手
 
+# 触发条件
 on:
   issue_comment:
-    types: [created]
+    types: [created]  # 当创建 issue 评论时
   pull_request_target:
-    types: [opened, closed, synchronize]
+    types: [opened, closed, synchronize]  # 当 PR 被打开、关闭或同步时
 
+# 权限配置
 permissions:
-  actions: write
-  contents: write
-  pull-requests: write
-  statuses: write
+  actions: write  # 写入操作权限
+  contents: write  # 写入仓库内容权限
+  pull-requests: write  # 写入 PR 权限
+  statuses: write  # 写入状态权限
 
+# 任务定义
 jobs:
-  CLAAssistant:
+  CLAAssistant:  # CLA 助手任务
+    # 仅在官方仓库运行
     if: github.repository == 'charmbracelet/crush'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest  # 运行环境：Ubuntu 最新版
     steps:
-      - name: "CLA Assistant"
+      - name: "CLA Assistant"  # CLA 助手步骤
+        # 触发条件：
+        # 1. 评论内容为 'recheck'
+        # 2. 评论内容为签署 CLA 的声明
+        # 3. 事件类型为 pull_request_target
         if: |
           github.event.comment.body == 'recheck' ||
           github.event.comment.body == 'I have read the Contributor License Agreement (CLA) and hereby sign the CLA.' ||
           github.event_name == 'pull_request_target'
+        # 使用 CLA 助手 GitHub Action
         uses: contributor-assistant/github-action@ca4a40a7d1004f18d9960b404b97e5f30a505a08 # v2.6.1
         env:
+          # 环境变量：GitHub 令牌
           GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         with:
+          # CLA 签名存储路径
           path-to-signatures: ".github/cla-signatures.json"
+          # CLA 文档路径
           path-to-document: "https://github.com/charmbracelet/crush/blob/main/CLA.md"
+          # 目标分支
           branch: "main"
+          # 豁免列表：不需要签署 CLA 的用户/机器人
           allowlist: charmcli,charmcrush,dependabot[bot]
+          # 自定义 PR 签名评论
           custom-pr-sign-comment: "I have read the Contributor License Agreement (CLA) and hereby sign the CLA."
+          # 自定义未签名 PR 评论
           custom-notsigned-prcomment: "Thank you for your submission. We really appreciate it! Like many open-source projects, we ask that you sign our [Contributor License Agreement](https://github.com/charmbracelet/crush/blob/main/CLA.md) before we can accept your contribution. You can sign the CLA by just posting a Pull Request comment same as the below format."
+          # 合并后是否锁定 PR
           lock-pullrequest-aftermerge: false
+          # 签名后的提交信息
           signed-commit-message: "chore(legal): @$contributorName has signed the CLA"

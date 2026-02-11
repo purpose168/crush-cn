@@ -1,31 +1,42 @@
-name: nightly
+# 夜间构建工作流配置文件
+name: nightly  # 工作流名称：夜间构建
 
+# 触发条件
 on:
   schedule:
-    - cron: "0 0 * * *" # every day at midnight
-  workflow_dispatch: # allows manual triggering
+    - cron: "0 0 * * *" # 每天午夜执行
+  workflow_dispatch: # 允许手动触发
 
+# 任务定义
 jobs:
-  check:
-    runs-on: ubuntu-latest
+  check:  # 检查任务
+    runs-on: ubuntu-latest  # 运行环境：Ubuntu 最新版
     outputs:
+      # 输出变量：是否应该运行夜间构建
       should_run: ${{ steps.check.outputs.should_run }}
     steps:
+      # 检出代码
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          fetch-depth: 1
-      - id: check
+          fetch-depth: 1  # 仅获取最新提交
+      
+      - id: check  # 检查步骤
         env:
+          # 环境变量：GitHub 令牌
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
         run: |
+          # 检查当前提交是否已经成功运行过夜间构建
           if gh run list --workflow nightly.yml -c $(git rev-parse HEAD) -s success | grep 'completed'; then
-            echo "should_run=false" >> $GITHUB_OUTPUT
+            echo "should_run=false" >> $GITHUB_OUTPUT  # 已经运行过，不需要再次运行
           else
-            echo "should_run=true" >> $GITHUB_OUTPUT
+            echo "should_run=true" >> $GITHUB_OUTPUT  # 未运行过，需要运行
           fi
-  nightly:
-    needs: check
-    if: needs.check.outputs.should_run == 'true'
+  
+  nightly:  # 夜间构建任务
+    needs: check  # 依赖于 check 任务
+    if: needs.check.outputs.should_run == 'true'  # 仅当 should_run 为 true 时运行
+    # 复用 charmbracelet/meta 仓库的夜间构建工作流配置
     uses: charmbracelet/meta/.github/workflows/nightly.yml@main
     secrets:
+      # 传递 Goreleaser 密钥
       goreleaser_key: ${{ secrets.GORELEASER_KEY }}

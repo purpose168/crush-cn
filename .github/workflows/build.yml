@@ -1,27 +1,50 @@
-name: build
+# 构建工作流配置文件
+name: build  # 工作流名称
+
+# 触发条件：当推送代码或创建 PR 时
 on: [push, pull_request]
 
+# 权限配置
 permissions:
-  contents: read
+  contents: read  # 只读访问仓库内容
 
+# 并发控制
 concurrency:
+  # 工作流组名称：基于 PR 编号或分支引用
   group: build-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: true  # 取消正在进行的相同工作流
 
+# 任务定义
 jobs:
-  build:
+  build:  # 构建任务
     strategy:
       matrix:
+        # 构建矩阵：在不同操作系统上运行
         os: [ubuntu-latest, macos-latest, windows-latest]
+    
+    # 运行环境：使用矩阵中定义的操作系统
     runs-on: ${{ matrix.os }}
+    
+    # 构建步骤
     steps:
+      # 检出代码
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          persist-credentials: false
+          persist-credentials: false  # 不持久化凭证
+      
+      # 设置 Go 环境
       - uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6.2.0
         with:
-          go-version-file: go.mod
+          go-version-file: go.mod  # 从 go.mod 文件读取 Go 版本
+      
+      # 整理依赖
       - run: go mod tidy
+      
+      # 检查是否有未提交的更改
       - run: git diff --exit-code
+      
+      # 构建项目（启用竞态检测）
       - run: go build -race ./...
+      
+      # 运行测试（启用竞态检测，快速失败）
       - run: go test -race -failfast ./...

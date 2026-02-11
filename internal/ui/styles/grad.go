@@ -9,10 +9,9 @@ import (
 	"github.com/rivo/uniseg"
 )
 
-// ForegroundGrad returns a slice of strings representing the input string
-// rendered with a horizontal gradient foreground from color1 to color2. Each
-// string in the returned slice corresponds to a grapheme cluster in the input
-// string. If bold is true, the rendered strings will be bolded.
+// ForegroundGrad 返回一个字符串切片，表示用从 color1 到 color2 的水平渐变前景色渲染的输入字符串
+// 返回切片中的每个字符串对应输入字符串中的一个字形簇（grapheme cluster）
+// 如果 bold 为 true，渲染的字符串将以粗体显示
 func ForegroundGrad(t *Styles, input string, bold bool, color1, color2 color.Color) []string {
 	if input == "" {
 		return []string{""}
@@ -41,8 +40,7 @@ func ForegroundGrad(t *Styles, input string, bold bool, color1, color2 color.Col
 	return clusters
 }
 
-// ApplyForegroundGrad renders a given string with a horizontal gradient
-// foreground.
+// ApplyForegroundGrad 使用水平渐变前景色渲染给定的字符串
 func ApplyForegroundGrad(t *Styles, input string, color1, color2 color.Color) string {
 	if input == "" {
 		return ""
@@ -55,8 +53,7 @@ func ApplyForegroundGrad(t *Styles, input string, color1, color2 color.Color) st
 	return o.String()
 }
 
-// ApplyBoldForegroundGrad renders a given string with a horizontal gradient
-// foreground.
+// ApplyBoldForegroundGrad 使用水平渐变前景色和粗体渲染给定的字符串
 func ApplyBoldForegroundGrad(t *Styles, input string, color1, color2 color.Color) string {
 	if input == "" {
 		return ""
@@ -69,8 +66,8 @@ func ApplyBoldForegroundGrad(t *Styles, input string, color1, color2 color.Color
 	return o.String()
 }
 
-// blendColors returns a slice of colors blended between the given keys.
-// Blending is done in Hcl to stay in gamut.
+// blendColors 返回在给定颜色键之间混合的颜色切片
+// 混合在 Hcl 颜色空间中进行，以保持在色域内
 func blendColors(size int, stops ...color.Color) []color.Color {
 	if len(stops) < 2 {
 		return nil
@@ -84,12 +81,12 @@ func blendColors(size int, stops ...color.Color) []color.Color {
 	numSegments := len(stopsPrime) - 1
 	blended := make([]color.Color, 0, size)
 
-	// Calculate how many colors each segment should have.
+	// 计算每个段应该有多少种颜色
 	segmentSizes := make([]int, numSegments)
 	baseSize := size / numSegments
 	remainder := size % numSegments
 
-	// Distribute the remainder across segments.
+	// 将余数分配到各个段
 	for i := range numSegments {
 		segmentSizes[i] = baseSize
 		if i < remainder {
@@ -97,7 +94,7 @@ func blendColors(size int, stops ...color.Color) []color.Color {
 		}
 	}
 
-	// Generate colors for each segment.
+	// 为每个段生成颜色
 	for i := range numSegments {
 		c1 := stopsPrime[i]
 		c2 := stopsPrime[i+1]

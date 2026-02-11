@@ -5,16 +5,15 @@ import (
 	"github.com/charmbracelet/x/exp/charmtone"
 )
 
-// LineStyle defines the styles for a given line type in the diff view.
+// LineStyle 定义差异视图中给定行类型的样式。
 type LineStyle struct {
 	LineNumber lipgloss.Style
 	Symbol     lipgloss.Style
 	Code       lipgloss.Style
 }
 
-// Style defines the overall style for the diff view, including styles for
-// different line types such as divider, missing, equal, insert, and delete
-// lines.
+// Style 定义差异视图的总体样式，包括不同行类型的样式，
+// 如分隔符、缺失、相等、插入和删除行。
 type Style struct {
 	DividerLine LineStyle
 	MissingLine LineStyle
@@ -23,7 +22,7 @@ type Style struct {
 	DeleteLine  LineStyle
 }
 
-// DefaultLightStyle provides a default light theme style for the diff view.
+// DefaultLightStyle 为差异视图提供默认的浅色主题样式。
 func DefaultLightStyle() Style {
 	return Style{
 		DividerLine: LineStyle{
@@ -73,7 +72,7 @@ func DefaultLightStyle() Style {
 	}
 }
 
-// DefaultDarkStyle provides a default dark theme style for the diff view.
+// DefaultDarkStyle 为差异视图提供默认的深色主题样式。
 func DefaultDarkStyle() Style {
 	return Style{
 		DividerLine: LineStyle{

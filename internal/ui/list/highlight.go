@@ -9,7 +9,7 @@ import (
 	uv "github.com/charmbracelet/ultraviolet"
 )
 
-// DefaultHighlighter is the default highlighter function that applies inverse style.
+// DefaultHighlighter 是默认的高亮函数，它应用反转样式。
 var DefaultHighlighter Highlighter = func(x, y int, c *uv.Cell) *uv.Cell {
 	if c == nil {
 		return c
@@ -18,10 +18,10 @@ var DefaultHighlighter Highlighter = func(x, y int, c *uv.Cell) *uv.Cell {
 	return c
 }
 
-// Highlighter represents a function that defines how to highlight text.
+// Highlighter 表示一个定义如何高亮文本的函数。
 type Highlighter func(x, y int, c *uv.Cell) *uv.Cell
 
-// HighlightContent returns the content with highlighted regions based on the specified parameters.
+// HighlightContent 根据指定参数返回带有高亮区域的内容。
 func HighlightContent(content string, area image.Rectangle, startLine, startCol, endLine, endCol int) string {
 	var sb strings.Builder
 	pos := image.Pt(-1, -1)
@@ -42,7 +42,7 @@ func HighlightContent(content string, area image.Rectangle, startLine, startCol,
 	return sb.String()
 }
 
-// Highlight highlights a region of text within the given content and region.
+// Highlight 高亮给定内容和区域内的文本区域。
 func Highlight(content string, area image.Rectangle, startLine, startCol, endLine, endCol int, highlighter Highlighter) string {
 	buf := HighlightBuffer(content, area, startLine, startCol, endLine, endCol, highlighter)
 	if buf == nil {
@@ -51,8 +51,8 @@ func Highlight(content string, area image.Rectangle, startLine, startCol, endLin
 	return buf.Render()
 }
 
-// HighlightBuffer highlights a region of text within the given content and
-// region, returning a [uv.ScreenBuffer].
+// HighlightBuffer 高亮给定内容和区域内的文本区域，
+// 返回一个[uv.ScreenBuffer]。
 func HighlightBuffer(content string, area image.Rectangle, startLine, startCol, endLine, endCol int, highlighter Highlighter) *uv.ScreenBuffer {
 	content = stringext.NormalizeSpace(content)
 
@@ -69,7 +69,7 @@ func HighlightBuffer(content string, area image.Rectangle, startLine, startCol, 
 	styled := uv.NewStyledString(content)
 	styled.Draw(&buf, area)
 
-	// Treat -1 as "end of content"
+	// 将-1视为"内容结束"
 	if endLine < 0 {
 		endLine = height - 1
 	}
@@ -84,7 +84,7 @@ func HighlightBuffer(content string, area image.Rectangle, startLine, startCol, 
 
 		line := buf.Line(y)
 
-		// Determine column range for this line
+		// 确定此行的列范围
 		colStart := 0
 		if y == startLine {
 			colStart = min(startCol, len(line))
@@ -95,31 +95,31 @@ func HighlightBuffer(content string, area image.Rectangle, startLine, startCol, 
 			colEnd = min(endCol, len(line))
 		}
 
-		// Track last non-empty position as we go
+		// 在进行时跟踪最后一个非空位置
 		lastContentX := -1
 
-		// Single pass: check content and track last non-empty position
+		// 单次遍历：检查内容并跟踪最后一个非空位置
 		for x := colStart; x < colEnd; x++ {
 			cell := line.At(x)
 			if cell == nil {
 				continue
 			}
 
-			// Update last content position if non-empty
+			// 如果非空则更新最后内容位置
 			if cell.Content != "" && cell.Content != " " {
 				lastContentX = x
 			}
 		}
 
-		// Only apply highlight up to last content position
+		// 仅对最后内容位置之前的内容应用高亮
 		highlightEnd := colEnd
 		if lastContentX >= 0 {
 			highlightEnd = lastContentX + 1
 		} else if lastContentX == -1 {
-			highlightEnd = colStart // No content on this line
+			highlightEnd = colStart // 此行没有内容
 		}
 
-		// Apply highlight style only to cells with content
+		// 仅对有内容的单元格应用高亮样式
 		for x := colStart; x < highlightEnd; x++ {
 			if !image.Pt(x, y).In(area) {
 				continue
@@ -144,15 +144,15 @@ func ToHighlighter(lgStyle lipgloss.Style) Highlighter {
 	}
 }
 
-// ToStyle converts an inline [lipgloss.Style] to a [uv.Style].
+// ToStyle 将内联[lipgloss.Style]转换为[uv.Style]。
 func ToStyle(lgStyle lipgloss.Style) uv.Style {
 	var uvStyle uv.Style
 
-	// Colors are already color.Color
+	// 颜色已经是color.Color类型
 	uvStyle.Fg = lgStyle.GetForeground()
 	uvStyle.Bg = lgStyle.GetBackground()
 
-	// Build attributes using bitwise OR
+	// 使用按位或运算构建属性
 	var attrs uint8
 
 	if lgStyle.GetBold() {
@@ -188,8 +188,7 @@ func ToStyle(lgStyle lipgloss.Style) uv.Style {
 	return uvStyle
 }
 
-// AdjustArea adjusts the given area rectangle by subtracting margins, borders,
-// and padding from the style.
+// AdjustArea 通过从样式中减去边距、边框和内边距来调整给定的区域矩形。
 func AdjustArea(area image.Rectangle, style lipgloss.Style) image.Rectangle {
 	topMargin, rightMargin, bottomMargin, leftMargin := style.GetMargin()
 	topBorder, rightBorder, bottomBorder, leftBorder := style.GetBorderTopSize(),

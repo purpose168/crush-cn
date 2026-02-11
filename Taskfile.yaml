@@ -1,157 +1,158 @@
 # https://taskfile.dev
+# Taskfile 配置文件，定义了项目的各种构建、测试和发布任务
 
 version: "3"
 
 vars:
   VERSION:
-    sh: git describe --long 2>/dev/null || echo ""
+    sh: git describe --long 2>/dev/null || echo ""  # 获取版本信息，使用 git describe 命令
   RACE:
-    sh: test -f race.log && echo "1" || echo ""
+    sh: test -f race.log && echo "1" || echo ""  # 检查是否存在 race.log 文件，用于启用竞态检测
 
 env:
-  CGO_ENABLED: 0
-  GOEXPERIMENT: greenteagc
+  CGO_ENABLED: 0  # 禁用 CGO
+  GOEXPERIMENT: greenteagc  # 启用 Go 实验性功能 greenteagc
 
 tasks:
   lint:install:
-    desc: Install golangci-lint
+    desc: 安装 golangci-lint 代码检查工具
     cmds:
       - go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
     env:
-      GOTOOLCHAIN: go1.25.0
+      GOTOOLCHAIN: go1.25.0  # 使用指定的 Go 工具链版本
 
   lint:
-    desc: Run base linters
+    desc: 运行基础代码检查
     cmds:
-      - task: lint:log
-      - golangci-lint run --path-mode=abs --config=".golangci.yml" --timeout=5m
+      - task: lint:log  # 先运行日志检查任务
+      - golangci-lint run --path-mode=abs --config=".golangci.yml" --timeout=5m  # 运行 golangci-lint 检查
     env:
-      GOEXPERIMENT: null
+      GOEXPERIMENT: null  # 禁用 GOEXPERIMENT
 
   lint:log:
-    desc: Check that log messages start with capital letters
+    desc: 检查日志消息是否以大写字母开头
     cmds:
-      - ./scripts/check_log_capitalization.sh
+      - ./scripts/check_log_capitalization.sh  # 运行日志大写检查脚本
 
   lint:fix:
-    desc: Run base linters and fix issues
+    desc: 运行基础代码检查并修复问题
     cmds:
-      - golangci-lint run --path-mode=abs --config=".golangci.yml" --timeout=5m --fix
+      - golangci-lint run --path-mode=abs --config=".golangci.yml" --timeout=5m --fix  # 运行 golangci-lint 并修复问题
     env:
-      GOEXPERIMENT: null
+      GOEXPERIMENT: null  # 禁用 GOEXPERIMENT
 
   build:
-    desc: Run build
+    desc: 构建项目
     vars:
-      LDFLAGS: '{{if .VERSION}}-ldflags="-X github.com/charmbracelet/crush/internal/version.Version={{.VERSION}}"{{end}}'
+      LDFLAGS: '{{if .VERSION}}-ldflags="-X github.com/charmbracelet/crush/internal/version.Version={{.VERSION}}"{{end}}'  # 构建标志，设置版本信息
     cmds:
-      - "go build {{if .RACE}}-race{{end}} {{.LDFLAGS}} ."
+      - "go build {{if .RACE}}-race{{end}} {{.LDFLAGS}} ."  # 构建项目，根据需要启用竞态检测
     generates:
-      - crush
+      - crush  # 生成的可执行文件
 
   run:
-    desc: Run build
+    desc: 构建并运行项目
     cmds:
-      - task: build
-      - "./crush {{.CLI_ARGS}} {{if .RACE}}2>race.log{{end}}"
+      - task: build  # 先构建项目
+      - "./crush {{.CLI_ARGS}} {{if .RACE}}2>race.log{{end}}"  # 运行构建后的可执行文件
 
   test:
-    desc: Run tests
+    desc: 运行测试
     cmds:
-      - go test -race -failfast ./... {{.CLI_ARGS}}
+      - go test -race -failfast ./... {{.CLI_ARGS}}  # 运行所有测试，启用竞态检测，快速失败
 
   test:record:
-    desc: Run tests and record all VCR cassettes again
-    aliases: [record]
+    desc: 运行测试并重新记录所有 VCR 磁带
+    aliases: [record]  # 别名
     cmds:
-      - rm -r internal/agent/testdata
-      - go test -v -count=1 -timeout=1h ./internal/agent
+      - rm -r internal/agent/testdata  # 删除旧的测试数据
+      - go test -v -count=1 -timeout=1h ./internal/agent  # 运行代理测试，详细输出，不使用缓存，设置超时
 
   fmt:
-    desc: Run gofumpt
+    desc: 运行 gofumpt 格式化代码
     cmds:
-      - gofumpt -w .
+      - gofumpt -w .  # 使用 gofumpt 格式化代码并写回
 
   fmt:html:
-    desc: Run prettier on HTML/CSS/JS files
+    desc: 对 HTML/CSS/JS 文件运行 prettier 格式化
     cmds:
-      - prettier --write internal/cmd/stats/index.html internal/cmd/stats/index.css internal/cmd/stats/index.js
+      - prettier --write internal/cmd/stats/index.html internal/cmd/stats/index.css internal/cmd/stats/index.js  # 格式化统计页面相关文件
 
   dev:
-    desc: Run with profiling enabled
+    desc: 启用性能分析运行项目
     env:
-      CRUSH_PROFILE: true
+      CRUSH_PROFILE: true  # 启用 Crush 性能分析
     cmds:
-      - go run .
+      - go run .  # 直接运行项目
 
   install:
-    desc: Install the application
+    desc: 安装应用程序
     vars:
-      LDFLAGS: '{{if .VERSION}}-ldflags="-X github.com/charmbracelet/crush/internal/version.Version={{.VERSION}}"{{end}}'
+      LDFLAGS: '{{if .VERSION}}-ldflags="-X github.com/charmbracelet/crush/internal/version.Version={{.VERSION}}"{{end}}'  # 构建标志，设置版本信息
     cmds:
-      - task: fetch-tags
-      - go install {{.LDFLAGS}} -v .
+      - task: fetch-tags  # 先获取标签
+      - go install {{.LDFLAGS}} -v .  # 安装应用程序
 
   profile:cpu:
-    desc: 10s CPU profile
+    desc: 10秒 CPU 性能分析
     cmds:
-      - go tool pprof -http :6061 'http://localhost:6060/debug/pprof/profile?seconds=10'
+      - go tool pprof -http :6061 'http://localhost:6060/debug/pprof/profile?seconds=10'  # 生成并可视化 CPU 性能分析
 
   profile:heap:
-    desc: Heap profile
+    desc: 堆内存性能分析
     cmds:
-      - go tool pprof -http :6061 'http://localhost:6060/debug/pprof/heap'
+      - go tool pprof -http :6061 'http://localhost:6060/debug/pprof/heap'  # 生成并可视化堆内存性能分析
 
   profile:allocs:
-    desc: Allocations profile
+    desc: 内存分配性能分析
     cmds:
-      - go tool pprof -http :6061 'http://localhost:6060/debug/pprof/allocs'
+      - go tool pprof -http :6061 'http://localhost:6060/debug/pprof/allocs'  # 生成并可视化内存分配性能分析
 
   schema:
-    desc: Generate JSON schema for configuration
+    desc: 生成配置的 JSON 架构
     cmds:
-      - go run main.go schema > schema.json
-      - echo "Generated schema.json"
+      - go run main.go schema > schema.json  # 运行 schema 命令生成架构文件
+      - echo "Generated schema.json"  # 输出成功信息
     generates:
-      - schema.json
+      - schema.json  # 生成的架构文件
 
   hyper:
-    desc: Update Hyper embedded provider.json
+    desc: 更新 Hyper 嵌入式 provider.json
     cmds:
-      - go generate ./internal/agent/hyper/...
+      - go generate ./internal/agent/hyper/...  # 运行代码生成
     generates:
-      - ./internal/agent/hyper/provider.json
+      - ./internal/agent/hyper/provider.json  # 生成的 provider.json 文件
 
   release:
-    desc: Create and push a new tag following semver
+    desc: 创建并推送遵循语义化版本的新标签
     vars:
       NEXT:
-        sh: svu next --always || go run github.com/caarlos0/svu/v3@latest next --always
-    prompt: "This will release {{.NEXT}}. Continue?"
+        sh: svu next --always || go run github.com/caarlos0/svu/v3@latest next --always  # 计算下一个版本号
+    prompt: "This will release {{.NEXT}}. Continue?"  # 发布确认提示
     preconditions:
       - sh: '[ $(git symbolic-ref --short HEAD) = "main" ]'
-        msg: Not on main branch
+        msg: Not on main branch  # 检查是否在 main 分支
       - sh: "[ $(git status --porcelain=2 | wc -l) = 0 ]"
-        msg: "Git is dirty"
+        msg: "Git is dirty"  # 检查 git 工作区是否干净
       - sh: 'gh run list --workflow build.yml --commit $(git rev-parse HEAD) --status success --json conclusion -q ".[0].conclusion" | grep -q success'
-        msg: "Test build for this commit failed or not present"
+        msg: "Test build for this commit failed or not present"  # 检查构建是否成功
       - sh: 'gh run list --workflow snapshot.yml --commit $(git rev-parse HEAD) --status success --json conclusion -q ".[0].conclusion" | grep -q success'
-        msg: "Snapshot build for this commit failed or not present"
+        msg: "Snapshot build for this commit failed or not present"  # 检查快照构建是否成功
     cmds:
-      - task: fetch-tags
-      - git commit --allow-empty -m "{{.NEXT}}"
-      - git tag --annotate --sign -m "{{.NEXT}}" {{.NEXT}} {{.CLI_ARGS}}
-      - echo "Pushing {{.NEXT}}..."
-      - git push origin main --follow-tags
+      - task: fetch-tags  # 获取标签
+      - git commit --allow-empty -m "{{.NEXT}}"  # 创建空提交
+      - git tag --annotate --sign -m "{{.NEXT}}" {{.NEXT}} {{.CLI_ARGS}}  # 创建带注释和签名的标签
+      - echo "Pushing {{.NEXT}}..."  # 输出推送信息
+      - git push origin main --follow-tags  # 推送标签和分支
 
   fetch-tags:
     cmds:
-      - git tag -d nightly || true
-      - git fetch --tags
+      - git tag -d nightly || true  # 删除 nightly 标签（如果存在）
+      - git fetch --tags  # 获取所有标签
 
   deps:
-    desc: Update Fantasy and Catwalk
+    desc: 更新 Fantasy 和 Catwalk 依赖
     cmds:
-      - go get charm.land/fantasy
-      - go get charm.land/catwalk
-      - go mod tidy
+      - go get charm.land/fantasy  # 更新 Fantasy 依赖
+      - go get charm.land/catwalk  # 更新 Catwalk 依赖
+      - go mod tidy  # 整理依赖关系

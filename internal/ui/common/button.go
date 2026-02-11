@@ -7,21 +7,21 @@ import (
 	"github.com/charmbracelet/crush/internal/ui/styles"
 )
 
-// ButtonOpts defines the configuration for a single button
+// ButtonOpts 定义单个按钮的配置
 type ButtonOpts struct {
-	// Text is the button label
+	// Text 是按钮标签
 	Text string
-	// UnderlineIndex is the 0-based index of the character to underline (-1 for none)
+	// UnderlineIndex 是要下划线字符的从 0 开始的索引（-1 表示无）
 	UnderlineIndex int
-	// Selected indicates whether this button is currently selected
+	// Selected 指示此按钮当前是否被选中
 	Selected bool
-	// Padding inner horizontal padding defaults to 2 if this is 0
+	// Padding 内部水平内边距，如果为 0 则默认为 2
 	Padding int
 }
 
-// Button creates a button with an underlined character and selection state
+// Button 创建一个带有下划线字符和选择状态的按钮
 func Button(t *styles.Styles, opts ButtonOpts) string {
-	// Select style based on selection state
+	// 根据选择状态选择样式
 	style := t.ButtonBlur
 	if opts.Selected {
 		style = t.ButtonFocus
@@ -32,7 +32,7 @@ func Button(t *styles.Styles, opts ButtonOpts) string {
 		opts.Padding = 2
 	}
 
-	// the index is out of bound
+	// 索引超出范围
 	if opts.UnderlineIndex > -1 && opts.UnderlineIndex > len(text)-1 {
 		opts.UnderlineIndex = -1
 	}
@@ -46,11 +46,11 @@ func Button(t *styles.Styles, opts ButtonOpts) string {
 	return text
 }
 
-// ButtonGroup creates a row of selectable buttons
-// Spacing is the separator between buttons
-// Use "  " or similar for horizontal layout
-// Use "\n"  for vertical layout
-// Defaults to "  " (horizontal)
+// ButtonGroup 创建一行可选择的按钮
+// Spacing 是按钮之间的分隔符
+// 使用 " " 或类似字符进行水平布局
+// 使用 "\n" 进行垂直布局
+// 默认为 "  "（水平）
 func ButtonGroup(t *styles.Styles, buttons []ButtonOpts, spacing string) string {
 	if len(buttons) == 0 {
 		return ""

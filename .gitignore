@@ -50,3 +50,7 @@ Thumbs.db
 manpages/
 completions/crush.*sh
 .prettierignore
+
+
+.trae/
+

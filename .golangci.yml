@@ -1,48 +1,55 @@
-version: "2"
-linters:
-  enable:
-    - bodyclose
-    # - exhaustive
-    # - goconst
-    # - godot
-    # - godox
-    # - gomoddirectives
-    - goprintffuncname
-    # - gosec
-    - misspell
-    # - nakedret
-    # - nestif
-    # - nilerr
-    - noctx
-    - nolintlint
-    # - prealloc
-    # - revive
-    - rowserrcheck
-    - sqlclosecheck
-    - staticcheck
-    - tparallel
-    # - unconvert
-    # - unparam
-    - whitespace
-    # - wrapcheck
-  disable:
-    - errcheck
-    - ineffassign
-    - unused
-  exclusions:
-    generated: lax
-    presets:
-      - common-false-positives
-    rules:
-      - text: '(slog|log)\.\w+'
-        linters:
-          - noctx
-issues:
-  max-issues-per-linter: 0
-  max-same-issues: 0
-formatters:
-  enable:
-    - gofumpt
-    - goimports
-  exclusions:
-    generated: lax
+# golangci-lint 配置文件，用于静态代码分析和代码质量检查
+version: "2"  # 配置文件版本
+
+linters:  # linter 配置
+  enable:  # 启用的 linter
+    - bodyclose  # 检查 HTTP 响应体是否正确关闭
+    # - exhaustive  # 检查 switch 语句是否覆盖所有枚举值
+    # - goconst  # 检查重复的字符串常量
+    # - godot  # 检查代码注释是否以句号结尾
+    # - godox  # 检查代码中的 TODO、FIXME 等注释
+    # - gomoddirectives  # 检查 go.mod 文件中的指令
+    - goprintffuncname  # 检查 printf 风格函数的命名
+    # - gosec  # 检查安全相关问题
+    - misspell  # 检查拼写错误
+    # - nakedret  # 检查裸返回（没有命名返回值的函数）
+    # - nestif  # 检查嵌套的 if 语句
+    # - nilerr  # 检查返回 nil 错误的函数
+    - noctx  # 检查是否在上下文中传递
+    - nolintlint  # 检查 nolint 注释的使用
+    # - prealloc  # 检查是否可以预分配切片容量
+    # - revive  # 通用代码质量检查器
+    - rowserrcheck  # 检查 SQL Rows 是否正确处理错误
+    - sqlclosecheck  # 检查 SQL 语句是否正确关闭
+    - staticcheck  # 强大的静态代码分析工具
+    - tparallel  # 检查 goroutine 中的 t.Parallel() 使用
+    # - unconvert  # 检查不必要的类型转换
+    # - unparam  # 检查未使用的函数参数
+    - whitespace  # 检查空白字符问题
+    # - wrapcheck  # 检查错误包装
+  
+  disable:  # 禁用的 linter
+    - errcheck  # 检查错误处理
+    - ineffassign  # 检查未使用的变量赋值
+    - unused  # 检查未使用的变量、函数等
+  
+  exclusions:  # 排除规则
+    generated: lax  # 对生成的代码使用宽松的检查
+    presets:  # 预设排除规则
+      - common-false-positives  # 常见的误报
+    rules:  # 自定义排除规则
+      - text: '(slog|log)\.\w+'  # 匹配 slog 或 log 包的函数调用
+        linters:  # 应用此排除规则的 linter
+          - noctx  # 排除 noctx 检查器对日志函数的检查
+
+issues:  # 问题配置
+  max-issues-per-linter: 0  # 每个 linter 的最大问题数（0 表示无限制）
+  max-same-issues: 0  # 相同问题的最大数量（0 表示无限制）
+
+formatters:  # 格式化器配置
+  enable:  # 启用的格式化器
+    - gofumpt  # 更严格的代码格式化工具
+    - goimports  # 自动整理导入包
+  
+  exclusions:  # 格式化器的排除规则
+    generated: lax  # 对生成的代码使用宽松的格式化规则

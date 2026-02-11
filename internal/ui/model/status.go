@@ -12,10 +12,10 @@ import (
 	"github.com/charmbracelet/x/ansi"
 )
 
-// DefaultStatusTTL is the default time-to-live for status messages.
+// DefaultStatusTTL 是状态消息的默认生存时间。
 const DefaultStatusTTL = 5 * time.Second
 
-// Status is the status bar and help model.
+// Status 是状态栏和帮助模型。
 type Status struct {
 	com      *common.Common
 	hideHelp bool
@@ -24,7 +24,7 @@ type Status struct {
 	msg      util.InfoMsg
 }
 
-// NewStatus creates a new status bar and help model.
+// NewStatus 创建一个新的状态栏和帮助模型。
 func NewStatus(com *common.Common, km help.KeyMap) *Status {
 	s := new(Status)
 	s.com = com
@@ -34,44 +34,44 @@ func NewStatus(com *common.Common, km help.KeyMap) *Status {
 	return s
 }
 
-// SetInfoMsg sets the status info message.
+// SetInfoMsg 设置状态信息消息。
 func (s *Status) SetInfoMsg(msg util.InfoMsg) {
 	s.msg = msg
 }
 
-// ClearInfoMsg clears the status info message.
+// ClearInfoMsg 清除状态信息消息。
 func (s *Status) ClearInfoMsg() {
 	s.msg = util.InfoMsg{}
 }
 
-// SetWidth sets the width of the status bar and help view.
+// SetWidth 设置状态栏和帮助视图的宽度。
 func (s *Status) SetWidth(width int) {
 	s.help.SetWidth(width)
 }
 
-// ShowingAll returns whether the full help view is shown.
+// ShowingAll 返回是否显示完整的帮助视图。
 func (s *Status) ShowingAll() bool {
 	return s.help.ShowAll
 }
 
-// ToggleHelp toggles the full help view.
+// ToggleHelp 切换完整的帮助视图。
 func (s *Status) ToggleHelp() {
 	s.help.ShowAll = !s.help.ShowAll
 }
 
-// SetHideHelp sets whether the app is on the onboarding flow.
+// SetHideHelp 设置应用程序是否处于引导流程中。
 func (s *Status) SetHideHelp(hideHelp bool) {
 	s.hideHelp = hideHelp
 }
 
-// Draw draws the status bar onto the screen.
+// Draw 将状态栏绘制到屏幕上。
 func (s *Status) Draw(scr uv.Screen, area uv.Rectangle) {
 	if !s.hideHelp {
 		helpView := s.com.Styles.Status.Help.Render(s.help.View(s.helpKm))
 		uv.NewStyledString(helpView).Draw(scr, area)
 	}
 
-	// Render notifications
+	// 渲染通知
 	if s.msg.IsEmpty() {
 		return
 	}
@@ -101,12 +101,11 @@ func (s *Status) Draw(scr uv.Screen, area uv.Rectangle) {
 	msg := ansi.Truncate(s.msg.Msg, messageWidth, "…")
 	info := msgStyle.Width(messageWidth).Render(msg)
 
-	// Draw the info message over the help view
+	// 在帮助视图上绘制信息消息
 	uv.NewStyledString(ind+info).Draw(scr, area)
 }
 
-// clearInfoMsgCmd returns a command that clears the info message after the
-// given TTL.
+// clearInfoMsgCmd 返回一个命令，在给定的TTL之后清除信息消息。
 func clearInfoMsgCmd(ttl time.Duration) tea.Cmd {
 	return tea.Tick(ttl, func(time.Time) tea.Msg {
 		return util.ClearStatusMsg{}

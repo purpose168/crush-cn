@@ -16,19 +16,19 @@ import (
 	uv "github.com/charmbracelet/ultraviolet"
 )
 
-// SessionsID is the identifier for the session selector dialog.
+// SessionsID 是会话选择器对话框的标识符。
 const SessionsID = "session"
 
 type sessionsMode uint8
 
-// Possible modes a session item can be in
+// 会话项目可以处于的可能模式
 const (
 	sessionsModeNormal sessionsMode = iota
 	sessionsModeDeleting
 	sessionsModeUpdating
 )
 
-// Session is a session selector dialog.
+// Session 是一个会话选择器对话框。
 type Session struct {
 	com                *common.Common
 	help               help.Model
@@ -56,7 +56,7 @@ type Session struct {
 
 var _ Dialog = (*Session)(nil)
 
-// NewSessions creates a new Session dialog.
+// NewSessions 创建一个新的Session对话框。
 func NewSessions(com *common.Common, selectedSessionID string) (*Session, error) {
 	s := new(Session)
 	s.sessionsMode = sessionsModeNormal
@@ -223,7 +223,7 @@ func (s *Session) HandleMsg(msg tea.Msg) Action {
 	return nil
 }
 
-// Cursor returns the cursor position relative to the dialog.
+// Cursor 返回相对于对话框的光标位置。
 func (s *Session) Cursor() *tea.Cursor {
 	return InputCursor(s.com.Styles, s.input.Cursor())
 }
@@ -238,14 +238,14 @@ func (s *Session) Draw(scr uv.Screen, area uv.Rectangle) *tea.Cursor {
 		t.Dialog.InputPrompt.GetVerticalFrameSize() + inputContentHeight +
 		t.Dialog.HelpView.GetVerticalFrameSize() +
 		t.Dialog.View.GetVerticalFrameSize()
-	s.input.SetWidth(max(0, innerWidth-t.Dialog.InputPrompt.GetHorizontalFrameSize()-1)) // (1) cursor padding
+	s.input.SetWidth(max(0, innerWidth-t.Dialog.InputPrompt.GetHorizontalFrameSize()-1)) // (1) 光标填充
 	s.list.SetSize(innerWidth, height-heightOffset)
 	s.help.SetWidth(innerWidth)
 
-	// This makes it so we do not scroll the list if we don't have to
+	// 这使得我们不必滚动列表
 	start, end := s.list.VisibleItemIndices()
 
-	// if selected index is outside visible range, scroll to it
+	// 如果选中的索引在可见范围之外，则滚动到它
 	if s.selectedSessionInx < start || s.selectedSessionInx > end {
 		s.list.ScrollToSelected()
 	}
@@ -283,7 +283,7 @@ func (s *Session) Draw(scr uv.Screen, area uv.Rectangle) *tea.Cursor {
 		dialogStyle := t.Dialog.Sessions.RenamingView
 		inputStyle := t.Dialog.InputPrompt
 
-		// Adjust cursor position to account for dialog layout + message
+		// 调整光标位置以考虑对话框布局+消息
 		cur.X += inputStyle.GetBorderLeftSize() +
 			inputStyle.GetMarginLeft() +
 			inputStyle.GetPaddingLeft() +
@@ -301,7 +301,7 @@ func (s *Session) Draw(scr uv.Screen, area uv.Rectangle) *tea.Cursor {
 			dialogStyle.GetBorderTopSize() +
 			lipgloss.Height(message) - 1
 
-		// move the cursor by one down until we see the selectedIndex
+		// 向下移动光标，直到我们看到selectedIndex
 		for ; start <= end && start != selectedIndex && selectedIndex > -1; start++ {
 			cur.Y += 1
 		}

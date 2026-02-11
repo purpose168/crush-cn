@@ -16,9 +16,9 @@ import (
 	"github.com/charmbracelet/crush/internal/ui/util"
 )
 
-// markProjectInitialized marks the current project as initialized in the config.
+// markProjectInitialized 在配置中将当前项目标记为已初始化。
 func (m *UI) markProjectInitialized() tea.Msg {
-	// TODO: handle error so we show it in the tui footer
+	// TODO: 处理错误以便在tui页脚中显示
 	err := config.MarkProjectInitialized(m.com.Config())
 	if err != nil {
 		slog.Error(err.Error())
@@ -26,7 +26,7 @@ func (m *UI) markProjectInitialized() tea.Msg {
 	return nil
 }
 
-// updateInitializeView handles keyboard input for the project initialization prompt.
+// updateInitializeView 处理项目初始化提示的键盘输入。
 func (m *UI) updateInitializeView(msg tea.KeyPressMsg) (cmds []tea.Cmd) {
 	switch {
 	case key.Matches(msg, m.keyMap.Initialize.Enter):
@@ -45,9 +45,9 @@ func (m *UI) updateInitializeView(msg tea.KeyPressMsg) (cmds []tea.Cmd) {
 	return cmds
 }
 
-// initializeProject starts project initialization and transitions to the landing view.
+// initializeProject 开始项目初始化并跳转到启动页面视图。
 func (m *UI) initializeProject() tea.Cmd {
-	// clear the session
+	// 清除会话
 	var cmds []tea.Cmd
 	if cmd := m.newSession(); cmd != nil {
 		cmds = append(cmds, cmd)
@@ -61,39 +61,39 @@ func (m *UI) initializeProject() tea.Cmd {
 		}
 		return sendMessageMsg{Content: initPrompt}
 	}
-	// Mark the project as initialized
+	// 将项目标记为已初始化
 	cmds = append(cmds, initialize, m.markProjectInitialized)
 
 	return tea.Sequence(cmds...)
 }
 
-// skipInitializeProject skips project initialization and transitions to the landing view.
+// skipInitializeProject 跳过项目初始化并跳转到启动页面视图。
 func (m *UI) skipInitializeProject() tea.Cmd {
-	// TODO: initialize the project
+	// TODO: 初始化项目
 	m.setState(uiLanding, uiFocusEditor)
-	// mark the project as initialized
+	// 将项目标记为已初始化
 	return m.markProjectInitialized
 }
 
-// initializeView renders the project initialization prompt with Yes/No buttons.
+// initializeView 渲染带有是/否按钮的项目初始化提示。
 func (m *UI) initializeView() string {
 	cfg := m.com.Config()
 	s := m.com.Styles.Initialize
 	cwd := home.Short(cfg.WorkingDir())
 	initFile := cfg.Options.InitializeAs
 
-	header := s.Header.Render("Would you like to initialize this project?")
+	header := s.Header.Render("您要初始化这个项目吗？")
 	path := s.Accent.PaddingLeft(2).Render(cwd)
-	desc := s.Content.Render(fmt.Sprintf("When I initialize your codebase I examine the project and put the result into an %s file which serves as general context.", initFile))
-	hint := s.Content.Render("You can also initialize anytime via ") + s.Accent.Render("ctrl+p") + s.Content.Render(".")
-	prompt := s.Content.Render("Would you like to initialize now?")
+	desc := s.Content.Render(fmt.Sprintf("当我初始化您的代码库时，我会检查项目并将结果放入%s文件中作为通用上下文。", initFile))
+	hint := s.Content.Render("您也可以随时通过 ") + s.Accent.Render("ctrl+p") + s.Content.Render(" 进行初始化。")
+	prompt := s.Content.Render("您现在要初始化吗？")
 
 	buttons := common.ButtonGroup(m.com.Styles, []common.ButtonOpts{
-		{Text: "Yep!", Selected: m.onboarding.yesInitializeSelected},
-		{Text: "Nope", Selected: !m.onboarding.yesInitializeSelected},
+		{Text: "是！", Selected: m.onboarding.yesInitializeSelected},
+		{Text: "否", Selected: !m.onboarding.yesInitializeSelected},
 	}, " ")
 
-	// max width 60 so the text is compact
+	// 最大宽度60以使文本紧凑
 	width := min(m.layout.main.Dx(), 60)
 
 	return lipgloss.NewStyle().

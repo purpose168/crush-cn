@@ -19,16 +19,15 @@ import (
 	paintbrush "github.com/jordanella/go-ansi-paintbrush"
 )
 
-// TransmittedMsg is a message indicating that an image has been transmitted to
-// the terminal.
+// TransmittedMsg 是一条消息，指示图像已传输到终端。
 type TransmittedMsg struct {
 	ID string
 }
 
-// Encoding represents the encoding format of the image.
+// Encoding 表示图像的编码格式。
 type Encoding byte
 
-// Image encodings.
+// 图像编码。
 const (
 	EncodingBlocks Encoding = iota
 	EncodingKitty
@@ -40,20 +39,20 @@ type imageKey struct {
 	rows int
 }
 
-// Hash returns a hash value for the image key.
-// This uses FNV-32a for simplicity and speed.
+// Hash 返回图像键的哈希值。
+// 这使用FNV-32a以实现简单和快速。
 func (k imageKey) Hash() uint32 {
 	h := fnv.New32a()
 	_, _ = io.WriteString(h, k.ID())
 	return h.Sum32()
 }
 
-// ID returns a unique string representation of the image key.
+// ID 返回图像键的唯一字符串表示。
 func (k imageKey) ID() string {
 	return fmt.Sprintf("%s-%dx%d", k.id, k.cols, k.rows)
 }
 
-// CellSize represents the size of a single terminal cell in pixels.
+// CellSize 表示单个终端单元格的像素大小。
 type CellSize struct {
 	Width, Height int
 }
@@ -68,15 +67,15 @@ var (
 	cachedMutex  sync.RWMutex
 )
 
-// ResetCache clears the image cache, freeing all cached decoded images.
+// ResetCache 清除图像缓存，释放所有缓存的解码图像。
 func ResetCache() {
 	cachedMutex.Lock()
 	clear(cachedImages)
 	cachedMutex.Unlock()
 }
 
-// fitImage resizes the image to fit within the specified dimensions in
-// terminal cells, maintaining the aspect ratio.
+// fitImage 调整图像大小以适应指定的终端单元格尺寸，
+// 同时保持纵横比。
 func fitImage(id string, img image.Image, cs CellSize, cols, rows int) image.Image {
 	if img == nil {
 		return nil
@@ -111,8 +110,7 @@ func fitImage(id string, img image.Image, cs CellSize, cols, rows int) image.Ima
 	return img
 }
 
-// HasTransmitted checks if the image with the given ID has already been
-// transmitted to the terminal.
+// HasTransmitted 检查具有给定ID的图像是否已经传输到终端。
 func HasTransmitted(id string, cols, rows int) bool {
 	key := imageKey{id: id, cols: cols, rows: rows}
 
@@ -122,8 +120,8 @@ func HasTransmitted(id string, cols, rows int) bool {
 	return ok
 }
 
-// Transmit transmits the image data to the terminal if needed. This is used to
-// cache the image on the terminal for later rendering.
+// Transmit 如果需要则将图像数据传输到终端。这用于
+// 在终端上缓存图像以供后续渲染。
 func (e Encoding) Transmit(id string, img image.Image, cs CellSize, cols, rows int, tmux bool) tea.Cmd {
 	if img == nil {
 		return nil
@@ -188,8 +186,7 @@ func (e Encoding) Transmit(id string, img image.Image, cs CellSize, cols, rows i
 	return cmd
 }
 
-// Render renders the given image within the specified dimensions using the
-// specified encoding.
+// Render 使用指定的编码在指定尺寸内渲染给定的图像。
 func (e Encoding) Render(id string, cols, rows int) string {
 	key := imageKey{id: id, cols: cols, rows: rows}
 	cachedMutex.RLock()
@@ -261,9 +258,8 @@ func (e Encoding) Render(id string, cols, rows int) string {
 
 		var buf bytes.Buffer
 		for y := range rows {
-			// As an optimization, we only write the fg color sequence id, and
-			// column-row data once on the first cell. The terminal will handle
-			// the rest.
+			// 作为优化，我们只在第一个单元格上写入前景色序列ID和
+			// 列-行数据一次。终端将处理其余部分。
 			buf.WriteString(fgStyle)
 			buf.WriteRune(kitty.Placeholder)
 			buf.WriteRune(kitty.Diacritic(y))

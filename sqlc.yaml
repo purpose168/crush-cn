@@ -1,14 +1,16 @@
-version: "2"
+# sqlc 配置文件，用于从 SQL 查询生成 Go 代码
+version: "2"  # sqlc 配置文件版本
+
 sql:
-  - engine: "sqlite"
-    schema: "internal/db/migrations"
-    queries: "internal/db/sql"
-    gen:
-      go:
-        package: "db"
-        out: "internal/db"
-        emit_json_tags: true
-        emit_prepared_queries: true
-        emit_interface: true
-        emit_exact_table_names: false
-        emit_empty_slices: true
+  - engine: "sqlite"  # 使用 SQLite 数据库引擎
+    schema: "internal/db/migrations"  # 数据库模式文件路径
+    queries: "internal/db/sql"  # SQL 查询文件路径
+    gen:  # 代码生成配置
+      go:  # Go 语言代码生成配置
+        package: "db"  # 生成的 Go 包名
+        out: "internal/db"  # 生成代码的输出目录
+        emit_json_tags: true  # 生成 JSON 标签
+        emit_prepared_queries: true  # 生成预处理查询
+        emit_interface: true  # 生成接口
+        emit_exact_table_names: false  # 不使用精确的表名
+        emit_empty_slices: true  # 生成空切片

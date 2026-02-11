@@ -7,8 +7,7 @@ import (
 	"github.com/charmbracelet/ultraviolet/layout"
 )
 
-// selectedLargeModel returns the currently selected large language model from
-// the agent coordinator, if one exists.
+// selectedLargeModel 返回从代理协调器中当前选中的大语言模型（如果存在）。
 func (m *UI) selectedLargeModel() *agent.Model {
 	if m.com.App.AgentCoordinator != nil {
 		model := m.com.App.AgentCoordinator.Model()
@@ -17,8 +16,7 @@ func (m *UI) selectedLargeModel() *agent.Model {
 	return nil
 }
 
-// landingView renders the landing page view showing the current working
-// directory, model information, and LSP/MCP status in a two-column layout.
+// landingView 渲染登录页面视图，在两列布局中显示当前工作目录、模型信息和LSP/MCP状态。
 func (m *UI) landingView() string {
 	t := m.com.Styles
 	width := m.layout.main.Dx()

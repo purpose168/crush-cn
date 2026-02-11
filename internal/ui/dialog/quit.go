@@ -8,13 +8,13 @@ import (
 	uv "github.com/charmbracelet/ultraviolet"
 )
 
-// QuitID is the identifier for the quit dialog.
+// QuitID 是退出对话框的标识符。
 const QuitID = "quit"
 
-// Quit represents a confirmation dialog for quitting the application.
+// Quit 表示退出应用程序的确认对话框。
 type Quit struct {
 	com        *common.Common
-	selectedNo bool // true if "No" button is selected
+	selectedNo bool // 如果选择了"否"按钮则为 true
 	keyMap     struct {
 		LeftRight,
 		EnterSpace,
@@ -28,7 +28,7 @@ type Quit struct {
 
 var _ Dialog = (*Quit)(nil)
 
-// NewQuit creates a new quit confirmation dialog.
+// NewQuit 创建一个新的退出确认对话框。
 func NewQuit(com *common.Common) *Quit {
 	q := &Quit{
 		com:        com,
@@ -36,38 +36,38 @@ func NewQuit(com *common.Common) *Quit {
 	}
 	q.keyMap.LeftRight = key.NewBinding(
 		key.WithKeys("left", "right"),
-		key.WithHelp("←/→", "switch options"),
+		key.WithHelp("←/→", "切换选项"),
 	)
 	q.keyMap.EnterSpace = key.NewBinding(
 		key.WithKeys("enter", " "),
-		key.WithHelp("enter/space", "confirm"),
+		key.WithHelp("enter/space", "确认"),
 	)
 	q.keyMap.Yes = key.NewBinding(
 		key.WithKeys("y", "Y", "ctrl+c"),
-		key.WithHelp("y/Y/ctrl+c", "yes"),
+		key.WithHelp("y/Y/ctrl+c", "是"),
 	)
 	q.keyMap.No = key.NewBinding(
 		key.WithKeys("n", "N"),
-		key.WithHelp("n/N", "no"),
+		key.WithHelp("n/N", "否"),
 	)
 	q.keyMap.Tab = key.NewBinding(
 		key.WithKeys("tab"),
-		key.WithHelp("tab", "switch options"),
+		key.WithHelp("tab", "切换选项"),
 	)
 	q.keyMap.Close = CloseKey
 	q.keyMap.Quit = key.NewBinding(
 		key.WithKeys("ctrl+c"),
-		key.WithHelp("ctrl+c", "quit"),
+		key.WithHelp("ctrl+c", "退出"),
 	)
 	return q
 }
 
-// ID implements [Model].
+// ID 实现 [Model] 接口。
 func (*Quit) ID() string {
 	return QuitID
 }
 
-// HandleMsg implements [Model].
+// HandleMsg 实现 [Model] 接口。
 func (q *Quit) HandleMsg(msg tea.Msg) Action {
 	switch msg := msg.(type) {
 	case tea.KeyPressMsg:
@@ -93,13 +93,13 @@ func (q *Quit) HandleMsg(msg tea.Msg) Action {
 	return nil
 }
 
-// Draw implements [Dialog].
+// Draw 实现 [Dialog] 接口。
 func (q *Quit) Draw(scr uv.Screen, area uv.Rectangle) *tea.Cursor {
-	const question = "Are you sure you want to quit?"
+	const question = "您确定要退出吗？"
 	baseStyle := q.com.Styles.Base
 	buttonOpts := []common.ButtonOpts{
-		{Text: "Yep!", Selected: !q.selectedNo, Padding: 3},
-		{Text: "Nope", Selected: q.selectedNo, Padding: 3},
+		{Text: "是！", Selected: !q.selectedNo, Padding: 3},
+		{Text: "否", Selected: q.selectedNo, Padding: 3},
 	}
 	buttons := common.ButtonGroup(q.com.Styles, buttonOpts, " ")
 	content := baseStyle.Render(
@@ -116,7 +116,7 @@ func (q *Quit) Draw(scr uv.Screen, area uv.Rectangle) *tea.Cursor {
 	return nil
 }
 
-// ShortHelp implements [help.KeyMap].
+// ShortHelp 实现 [help.KeyMap] 接口。
 func (q *Quit) ShortHelp() []key.Binding {
 	return []key.Binding{
 		q.keyMap.LeftRight,
@@ -124,7 +124,7 @@ func (q *Quit) ShortHelp() []key.Binding {
 	}
 }
 
-// FullHelp implements [help.KeyMap].
+// FullHelp 实现 [help.KeyMap] 接口。
 func (q *Quit) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
 		{q.keyMap.LeftRight, q.keyMap.EnterSpace, q.keyMap.Yes, q.keyMap.No},

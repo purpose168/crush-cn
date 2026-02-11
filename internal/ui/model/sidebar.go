@@ -13,31 +13,31 @@ import (
 	"golang.org/x/text/language"
 )
 
-// modelInfo renders the current model information including reasoning
-// settings and context usage/cost for the sidebar.
+// modelInfo 渲染当前模型信息，包括推理
+// 设置和上下文使用情况/成本，用于侧边栏。
 func (m *UI) modelInfo(width int) string {
 	model := m.selectedLargeModel()
 	reasoningInfo := ""
 	providerName := ""
 
 	if model != nil {
-		// Get provider name first
+		// 首先获取提供商名称
 		providerConfig, ok := m.com.Config().Providers.Get(model.ModelCfg.Provider)
 		if ok {
 			providerName = providerConfig.Name
 
-			// Only check reasoning if model can reason
+			// 仅当模型支持推理时才检查推理设置
 			if model.CatwalkCfg.CanReason {
 				if len(model.CatwalkCfg.ReasoningLevels) == 0 {
 					if model.ModelCfg.Think {
-						reasoningInfo = "Thinking On"
+						reasoningInfo = "思考开启"
 					} else {
-						reasoningInfo = "Thinking Off"
+						reasoningInfo = "思考关闭"
 					}
 				} else {
 					formatter := cases.Title(language.English, cases.NoLower)
 					reasoningEffort := cmp.Or(model.ModelCfg.ReasoningEffort, model.CatwalkCfg.DefaultReasoningEffort)
-					reasoningInfo = formatter.String(fmt.Sprintf("Reasoning %s", reasoningEffort))
+					reasoningInfo = formatter.String(fmt.Sprintf("推理强度 %s", reasoningEffort))
 				}
 			}
 		}
@@ -54,8 +54,8 @@ func (m *UI) modelInfo(width int) string {
 	return common.ModelInfo(m.com.Styles, model.CatwalkCfg.Name, providerName, reasoningInfo, modelContext, width)
 }
 
-// getDynamicHeightLimits will give us the num of items to show in each section based on the hight
-// some items are more important than others.
+// getDynamicHeightLimits 根据高度返回每个部分要显示的项目数量，
+// 因为某些项目比其他项目更重要。
 func getDynamicHeightLimits(availableHeight int) (maxFiles, maxLSPs, maxMCPs int) {
 	const (
 		minItemsPerSection      = 2
@@ -65,22 +65,22 @@ func getDynamicHeightLimits(availableHeight int) (maxFiles, maxLSPs, maxMCPs int
 		minAvailableHeightLimit = 10
 	)
 
-	// If we have very little space, use minimum values
+	// 如果空间很小，使用最小值
 	if availableHeight < minAvailableHeightLimit {
 		return minItemsPerSection, minItemsPerSection, minItemsPerSection
 	}
 
-	// Distribute available height among the three sections
-	// Give priority to files, then LSPs, then MCPs
+	// 在三个部分之间分配可用高度
+	// 优先文件，然后是LSP，最后是MCP
 	totalSections := 3
 	heightPerSection := availableHeight / totalSections
 
-	// Calculate limits for each section, ensuring minimums
+	// 计算每个部分的限制，确保最小值
 	maxFiles = max(minItemsPerSection, min(defaultMaxFilesShown, heightPerSection))
 	maxLSPs = max(minItemsPerSection, min(defaultMaxLSPsShown, heightPerSection))
 	maxMCPs = max(minItemsPerSection, min(defaultMaxMCPsShown, heightPerSection))
 
-	// If we have extra space, give it to files first
+	// 如果有多余的空间，首先给文件
 	remainingHeight := availableHeight - (maxFiles + maxLSPs + maxMCPs)
 	if remainingHeight > 0 {
 		extraForFiles := min(remainingHeight, defaultMaxFilesShown-maxFiles)
@@ -101,8 +101,8 @@ func getDynamicHeightLimits(availableHeight int) (maxFiles, maxLSPs, maxMCPs int
 	return maxFiles, maxLSPs, maxMCPs
 }
 
-// sidebar renders the chat sidebar containing session title, working
-// directory, model info, file list, LSP status, and MCP status.
+// sidebar 渲染聊天侧边栏，包含会话标题、工作
+// 目录、模型信息、文件列表、LSP状态和MCP状态。
 func (m *UI) drawSidebar(scr uv.Screen, area uv.Rectangle) {
 	if m.session == nil {
 		return

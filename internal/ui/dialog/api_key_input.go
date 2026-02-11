@@ -28,10 +28,10 @@ const (
 	APIKeyInputStateError
 )
 
-// APIKeyInputID is the identifier for the model selection dialog.
+// APIKeyInputID 是模型选择对话框的标识符。
 const APIKeyInputID = "api_key_input"
 
-// APIKeyInput represents a model selection dialog.
+// APIKeyInput 表示一个模型选择对话框。
 type APIKeyInput struct {
 	com          *common.Common
 	isOnboarding bool
@@ -54,7 +54,7 @@ type APIKeyInput struct {
 
 var _ Dialog = (*APIKeyInput)(nil)
 
-// NewAPIKeyInput creates a new Models dialog.
+// NewAPIKeyInput 创建一个新的 Models 对话框。
 func NewAPIKeyInput(
 	com *common.Common,
 	isOnboarding bool,
@@ -76,7 +76,7 @@ func NewAPIKeyInput(
 
 	m.input = textinput.New()
 	m.input.SetVirtualCursor(false)
-	m.input.Placeholder = "Enter your API key..."
+	m.input.Placeholder = "输入您的 API 密钥..."
 	m.input.SetStyles(com.Styles.TextInput)
 	m.input.Focus()
 	m.input.SetWidth(max(0, innerWidth-t.Dialog.InputPrompt.GetHorizontalFrameSize()-1)) // (1) cursor padding
@@ -91,19 +91,19 @@ func NewAPIKeyInput(
 
 	m.keyMap.Submit = key.NewBinding(
 		key.WithKeys("enter", "ctrl+y"),
-		key.WithHelp("enter", "submit"),
+		key.WithHelp("enter", "提交"),
 	)
 	m.keyMap.Close = CloseKey
 
 	return &m, nil
 }
 
-// ID implements Dialog.
+// ID 实现 Dialog 接口。
 func (m *APIKeyInput) ID() string {
 	return APIKeyInputID
 }
 
-// HandleMsg implements [Dialog].
+// HandleMsg 实现 [Dialog] 接口。
 func (m *APIKeyInput) HandleMsg(msg tea.Msg) Action {
 	switch msg := msg.(type) {
 	case ActionChangeAPIKeyState:
@@ -125,7 +125,7 @@ func (m *APIKeyInput) HandleMsg(msg tea.Msg) Action {
 	case tea.KeyPressMsg:
 		switch {
 		case m.state == APIKeyInputStateVerifying:
-			// do nothing
+			// 不做任何操作
 		case key.Matches(msg, m.keyMap.Close):
 			switch m.state {
 			case APIKeyInputStateVerified:
@@ -157,7 +157,7 @@ func (m *APIKeyInput) HandleMsg(msg tea.Msg) Action {
 	return nil
 }
 
-// Draw implements [Dialog].
+// Draw 实现 [Dialog] 接口。
 func (m *APIKeyInput) Draw(scr uv.Screen, area uv.Rectangle) *tea.Cursor {
 	t := m.com.Styles
 
@@ -172,7 +172,7 @@ func (m *APIKeyInput) Draw(scr uv.Screen, area uv.Rectangle) *tea.Cursor {
 	content := strings.Join([]string{
 		m.headerView(),
 		inputStyle.Render(m.inputView()),
-		textStyle.Render("This will be written in your global configuration:"),
+		textStyle.Render("这将写入您的全局配置："),
 		textStyle.Render(config.GlobalConfigData()),
 		"",
 		helpStyle.Render(m.help.View(m)),
@@ -184,7 +184,7 @@ func (m *APIKeyInput) Draw(scr uv.Screen, area uv.Rectangle) *tea.Cursor {
 		view := content
 		DrawOnboardingCursor(scr, area, view, cur)
 
-		// FIXME(@andreynering): Figure it out how to properly fix this
+		// FIXME(@andreynering): 弄清楚如何正确修复这个问题
 		if cur != nil {
 			cur.Y -= 1
 			cur.X -= 1
@@ -219,13 +219,13 @@ func (m *APIKeyInput) dialogTitle() string {
 	)
 	switch m.state {
 	case APIKeyInputStateInitial:
-		return textStyle.Render("Enter your ") + accentStyle.Render(fmt.Sprintf("%s Key", m.provider.Name)) + textStyle.Render(".")
+		return textStyle.Render("输入您的 ") + accentStyle.Render(fmt.Sprintf("%s 密钥", m.provider.Name)) + textStyle.Render("。")
 	case APIKeyInputStateVerifying:
-		return textStyle.Render("Verifying your ") + accentStyle.Render(fmt.Sprintf("%s Key", m.provider.Name)) + textStyle.Render("...")
+		return textStyle.Render("正在验证您的 ") + accentStyle.Render(fmt.Sprintf("%s 密钥", m.provider.Name)) + textStyle.Render("...")
 	case APIKeyInputStateVerified:
-		return accentStyle.Render(fmt.Sprintf("%s Key", m.provider.Name)) + textStyle.Render(" validated.")
+		return accentStyle.Render(fmt.Sprintf("%s 密钥", m.provider.Name)) + textStyle.Render(" 已验证。")
 	case APIKeyInputStateError:
-		return errorStyle.Render("Invalid ") + accentStyle.Render(fmt.Sprintf("%s Key", m.provider.Name)) + errorStyle.Render(". Try again?")
+		return errorStyle.Render("无效的 ") + accentStyle.Render(fmt.Sprintf("%s 密钥", m.provider.Name)) + errorStyle.Render("。再试一次？")
 	}
 	return ""
 }
@@ -263,12 +263,12 @@ func (m *APIKeyInput) inputView() string {
 	return m.input.View()
 }
 
-// Cursor returns the cursor position relative to the dialog.
+// Cursor 返回相对于对话框的光标位置。
 func (m *APIKeyInput) Cursor() *tea.Cursor {
 	return InputCursor(m.com.Styles, m.input.Cursor())
 }
 
-// FullHelp returns the full help view.
+// FullHelp 返回完整的帮助视图。
 func (m *APIKeyInput) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
 		{
@@ -278,7 +278,7 @@ func (m *APIKeyInput) FullHelp() [][]key.Binding {
 	}
 }
 
-// ShortHelp returns the full help view.
+// ShortHelp 返回完整的帮助视图。
 func (m *APIKeyInput) ShortHelp() []key.Binding {
 	return []key.Binding{
 		m.keyMap.Submit,
@@ -298,7 +298,7 @@ func (m *APIKeyInput) verifyAPIKey() tea.Msg {
 	}
 	err := providerConfig.TestConnection(m.com.Config().Resolver())
 
-	// intentionally wait for at least 750ms to make sure the user sees the spinner
+	// 故意等待至少 750 毫秒以确保用户看到加载动画
 	elapsed := time.Since(start)
 	minimum := 750 * time.Millisecond
 	if elapsed < minimum {
@@ -316,7 +316,7 @@ func (m *APIKeyInput) saveKeyAndContinue() Action {
 
 	err := cfg.SetProviderAPIKey(string(m.provider.ID), m.input.Value())
 	if err != nil {
-		return ActionCmd{util.ReportError(fmt.Errorf("failed to save API key: %w", err))}
+		return ActionCmd{util.ReportError(fmt.Errorf("保存 API 密钥失败：%w", err))}
 	}
 
 	return ActionSelectModel{

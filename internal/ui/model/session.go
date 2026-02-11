@@ -20,16 +20,14 @@ import (
 	"github.com/charmbracelet/x/ansi"
 )
 
-// loadSessionMsg is a message indicating that a session and its files have
-// been loaded.
+// loadSessionMsg 是表示会话及其文件已加载的消息。
 type loadSessionMsg struct {
 	session   *session.Session
 	files     []SessionFile
 	readFiles []string
 }
 
-// lspFilePaths returns deduplicated file paths from both modified and read
-// files for starting LSP servers.
+// lspFilePaths 从已修改和已读取的文件中返回去重后的文件路径，用于启动LSP服务器。
 func (msg loadSessionMsg) lspFilePaths() []string {
 	seen := make(map[string]struct{}, len(msg.files)+len(msg.readFiles))
 	paths := make([]string, 0, len(msg.files)+len(msg.readFiles))
@@ -51,8 +49,7 @@ func (msg loadSessionMsg) lspFilePaths() []string {
 	return paths
 }
 
-// SessionFile tracks the first and latest versions of a file in a session,
-// along with the total additions and deletions.
+// SessionFile 跟踪会话中文件的第一个和最新版本，以及总增删行数。
 type SessionFile struct {
 	FirstVersion  history.File
 	LatestVersion history.File
@@ -60,10 +57,8 @@ type SessionFile struct {
 	Deletions     int
 }
 
-// loadSession loads the session along with its associated files and computes
-// the diff statistics (additions and deletions) for each file in the session.
-// It returns a tea.Cmd that, when executed, fetches the session data and
-// returns a sessionFilesLoadedMsg containing the processed session files.
+// loadSession 加载会话及其关联文件，并计算会话中每个文件的差异统计（增删行数）。
+// 它返回一个 tea.Cmd，执行时会获取会话数据并返回包含已处理会话文件的 sessionFilesLoadedMsg。
 func (m *UI) loadSession(sessionID string) tea.Cmd {
 	return func() tea.Msg {
 		session, err := m.com.App.Sessions.Get(context.Background(), sessionID)
@@ -78,7 +73,7 @@ func (m *UI) loadSession(sessionID string) tea.Cmd {
 
 		readFiles, err := m.com.App.FileTracker.ListReadFiles(context.Background(), sessionID)
 		if err != nil {
-			slog.Error("Failed to load read files for session", "error", err)
+			slog.Error("加载会话的已读取文件失败", "error", err)
 		}
 
 		return loadSessionMsg{
@@ -138,8 +133,7 @@ func (m *UI) loadSessionFiles(sessionID string) ([]SessionFile, error) {
 	return sessionFiles, nil
 }
 
-// handleFileEvent processes file change events and updates the session file
-// list with new or updated file information.
+// handleFileEvent 处理文件更改事件，使用新文件信息更新会话文件列表。
 func (m *UI) handleFileEvent(file history.File) tea.Cmd {
 	if m.session == nil || file.SessionID != m.session.ID {
 		return nil
@@ -147,7 +141,7 @@ func (m *UI) handleFileEvent(file history.File) tea.Cmd {
 
 	return func() tea.Msg {
 		sessionFiles, err := m.loadSessionFiles(m.session.ID)
-		// could not load session files
+		// 无法加载会话文件
 		if err != nil {
 			return util.NewErrorMsg(err)
 		}
@@ -158,16 +152,15 @@ func (m *UI) handleFileEvent(file history.File) tea.Cmd {
 	}
 }
 
-// filesInfo renders the modified files section for the sidebar, showing files
-// with their addition/deletion counts.
+// filesInfo 为侧边栏渲染已修改文件部分，显示文件及其增删计数。
 func (m *UI) filesInfo(cwd string, width, maxItems int, isSection bool) string {
 	t := m.com.Styles
 
-	title := t.Subtle.Render("Modified Files")
+	title := t.Subtle.Render("已修改文件")
 	if isSection {
-		title = common.Section(t, "Modified Files", width)
+		title = common.Section(t, "已修改文件", width)
 	}
-	list := t.Subtle.Render("None")
+	list := t.Subtle.Render("无")
 	var filesWithChanges []SessionFile
 	for _, f := range m.sessionFiles {
 		if f.Additions == 0 && f.Deletions == 0 {
@@ -182,8 +175,7 @@ func (m *UI) filesInfo(cwd string, width, maxItems int, isSection bool) string {
 	return lipgloss.NewStyle().Width(width).Render(fmt.Sprintf("%s\n\n%s", title, list))
 }
 
-// fileList renders a list of files with their diff statistics, truncating to
-// maxItems and showing a "...and N more" message if needed.
+// fileList 渲染带有差异统计的文件列表，截断至maxItems并在需要时显示"...以及其余N项"消息。
 func fileList(t *styles.Styles, cwd string, filesWithChanges []SessionFile, width, maxItems int) string {
 	if maxItems <= 0 {
 		return ""
@@ -192,12 +184,12 @@ func fileList(t *styles.Styles, cwd string, filesWithChanges []SessionFile, widt
 	filesShown := 0
 
 	for _, f := range filesWithChanges {
-		// Skip files with no changes
+		// 跳过没有更改的文件
 		if filesShown >= maxItems {
 			break
 		}
 
-		// Build stats string with colors
+		// 构建带有颜色的状态字符串
 		var statusParts []string
 		if f.Additions > 0 {
 			statusParts = append(statusParts, t.Files.Additions.Render(fmt.Sprintf("+%d", f.Additions)))
@@ -207,7 +199,7 @@ func fileList(t *styles.Styles, cwd string, filesWithChanges []SessionFile, widt
 		}
 		extraContent := strings.Join(statusParts, " ")
 
-		// Format file path
+		// 格式化文件路径
 		filePath := f.FirstVersion.Path
 		if rel, err := filepath.Rel(cwd, filePath); err == nil {
 			filePath = rel
@@ -226,13 +218,13 @@ func fileList(t *styles.Styles, cwd string, filesWithChanges []SessionFile, widt
 
 	if len(filesWithChanges) > maxItems {
 		remaining := len(filesWithChanges) - maxItems
-		renderedFiles = append(renderedFiles, t.Subtle.Render(fmt.Sprintf("…and %d more", remaining)))
+		renderedFiles = append(renderedFiles, t.Subtle.Render(fmt.Sprintf("以及其余 %d 项", remaining)))
 	}
 
 	return lipgloss.JoinVertical(lipgloss.Left, renderedFiles...)
 }
 
-// startLSPs starts LSP servers for the given file paths.
+// startLSPs 为给定的文件路径启动LSP服务器。
 func (m *UI) startLSPs(paths []string) tea.Cmd {
 	if len(paths) == 0 {
 		return nil

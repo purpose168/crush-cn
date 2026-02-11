@@ -18,13 +18,13 @@ import (
 )
 
 const (
-	// ReasoningID is the identifier for the reasoning effort dialog.
+	// ReasoningID 是推理强度对话框的标识符。
 	ReasoningID              = "reasoning"
 	reasoningDialogMaxWidth  = 80
 	reasoningDialogMaxHeight = 12
 )
 
-// Reasoning represents a dialog for selecting reasoning effort.
+// Reasoning 表示一个用于选择推理强度的对话框。
 type Reasoning struct {
 	com   *common.Common
 	help  help.Model
@@ -40,7 +40,7 @@ type Reasoning struct {
 	}
 }
 
-// ReasoningItem represents a reasoning effort list item.
+// ReasoningItem 表示一个推理强度列表项目。
 type ReasoningItem struct {
 	effort    string
 	title     string
@@ -56,7 +56,7 @@ var (
 	_ ListItem = (*ReasoningItem)(nil)
 )
 
-// NewReasoning creates a new reasoning effort dialog.
+// NewReasoning 创建一个新的推理强度对话框。
 func NewReasoning(com *common.Common) (*Reasoning, error) {
 	r := &Reasoning{com: com}
 
@@ -69,25 +69,25 @@ func NewReasoning(com *common.Common) (*Reasoning, error) {
 
 	r.input = textinput.New()
 	r.input.SetVirtualCursor(false)
-	r.input.Placeholder = "Type to filter"
+	r.input.Placeholder = "输入以过滤"
 	r.input.SetStyles(com.Styles.TextInput)
 	r.input.Focus()
 
 	r.keyMap.Select = key.NewBinding(
 		key.WithKeys("enter", "ctrl+y"),
-		key.WithHelp("enter", "confirm"),
+		key.WithHelp("enter", "确认"),
 	)
 	r.keyMap.Next = key.NewBinding(
 		key.WithKeys("down", "ctrl+n"),
-		key.WithHelp("↓", "next item"),
+		key.WithHelp("↓", "下一项"),
 	)
 	r.keyMap.Previous = key.NewBinding(
 		key.WithKeys("up", "ctrl+p"),
-		key.WithHelp("↑", "previous item"),
+		key.WithHelp("↑", "上一项"),
 	)
 	r.keyMap.UpDown = key.NewBinding(
 		key.WithKeys("up", "down"),
-		key.WithHelp("↑/↓", "choose"),
+		key.WithHelp("↑/↓", "选择"),
 	)
 	r.keyMap.Close = CloseKey
 
@@ -98,12 +98,12 @@ func NewReasoning(com *common.Common) (*Reasoning, error) {
 	return r, nil
 }
 
-// ID implements Dialog.
+// ID 实现 Dialog 接口。
 func (r *Reasoning) ID() string {
 	return ReasoningID
 }
 
-// HandleMsg implements [Dialog].
+// HandleMsg 实现 [Dialog] 接口。
 func (r *Reasoning) HandleMsg(msg tea.Msg) Action {
 	switch msg := msg.(type) {
 	case tea.KeyPressMsg:
@@ -151,12 +151,12 @@ func (r *Reasoning) HandleMsg(msg tea.Msg) Action {
 	return nil
 }
 
-// Cursor returns the cursor position relative to the dialog.
+// Cursor 返回相对于对话框的光标位置。
 func (r *Reasoning) Cursor() *tea.Cursor {
 	return InputCursor(r.com.Styles, r.input.Cursor())
 }
 
-// Draw implements [Dialog].
+// Draw 实现 [Dialog] 接口。
 func (r *Reasoning) Draw(scr uv.Screen, area uv.Rectangle) *tea.Cursor {
 	t := r.com.Styles
 	width := max(0, min(reasoningDialogMaxWidth, area.Dx()))
@@ -172,7 +172,7 @@ func (r *Reasoning) Draw(scr uv.Screen, area uv.Rectangle) *tea.Cursor {
 	r.help.SetWidth(innerWidth)
 
 	rc := NewRenderContext(t, width)
-	rc.Title = "Select Reasoning Effort"
+	rc.Title = "选择推理强度"
 	inputView := t.Dialog.InputPrompt.Render(r.input.View())
 	rc.AddPart(inputView)
 
@@ -194,7 +194,7 @@ func (r *Reasoning) Draw(scr uv.Screen, area uv.Rectangle) *tea.Cursor {
 	return cur
 }
 
-// ShortHelp implements [help.KeyMap].
+// ShortHelp 实现 [help.KeyMap] 接口。
 func (r *Reasoning) ShortHelp() []key.Binding {
 	return []key.Binding{
 		r.keyMap.UpDown,
@@ -203,7 +203,7 @@ func (r *Reasoning) ShortHelp() []key.Binding {
 	}
 }
 
-// FullHelp implements [help.KeyMap].
+// FullHelp 实现 [help.KeyMap] 接口。
 func (r *Reasoning) FullHelp() [][]key.Binding {
 	m := [][]key.Binding{}
 	slice := []key.Binding{
@@ -223,17 +223,17 @@ func (r *Reasoning) setReasoningItems() error {
 	cfg := r.com.Config()
 	agentCfg, ok := cfg.Agents[config.AgentCoder]
 	if !ok {
-		return errors.New("agent configuration not found")
+		return errors.New("未找到智能体配置")
 	}
 
 	selectedModel := cfg.Models[agentCfg.Model]
 	model := cfg.GetModelByType(agentCfg.Model)
 	if model == nil {
-		return errors.New("model configuration not found")
+		return errors.New("未找到模型配置")
 	}
 
 	if len(model.ReasoningLevels) == 0 {
-		return errors.New("no reasoning levels available")
+		return errors.New("没有可用的推理级别")
 	}
 
 	currentEffort := selectedModel.ReasoningEffort
@@ -263,17 +263,17 @@ func (r *Reasoning) setReasoningItems() error {
 	return nil
 }
 
-// Filter returns the filter value for the reasoning item.
+// Filter 返回推理项目的过滤值。
 func (r *ReasoningItem) Filter() string {
 	return r.title
 }
 
-// ID returns the unique identifier for the reasoning effort.
+// ID 返回推理强度的唯一标识符。
 func (r *ReasoningItem) ID() string {
 	return r.effort
 }
 
-// SetFocused sets the focus state of the reasoning item.
+// SetFocused 设置推理项目的焦点状态。
 func (r *ReasoningItem) SetFocused(focused bool) {
 	if r.focused != focused {
 		r.cache = nil
@@ -281,17 +281,17 @@ func (r *ReasoningItem) SetFocused(focused bool) {
 	r.focused = focused
 }
 
-// SetMatch sets the fuzzy match for the reasoning item.
+// SetMatch 设置推理项目的模糊匹配。
 func (r *ReasoningItem) SetMatch(m fuzzy.Match) {
 	r.cache = nil
 	r.m = m
 }
 
-// Render returns the string representation of the reasoning item.
+// Render 返回推理项目的字符串表示。
 func (r *ReasoningItem) Render(width int) string {
 	info := ""
 	if r.isCurrent {
-		info = "current"
+		info = "当前"
 	}
 	styles := ListItemStyles{
 		ItemBlurred:     r.t.Dialog.NormalItem,

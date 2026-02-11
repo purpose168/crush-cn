@@ -1,50 +1,51 @@
 # yaml-language-server: $schema=https://goreleaser.com/static/schema-pro.json
 # vim: set ts=2 sw=2 tw=0 fo=jcroql
+# GoReleaser 配置文件，用于自动构建和发布 Crush 项目
 version: 2
 
-project_name: crush
+project_name: crush  # 项目名称
 
 includes:
   - from_url:
-      url: charmbracelet/meta/main/notarize.yaml
+      url: charmbracelet/meta/main/notarize.yaml  # 包含外部配置文件，用于应用程序签名
 
 metadata:
-  mod_timestamp: "{{ .CommitTimestamp }}"
-  license: "FSL-1.1-MIT"
-  homepage: "https://charm.sh/crush"
-  description: "A powerful terminal-based AI assistant for developers, providing intelligent coding assistance directly in your terminal."
-  full_description: "A powerful terminal-based AI assistant for developers, providing intelligent coding assistance directly in your terminal."
+  mod_timestamp: "{{ .CommitTimestamp }}"  # 模块时间戳，使用提交时间
+  license: "FSL-1.1-MIT"  # 许可证类型
+  homepage: "https://charm.sh/crush"  # 项目主页
+  description: "A powerful terminal-based AI assistant for developers, providing intelligent coding assistance directly in your terminal."  # 项目描述
+  full_description: "A powerful terminal-based AI assistant for developers, providing intelligent coding assistance directly in your terminal."  # 项目完整描述
   maintainers:
     - "kujtimiihoxha <kujtim@charm.sh>"
     - "caarlos0 <carlos@charm.sh>" # for aur
 
 nightly:
-  publish_release: true
-  keep_single_release: true
-  version_template: "{{ incminor .Version }}-nightly"
+  publish_release: true  # 发布夜间版本
+  keep_single_release: true  # 只保留一个夜间版本
+  version_template: "{{ incminor .Version }}-nightly"  # 夜间版本的版本模板
 
 snapshot:
-  version_template: "0.0.0-{{ .Timestamp }}"
+  version_template: "0.0.0-{{ .Timestamp }}"  # 快照版本的版本模板
 
 before:
   hooks:
-    - go mod tidy
-    - rm -rf completions
-    - mkdir completions
-    - rm -rf manpages
-    - mkdir manpages
-    - sh -c 'go run . completion bash >./completions/crush.bash'
-    - sh -c 'go run . completion zsh >./completions/crush.zsh'
-    - sh -c 'go run . completion fish >./completions/crush.fish'
-    - sh -c 'go run . man | gzip -c >./manpages/crush.1.gz'
+    - go mod tidy  # 整理 Go 模块依赖
+    - rm -rf completions  # 删除旧的补全文件
+    - mkdir completions  # 创建补全文件目录
+    - rm -rf manpages  # 删除旧的手册页
+    - mkdir manpages  # 创建手册页目录
+    - sh -c 'go run . completion bash >./completions/crush.bash'  # 生成 Bash 补全
+    - sh -c 'go run . completion zsh >./completions/crush.zsh'  # 生成 Zsh 补全
+    - sh -c 'go run . completion fish >./completions/crush.fish'  # 生成 Fish 补全
+    - sh -c 'go run . man | gzip -c >./manpages/crush.1.gz'  # 生成压缩的手册页
 
 # gomod:
 #   proxy: true
 
 builds:
   - env:
-      - CGO_ENABLED=0
-      - GOEXPERIMENT=greenteagc
+      - CGO_ENABLED=0  # 禁用 CGO
+      - GOEXPERIMENT=greenteagc  # 启用 Go 实验性功能
     goos:
       - linux
       - darwin
@@ -70,9 +71,9 @@ builds:
       - goos: windows
         goarch: arm
     ldflags:
-      - -s -w -X github.com/charmbracelet/crush/internal/version.Version={{.Version}}
+      - -s -w -X github.com/charmbracelet/crush/internal/version.Version={{.Version}}  # 设置版本信息
     flags:
-      - -trimpath
+      - -trimpath  # 移除构建路径中的绝对路径
 
 archives:
   - name_template: >-
@@ -83,7 +84,7 @@ archives:
       {{- else if eq .Arch "386" }}i386
       {{- else }}{{ .Arch }}{{ end }}
       {{- with .Arm}}v{{ . }}{{ end }}
-    wrap_in_directory: true
+    wrap_in_directory: true  # 将文件包装在目录中
     files:
       - README*
       - LICENSE*
@@ -91,15 +92,15 @@ archives:
       - completions/*
     format_overrides:
       - goos: windows
-        formats: [zip]
+        formats: [zip]  # Windows 使用 zip 格式
 
 checksum:
-  name_template: "checksums.txt"
+  name_template: "checksums.txt"  # 校验和文件名
 
 aur_sources:
-  - private_key: "{{ .Env.AUR_KEY }}"
-    disable: "{{ with .Prerelease }}true{{ end }}"
-    git_url: "ssh://aur@aur.archlinux.org/crush.git"
+  - private_key: "{{ .Env.AUR_KEY }}"  # AUR 私钥
+    disable: "{{ with .Prerelease }}true{{ end }}"  # 预发布版本时禁用
+    git_url: "ssh://aur@aur.archlinux.org/crush.git"  # AUR 仓库 URL
     commit_author:
       name: "Charm"
       email: "charmcli@users.noreply.github.com"
@@ -107,7 +108,7 @@ aur_sources:
       - go
       - git
     prepare: |-
-      go mod download
+      go mod download  # 下载依赖
     build: |-
       mkdir completions
       mkdir manpages
@@ -141,9 +142,9 @@ aur_sources:
       install -Dm644 README* "${pkgdir}/usr/share/doc/crush/"
 
 aurs:
-  - private_key: "{{ .Env.AUR_KEY }}"
-    disable: "{{ with .Prerelease }}true{{ end }}"
-    git_url: "ssh://aur@aur.archlinux.org/crush-bin.git"
+  - private_key: "{{ .Env.AUR_KEY }}"  # AUR 私钥
+    disable: "{{ with .Prerelease }}true{{ end }}"  # 预发布版本时禁用
+    git_url: "ssh://aur@aur.archlinux.org/crush-bin.git"  # AUR 二进制包仓库 URL
     commit_author:
       name: "Charm"
       email: "charmcli@users.noreply.github.com"
@@ -179,16 +180,16 @@ aurs:
       install -Dm644 README* "${pkgdir}/usr/share/doc/crush/"
 
 furies:
-  - disable: "{{ if (or .Prerelease .IsNightly) }}true{{ end }}"
-    account: "{{ with .Env.FURY_TOKEN }}charmcli{{ else }}{{ end }}"
-    secret_name: FURY_TOKEN
+  - disable: "{{ if (or .Prerelease .IsNightly) }}true{{ end }}"  # 预发布和夜间版本时禁用
+    account: "{{ with .Env.FURY_TOKEN }}charmcli{{ else }}{{ end }}"  # Fury 账户
+    secret_name: FURY_TOKEN  # Fury 令牌
 
 brews:
   - repository:
       owner: charmbracelet
       name: homebrew-tap
-      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
-    skip_upload: "{{ with .Prerelease }}true{{ end }}"
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"  # GitHub 令牌
+    skip_upload: "{{ with .Prerelease }}true{{ end }}"  # 预发布版本时跳过上传
     commit_author:
       name: "Charm"
       email: "charmcli@users.noreply.github.com"
@@ -203,18 +204,18 @@ scoops:
   - repository:
       owner: charmbracelet
       name: scoop-bucket
-      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
-    skip_upload: "{{ with .Prerelease }}true{{ end }}"
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"  # GitHub 令牌
+    skip_upload: "{{ with .Prerelease }}true{{ end }}"  # 预发布版本时跳过上传
     commit_author:
       name: "Charm"
       email: "charmcli@users.noreply.github.com"
 
 npms:
-  - name: "@charmland/crush"
-    repository: "git+https://github.com/charmbracelet/crush.git"
-    bugs: https://github.com/charmbracelet/crush/issues
-    access: public
-    disable: "{{ with .Prerelease }}true{{ end }}"
+  - name: "@charmland/crush"  # NPM 包名
+    repository: "git+https://github.com/charmbracelet/crush.git"  # 仓库 URL
+    bugs: https://github.com/charmbracelet/crush/issues  # Bug 报告 URL
+    access: public  # 公开访问
+    disable: "{{ with .Prerelease }}true{{ end }}"  # 预发布版本时禁用
 
 nfpms:
   - formats:
@@ -223,7 +224,7 @@ nfpms:
       - rpm
       - archlinux
       - termux.deb
-    file_name_template: "{{ .ConventionalFileName }}"
+    file_name_template: "{{ .ConventionalFileName }}"  # 文件名模板
     contents:
       - src: ./completions/crush.bash
         dst: '{{ if eq .Format "termux.deb" }}/data/data/com.termux/files/usr{{ end }}/etc/bash_completion.d/crush'
@@ -235,41 +236,41 @@ nfpms:
         dst: '{{ if eq .Format "termux.deb" }}/data/data/com.termux/files{{ end }}/usr/share/man/man1/crush.1.gz'
     rpm:
       signature:
-        key_file: '{{ if ne (index .Env "GPG_KEY_PATH") "" }}{{ .Env.GPG_KEY_PATH }}{{ else }}{{ end }}'
+        key_file: '{{ if ne (index .Env "GPG_KEY_PATH") "" }}{{ .Env.GPG_KEY_PATH }}{{ else }}{{ end }}'  # GPG 密钥文件
     deb:
       signature:
-        key_file: '{{ if ne (index .Env "GPG_KEY_PATH") "" }}{{ .Env.GPG_KEY_PATH }}{{ else }}{{ end }}'
+        key_file: '{{ if ne (index .Env "GPG_KEY_PATH") "" }}{{ .Env.GPG_KEY_PATH }}{{ else }}{{ end }}'  # GPG 密钥文件
 
 signs:
   - cmd: cosign
-    signature: "${artifact}.sigstore.json"
+    signature: "${artifact}.sigstore.json"  # 签名文件
     args:
       - sign-blob
       - "--bundle=${signature}"
       - "${artifact}"
       - "--yes"
-    artifacts: checksum
+    artifacts: checksum  # 对校验和文件进行签名
     output: true
 
 source:
-  enabled: true
+  enabled: true  # 启用源码发布
 
 sboms:
-  - artifacts: archive
+  - artifacts: archive  # 为归档生成 SBOM
   - id: source
-    artifacts: source
+    artifacts: source  # 为源码生成 SBOM
 
 nix:
   - repository:
       owner: "charmbracelet"
       name: nur
-      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"  # GitHub 令牌
     commit_author:
       name: "Charm"
       email: "charmcli@users.noreply.github.com"
-    license: fsl11Mit
-    formatter: nixfmt
-    skip_upload: "{{ with .Prerelease }}true{{ end }}"
+    license: fsl11Mit  # 许可证
+    formatter: nixfmt  # Nix 格式化工具
+    skip_upload: "{{ with .Prerelease }}true{{ end }}"  # 预发布版本时跳过上传
     extra_install: |-
       installManPage ./manpages/crush.1.gz
       installShellCompletion ./completions/*
@@ -278,17 +279,17 @@ winget:
   - publisher: charmbracelet
     copyright: Charmbracelet, Inc
     publisher_url: https://charm.land
-    release_notes_url: "https://github.com/charmbracelet/crush/releases/tag/{{.Tag}}"
-    license_url: https://github.com/charmbracelet/crush/blob/main/LICENSE.md
-    skip_upload: "{{ with .Prerelease }}true{{ end }}"
+    release_notes_url: "https://github.com/charmbracelet/crush/releases/tag/{{.Tag}}"  # 发布说明 URL
+    license_url: https://github.com/charmbracelet/crush/blob/main/LICENSE.md  # 许可证 URL
+    skip_upload: "{{ with .Prerelease }}true{{ end }}"  # 预发布版本时跳过上传
     commit_author:
       name: "Charm"
       email: "charmcli@users.noreply.github.com"
     repository:
       owner: "charmbracelet"
       name: winget-pkgs
-      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
-      branch: "crush-{{.Version}}"
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"  # GitHub 令牌
+      branch: "crush-{{.Version}}"  # 分支名
       pull_request:
         enabled: true
         draft: false
@@ -299,9 +300,9 @@ winget:
           branch: master
 
 changelog:
-  sort: asc
-  disable: "{{ .IsNightly }}"
-  use: github
+  sort: asc  # 按升序排序
+  disable: "{{ .IsNightly }}"  # 夜间版本时禁用
+  use: github  # 使用 GitHub 变更日志
   filters:
     exclude:
       - "^(build|ci): "
@@ -343,7 +344,7 @@ changelog:
       order: 9999
 
 release:
-  prerelease: auto
+  prerelease: auto  # 自动检测预发布版本
   footer:
     from_url:
-      url: https://raw.githubusercontent.com/charmbracelet/meta/main/footer.md
+      url: https://raw.githubusercontent.com/charmbracelet/meta/main/footer.md  # 页脚内容

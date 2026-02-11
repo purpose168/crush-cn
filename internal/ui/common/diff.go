@@ -6,8 +6,7 @@ import (
 	"github.com/charmbracelet/crush/internal/ui/styles"
 )
 
-// DiffFormatter returns a diff formatter with the given styles that can be
-// used to format diff outputs.
+// DiffFormatter 返回一个使用给定样式的差异格式化器，可用于格式化差异输出。
 func DiffFormatter(s *styles.Styles) *diffview.DiffView {
 	formatDiff := diffview.New()
 	style := chroma.MustNewStyle("crush", s.ChromaTheme())

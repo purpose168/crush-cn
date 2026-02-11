@@ -1,4 +1,4 @@
-// Package logo renders a Crush wordmark in a stylized way.
+// Package logo 以风格化的方式渲染Crush标志。
 package logo
 
 import (
@@ -13,27 +13,27 @@ import (
 	"github.com/charmbracelet/x/exp/slice"
 )
 
-// letterform represents a letterform. It can be stretched horizontally by
-// a given amount via the boolean argument.
+// letterform 表示字母形式。可以通过布尔参数将其水平拉伸
+// 指定的量。
 type letterform func(bool) string
 
 const diag = `╱`
 
-// Opts are the options for rendering the Crush title art.
+// Opts 是渲染Crush标题艺术字的选项。
 type Opts struct {
-	FieldColor   color.Color // diagonal lines
-	TitleColorA  color.Color // left gradient ramp point
-	TitleColorB  color.Color // right gradient ramp point
-	CharmColor   color.Color // Charm™ text color
-	VersionColor color.Color // Version text color
-	Width        int         // width of the rendered logo, used for truncation
+	FieldColor   color.Color // 对角线
+	TitleColorA  color.Color // 左侧渐变坡度点
+	TitleColorB  color.Color // 右侧渐变坡度点
+	CharmColor   color.Color // Charm™文本颜色
+	VersionColor color.Color // 版本文本颜色
+	Width        int         // 渲染的logo宽度，用于截断
 }
 
-// Render renders the Crush logo. Set the argument to true to render the narrow
-// version, intended for use in a sidebar.
+// Render 渲染Crush标志。将参数设置为true以渲染窄版本，
+// 旨在用于侧边栏。
 //
-// The compact argument determines whether it renders compact for the sidebar
-// or wider for the main pane.
+// compact参数决定它是为侧边栏渲染紧凑版本，
+// 还是为主面板渲染较宽版本。
 func Render(s *styles.Styles, version string, compact bool, o Opts) string {
 	const charm = " Charm™"
 
@@ -41,7 +41,7 @@ func Render(s *styles.Styles, version string, compact bool, o Opts) string {
 		return lipgloss.NewStyle().Foreground(c).Render(s)
 	}
 
-	// Title.
+	// 标题。
 	const spacing = 1
 	letterforms := []letterform{
 		letterC,
@@ -63,17 +63,17 @@ func Render(s *styles.Styles, version string, compact bool, o Opts) string {
 	}
 	crush = b.String()
 
-	// Charm and version.
+	// Charm和版本。
 	metaRowGap := 1
 	maxVersionWidth := crushWidth - lipgloss.Width(charm) - metaRowGap
-	version = ansi.Truncate(version, maxVersionWidth, "…") // truncate version if too long.
+	version = ansi.Truncate(version, maxVersionWidth, "…") // 如果版本太长则截断。
 	gap := max(0, crushWidth-lipgloss.Width(charm)-lipgloss.Width(version))
 	metaRow := fg(o.CharmColor, charm) + strings.Repeat(" ", gap) + fg(o.VersionColor, version)
 
-	// Join the meta row and big Crush title.
+	// 连接元行和大型Crush标题。
 	crush = strings.TrimSpace(metaRow + "\n" + crush)
 
-	// Narrow version.
+	// 窄版本。
 	if compact {
 		field := fg(o.FieldColor, strings.Repeat(diag, crushWidth))
 		return strings.Join([]string{field, field, crush, field, ""}, "\n")
@@ -81,7 +81,7 @@ func Render(s *styles.Styles, version string, compact bool, o Opts) string {
 
 	fieldHeight := lipgloss.Height(crush)
 
-	// Left field.
+	// 左侧区域。
 	const leftWidth = 6
 	leftFieldRow := fg(o.FieldColor, strings.Repeat(diag, leftWidth))
 	leftField := new(strings.Builder)
@@ -89,8 +89,8 @@ func Render(s *styles.Styles, version string, compact bool, o Opts) string {
 		fmt.Fprintln(leftField, leftFieldRow)
 	}
 
-	// Right field.
-	rightWidth := max(15, o.Width-crushWidth-leftWidth-2) // 2 for the gap.
+	// 右侧区域。
+	rightWidth := max(15, o.Width-crushWidth-leftWidth-2) // 2用于间距。
 	const stepDownAt = 0
 	rightField := new(strings.Builder)
 	for i := range fieldHeight {
@@ -101,11 +101,11 @@ func Render(s *styles.Styles, version string, compact bool, o Opts) string {
 		fmt.Fprint(rightField, fg(o.FieldColor, strings.Repeat(diag, width)), "\n")
 	}
 
-	// Return the wide version.
+	// 返回宽版本。
 	const hGap = " "
 	logo := lipgloss.JoinHorizontal(lipgloss.Top, leftField.String(), hGap, crush, hGap, rightField.String())
 	if o.Width > 0 {
-		// Truncate the logo to the specified width.
+		// 将logo截断到指定宽度。
 		lines := strings.Split(logo, "\n")
 		for i, line := range lines {
 			lines[i] = ansi.Truncate(line, o.Width, "")
@@ -115,12 +115,12 @@ func Render(s *styles.Styles, version string, compact bool, o Opts) string {
 	return logo
 }
 
-// SmallRender renders a smaller version of the Crush logo, suitable for
-// smaller windows or sidebar usage.
+// SmallRender 渲染较小版本的Crush标志，适用于
+// 较小的窗口或侧边栏使用。
 func SmallRender(t *styles.Styles, width int) string {
 	title := t.Base.Foreground(t.Secondary).Render("Charm™")
 	title = fmt.Sprintf("%s %s", title, styles.ApplyBoldForegroundGrad(t, "Crush", t.Secondary, t.Primary))
-	remainingWidth := width - lipgloss.Width(title) - 1 // 1 for the space after "Crush"
+	remainingWidth := width - lipgloss.Width(title) - 1 // 1用于"Crush"后面的空格
 	if remainingWidth > 0 {
 		lines := strings.Repeat("╱", remainingWidth)
 		title = fmt.Sprintf("%s %s", title, t.Base.Foreground(t.Primary).Render(lines))
@@ -128,8 +128,8 @@ func SmallRender(t *styles.Styles, width int) string {
 	return title
 }
 
-// renderWord renders letterforms to fork a word. stretchIndex is the index of
-// the letter to stretch, or -1 if no letter should be stretched.
+// renderWord 渲染字母形式以组成单词。stretchIndex是要拉伸的字母的索引，
+// 如果没有字母应该拉伸则为-1。
 func renderWord(spacing int, stretchIndex int, letterforms ...letterform) string {
 	if spacing < 0 {
 		spacing = 0
@@ -137,13 +137,13 @@ func renderWord(spacing int, stretchIndex int, letterforms ...letterform) string
 
 	renderedLetterforms := make([]string, len(letterforms))
 
-	// pick one letter randomly to stretch
+	// 随机选择一个字母进行拉伸
 	for i, letter := range letterforms {
 		renderedLetterforms[i] = letter(i == stretchIndex)
 	}
 
 	if spacing > 0 {
-		// Add spaces between the letters and render.
+		// 在字母之间添加空格并渲染。
 		renderedLetterforms = slice.Intersperse(renderedLetterforms, strings.Repeat(" ", spacing))
 	}
 	return strings.TrimSpace(
@@ -151,11 +151,11 @@ func renderWord(spacing int, stretchIndex int, letterforms ...letterform) string
 	)
 }
 
-// letterC renders the letter C in a stylized way. It takes an integer that
-// determines how many cells to stretch the letter. If the stretch is less than
-// 1, it defaults to no stretching.
+// letterC 以风格化的方式渲染字母C。它接受一个整数，
+// 该整数确定要拉伸多少个单元格。如果拉伸小于1，
+// 则默认为不拉伸。
 func letterC(stretch bool) string {
-	// Here's what we're making:
+	// 这是我们正在制作的：
 	//
 	// ▄▀▀▀▀
 	// █
@@ -181,11 +181,11 @@ func letterC(stretch bool) string {
 	)
 }
 
-// letterH renders the letter H in a stylized way. It takes an integer that
-// determines how many cells to stretch the letter. If the stretch is less than
-// 1, it defaults to no stretching.
+// letterH 以风格化的方式渲染字母H。它接受一个整数，
+// 该整数确定要拉伸多少个单元格。如果拉伸小于1，
+// 则默认为不拉伸。
 func letterH(stretch bool) string {
-	// Here's what we're making:
+	// 这是我们正在制作的：
 	//
 	// █   █
 	// █▀▀▀█
@@ -211,11 +211,11 @@ func letterH(stretch bool) string {
 	)
 }
 
-// letterR renders the letter R in a stylized way. It takes an integer that
-// determines how many cells to stretch the letter. If the stretch is less than
-// 1, it defaults to no stretching.
+// letterR 以风格化的方式渲染字母R。它接受一个整数，
+// 该整数确定要拉伸多少个单元格。如果拉伸小于1，
+// 则默认为不拉伸。
 func letterR(stretch bool) string {
-	// Here's what we're making:
+	// 这是我们正在制作的：
 	//
 	// █▀▀▀▄
 	// █▀▀▀▄
@@ -247,11 +247,11 @@ func letterR(stretch bool) string {
 	)
 }
 
-// letterSStylized renders the letter S in a stylized way, more so than
-// [letterS]. It takes an integer that determines how many cells to stretch the
-// letter. If the stretch is less than 1, it defaults to no stretching.
+// letterSStylized 以风格化的方式渲染字母S，比[letterS]更具风格化。
+// 它接受一个整数，该整数确定要拉伸多少个单元格。如果拉伸小于1，
+// 则默认为不拉伸。
 func letterSStylized(stretch bool) string {
-	// Here's what we're making:
+	// 这是我们正在制作的：
 	//
 	// ▄▀▀▀▀▀
 	// ▀▀▀▀▀█
@@ -283,11 +283,11 @@ func letterSStylized(stretch bool) string {
 	)
 }
 
-// letterU renders the letter U in a stylized way. It takes an integer that
-// determines how many cells to stretch the letter. If the stretch is less than
-// 1, it defaults to no stretching.
+// letterU 以风格化的方式渲染字母U。它接受一个整数，
+// 该整数确定要拉伸多少个单元格。如果拉伸小于1，
+// 则默认为不拉伸。
 func letterU(stretch bool) string {
-	// Here's what we're making:
+	// 这是我们正在制作的：
 	//
 	// █   █
 	// █   █
@@ -318,8 +318,8 @@ func joinLetterform(letters ...string) string {
 	return lipgloss.JoinHorizontal(lipgloss.Top, letters...)
 }
 
-// letterformProps defines letterform stretching properties.
-// for readability.
+// letterformProps 定义字母形式拉伸属性。
+// 用于提高可读性。
 type letterformProps struct {
 	width      int
 	minStretch int
@@ -327,8 +327,8 @@ type letterformProps struct {
 	stretch    bool
 }
 
-// stretchLetterformPart is a helper function for letter stretching. If randomize
-// is false the minimum number will be used.
+// stretchLetterformPart 是字母拉伸的辅助函数。如果randomize
+// 为false，则使用最小值。
 func stretchLetterformPart(s string, p letterformProps) string {
 	if p.maxStretch < p.minStretch {
 		p.minStretch, p.maxStretch = p.maxStretch, p.minStretch

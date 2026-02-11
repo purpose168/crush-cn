@@ -10,7 +10,7 @@ import (
 	"github.com/sahilm/fuzzy"
 )
 
-// ModelGroup represents a group of model items.
+// ModelGroup 表示一组模型项目。
 type ModelGroup struct {
 	Title      string
 	Items      []*ModelItem
@@ -18,7 +18,7 @@ type ModelGroup struct {
 	t          *styles.Styles
 }
 
-// NewModelGroup creates a new ModelGroup.
+// NewModelGroup 创建一个新的 ModelGroup。
 func NewModelGroup(t *styles.Styles, title string, configured bool, items ...*ModelItem) ModelGroup {
 	return ModelGroup{
 		Title:      title,
@@ -28,17 +28,17 @@ func NewModelGroup(t *styles.Styles, title string, configured bool, items ...*Mo
 	}
 }
 
-// AppendItems appends [ModelItem]s to the group.
+// AppendItems 将 [ModelItem] 追加到组中。
 func (m *ModelGroup) AppendItems(items ...*ModelItem) {
 	m.Items = append(m.Items, items...)
 }
 
-// Render implements [list.Item].
+// Render 实现 [list.Item] 接口。
 func (m *ModelGroup) Render(width int) string {
 	var configured string
 	if m.configured {
 		configuredIcon := m.t.ToolCallSuccess.Render()
-		configuredText := m.t.Subtle.Render("Configured")
+		configuredText := m.t.Subtle.Render("已配置")
 		configured = configuredIcon + " " + configuredText
 	}
 
@@ -48,7 +48,7 @@ func (m *ModelGroup) Render(width int) string {
 	return common.Section(m.t, title, width, configured)
 }
 
-// ModelItem represents a list item for a model type.
+// ModelItem 表示模型类型的列表项目。
 type ModelItem struct {
 	prov      catwalk.Provider
 	model     catwalk.Model
@@ -61,7 +61,7 @@ type ModelItem struct {
 	showProvider bool
 }
 
-// SelectedModel returns this model item as a [config.SelectedModel] instance.
+// SelectedModel 返回此模型项目作为 [config.SelectedModel] 实例。
 func (m *ModelItem) SelectedModel() config.SelectedModel {
 	return config.SelectedModel{
 		Model:           m.model.ID,
@@ -71,14 +71,14 @@ func (m *ModelItem) SelectedModel() config.SelectedModel {
 	}
 }
 
-// SelectedModelType returns the type of model represented by this item.
+// SelectedModelType 返回此项目表示的模型类型。
 func (m *ModelItem) SelectedModelType() config.SelectedModelType {
 	return m.modelType.Config()
 }
 
 var _ ListItem = &ModelItem{}
 
-// NewModelItem creates a new ModelItem.
+// NewModelItem 创建一个新的 ModelItem。
 func NewModelItem(t *styles.Styles, prov catwalk.Provider, model catwalk.Model, typ ModelType, showProvider bool) *ModelItem {
 	return &ModelItem{
 		prov:         prov,
@@ -90,17 +90,17 @@ func NewModelItem(t *styles.Styles, prov catwalk.Provider, model catwalk.Model, 
 	}
 }
 
-// Filter implements ListItem.
+// Filter 实现 ListItem 接口。
 func (m *ModelItem) Filter() string {
 	return m.model.Name
 }
 
-// ID implements ListItem.
+// ID 实现 ListItem 接口。
 func (m *ModelItem) ID() string {
 	return modelKey(string(m.prov.ID), m.model.ID)
 }
 
-// Render implements ListItem.
+// Render 实现 ListItem 接口。
 func (m *ModelItem) Render(width int) string {
 	var providerInfo string
 	if m.showProvider {
@@ -115,7 +115,7 @@ func (m *ModelItem) Render(width int) string {
 	return renderItem(styles, m.model.Name, providerInfo, m.focused, width, m.cache, &m.m)
 }
 
-// SetFocused implements ListItem.
+// SetFocused 实现 ListItem 接口。
 func (m *ModelItem) SetFocused(focused bool) {
 	if m.focused != focused {
 		m.cache = nil
@@ -123,7 +123,7 @@ func (m *ModelItem) SetFocused(focused bool) {
 	m.focused = focused
 }
 
-// SetMatch implements ListItem.
+// SetMatch 实现 ListItem 接口。
 func (m *ModelItem) SetMatch(fm fuzzy.Match) {
 	m.cache = nil
 	m.m = fm

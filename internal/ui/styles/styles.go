@@ -16,307 +16,312 @@ import (
 	"github.com/charmbracelet/x/exp/charmtone"
 )
 
+// 图标常量定义
 const (
-	CheckIcon   string = "✓"
-	SpinnerIcon string = "⋯"
-	LoadingIcon string = "⟳"
-	ModelIcon   string = "◇"
+	CheckIcon   string = "✓" // 勾选图标
+	SpinnerIcon string = "⋯" // 加载中图标
+	LoadingIcon string = "⟳" // 刷新图标
+	ModelIcon   string = "◇" // 模型图标
 
-	ArrowRightIcon string = "→"
+	ArrowRightIcon string = "→" // 右箭头图标
 
-	ToolPending string = "●"
-	ToolSuccess string = "✓"
-	ToolError   string = "×"
+	ToolPending string = "●" // 工具等待状态图标
+	ToolSuccess string = "✓" // 工具成功状态图标
+	ToolError   string = "×" // 工具错误状态图标
 
-	RadioOn  string = "◉"
-	RadioOff string = "○"
+	RadioOn  string = "◉" // 单选按钮选中状态
+	RadioOff string = "○" // 单选按钮未选中状态
 
-	BorderThin  string = "│"
-	BorderThick string = "▌"
+	BorderThin  string = "│" // 细边框
+	BorderThick string = "▌" // 粗边框
 
-	SectionSeparator string = "─"
+	SectionSeparator string = "─" // 节分隔线
 
-	TodoCompletedIcon  string = "✓"
-	TodoPendingIcon    string = "•"
-	TodoInProgressIcon string = "→"
+	TodoCompletedIcon  string = "✓" // 待办事项完成图标
+	TodoPendingIcon    string = "•" // 待办事项待处理图标
+	TodoInProgressIcon string = "→" // 待办事项进行中图标
 
-	ImageIcon string = "■"
-	TextIcon  string = "≡"
+	ImageIcon string = "■" // 图片图标
+	TextIcon  string = "≡" // 文本图标
 
-	ScrollbarThumb string = "┃"
-	ScrollbarTrack string = "│"
+	ScrollbarThumb string = "┃" // 滚动条滑块
+	ScrollbarTrack string = "│" // 滚动条轨道
 
-	LSPErrorIcon   string = "E"
-	LSPWarningIcon string = "W"
-	LSPInfoIcon    string = "I"
-	LSPHintIcon    string = "H"
+	LSPErrorIcon   string = "E" // LSP错误图标
+	LSPWarningIcon string = "W" // LSP警告图标
+	LSPInfoIcon    string = "I" // LSP信息图标
+	LSPHintIcon    string = "H" // LSP提示图标
 )
 
+// 默认样式常量
 const (
-	defaultMargin     = 2
-	defaultListIndent = 2
+	defaultMargin     = 2 // 默认边距
+	defaultListIndent = 2 // 默认列表缩进
 )
+
+// Styles 定义了UI的所有样式
 
 type Styles struct {
-	WindowTooSmall lipgloss.Style
+	WindowTooSmall lipgloss.Style // 窗口过小时的提示样式
 
-	// Reusable text styles
-	Base      lipgloss.Style
-	Muted     lipgloss.Style
-	HalfMuted lipgloss.Style
-	Subtle    lipgloss.Style
+	// 可复用文本样式
+	Base      lipgloss.Style // 基础文本样式
+	Muted     lipgloss.Style // 弱化文本样式
+	HalfMuted lipgloss.Style // 半弱化文本样式
+	Subtle    lipgloss.Style // 细微文本样式
 
-	// Tags
-	TagBase  lipgloss.Style
-	TagError lipgloss.Style
-	TagInfo  lipgloss.Style
+	// 标签样式
+	TagBase  lipgloss.Style // 基础标签样式
+	TagError lipgloss.Style // 错误标签样式
+	TagInfo  lipgloss.Style // 信息标签样式
 
-	// Header
+	// 头部样式
 	Header struct {
-		Charm        lipgloss.Style // Style for "Charm™" label
-		Diagonals    lipgloss.Style // Style for diagonal separators (╱)
-		Percentage   lipgloss.Style // Style for context percentage
-		Keystroke    lipgloss.Style // Style for keystroke hints (e.g., "ctrl+d")
-		KeystrokeTip lipgloss.Style // Style for keystroke action text (e.g., "open", "close")
-		WorkingDir   lipgloss.Style // Style for current working directory
-		Separator    lipgloss.Style // Style for separator dots (•)
+		Charm        lipgloss.Style // "Charm™" 标签样式
+		Diagonals    lipgloss.Style // 对角线分隔符样式 (╱)
+		Percentage   lipgloss.Style // 上下文百分比样式
+		Keystroke    lipgloss.Style // 快捷键提示样式 (例如: "ctrl+d")
+		KeystrokeTip lipgloss.Style // 快捷键操作文本样式 (例如: "打开", "关闭")
+		WorkingDir   lipgloss.Style // 当前工作目录样式
+		Separator    lipgloss.Style // 分隔点样式 (•)
 	}
 
+	// 紧凑详情样式
 	CompactDetails struct {
-		View    lipgloss.Style
-		Version lipgloss.Style
-		Title   lipgloss.Style
+		View    lipgloss.Style // 视图样式
+		Version lipgloss.Style // 版本信息样式
+		Title   lipgloss.Style // 标题样式
 	}
 
-	// Panels
-	PanelMuted lipgloss.Style
-	PanelBase  lipgloss.Style
+	// 面板样式
+	PanelMuted lipgloss.Style // 弱化面板样式
+	PanelBase  lipgloss.Style // 基础面板样式
 
-	// Line numbers for code blocks
+	// 代码块行号样式
 	LineNumber lipgloss.Style
 
-	// Message borders
-	FocusedMessageBorder lipgloss.Border
+	// 消息边框
+	FocusedMessageBorder lipgloss.Border // 聚焦消息边框
 
-	// Tool calls
-	ToolCallPending   lipgloss.Style
-	ToolCallError     lipgloss.Style
-	ToolCallSuccess   lipgloss.Style
-	ToolCallCancelled lipgloss.Style
-	EarlyStateMessage lipgloss.Style
+	// 工具调用样式
+	ToolCallPending   lipgloss.Style // 工具调用等待样式
+	ToolCallError     lipgloss.Style // 工具调用错误样式
+	ToolCallSuccess   lipgloss.Style // 工具调用成功样式
+	ToolCallCancelled lipgloss.Style // 工具调用取消样式
+	EarlyStateMessage lipgloss.Style // 早期状态消息样式
 
-	// Text selection
+	// 文本选择样式
 	TextSelection lipgloss.Style
 
-	// LSP and MCP status indicators
-	ItemOfflineIcon lipgloss.Style
-	ItemBusyIcon    lipgloss.Style
-	ItemErrorIcon   lipgloss.Style
-	ItemOnlineIcon  lipgloss.Style
+	// LSP和MCP状态指示器
+	ItemOfflineIcon lipgloss.Style // 离线状态图标样式
+	ItemBusyIcon    lipgloss.Style // 忙碌状态图标样式
+	ItemErrorIcon   lipgloss.Style // 错误状态图标样式
+	ItemOnlineIcon  lipgloss.Style // 在线状态图标样式
 
-	// Markdown & Chroma
-	Markdown      ansi.StyleConfig
-	PlainMarkdown ansi.StyleConfig
+	// Markdown和Chroma样式
+	Markdown      ansi.StyleConfig // Markdown样式配置
+	PlainMarkdown ansi.StyleConfig // 纯文本Markdown样式配置
 
-	// Inputs
-	TextInput textinput.Styles
-	TextArea  textarea.Styles
+	// 输入框样式
+	TextInput textinput.Styles // 文本输入框样式
+	TextArea  textarea.Styles  // 文本区域样式
 
-	// Help
-	Help help.Styles
+	// 帮助样式
+	Help help.Styles // 帮助文本样式
 
-	// Diff
-	Diff diffview.Style
+	// 差异视图样式
+	Diff diffview.Style // 差异视图样式
 
-	// FilePicker
-	FilePicker filepicker.Styles
+	// 文件选择器样式
+	FilePicker filepicker.Styles // 文件选择器样式
 
-	// Buttons
-	ButtonFocus lipgloss.Style
-	ButtonBlur  lipgloss.Style
+	// 按钮样式
+	ButtonFocus lipgloss.Style // 按钮聚焦样式
+	ButtonBlur  lipgloss.Style // 按钮失焦样式
 
-	// Borders
-	BorderFocus lipgloss.Style
-	BorderBlur  lipgloss.Style
+	// 边框样式
+	BorderFocus lipgloss.Style // 边框聚焦样式
+	BorderBlur  lipgloss.Style // 边框失焦样式
 
-	// Editor
-	EditorPromptNormalFocused   lipgloss.Style
-	EditorPromptNormalBlurred   lipgloss.Style
-	EditorPromptYoloIconFocused lipgloss.Style
-	EditorPromptYoloIconBlurred lipgloss.Style
-	EditorPromptYoloDotsFocused lipgloss.Style
-	EditorPromptYoloDotsBlurred lipgloss.Style
+	// 编辑器提示样式
+	EditorPromptNormalFocused   lipgloss.Style // 普通编辑器提示聚焦样式
+	EditorPromptNormalBlurred   lipgloss.Style // 普通编辑器提示失焦样式
+	EditorPromptYoloIconFocused lipgloss.Style // Yolo编辑器提示图标聚焦样式
+	EditorPromptYoloIconBlurred lipgloss.Style // Yolo编辑器提示图标失焦样式
+	EditorPromptYoloDotsFocused lipgloss.Style // Yolo编辑器提示点聚焦样式
+	EditorPromptYoloDotsBlurred lipgloss.Style // Yolo编辑器提示点失焦样式
 
-	// Radio
-	RadioOn  lipgloss.Style
-	RadioOff lipgloss.Style
+	// 单选按钮样式
+	RadioOn  lipgloss.Style // 单选按钮选中样式
+	RadioOff lipgloss.Style // 单选按钮未选中样式
 
-	// Background
+	// 背景颜色
 	Background color.Color
 
-	// Logo
-	LogoFieldColor   color.Color
-	LogoTitleColorA  color.Color
-	LogoTitleColorB  color.Color
-	LogoCharmColor   color.Color
-	LogoVersionColor color.Color
+	// Logo样式
+	LogoFieldColor   color.Color // Logo字段颜色
+	LogoTitleColorA  color.Color // Logo标题颜色A
+	LogoTitleColorB  color.Color // Logo标题颜色B
+	LogoCharmColor   color.Color // Logo Charm颜色
+	LogoVersionColor color.Color // Logo版本颜色
 
-	// Colors - semantic colors for tool rendering.
-	Primary       color.Color
-	Secondary     color.Color
-	Tertiary      color.Color
-	BgBase        color.Color
-	BgBaseLighter color.Color
-	BgSubtle      color.Color
-	BgOverlay     color.Color
-	FgBase        color.Color
-	FgMuted       color.Color
-	FgHalfMuted   color.Color
-	FgSubtle      color.Color
-	Border        color.Color
-	BorderColor   color.Color // Border focus color
-	Error         color.Color
-	Warning       color.Color
-	Info          color.Color
-	White         color.Color
-	BlueLight     color.Color
-	Blue          color.Color
-	BlueDark      color.Color
-	GreenLight    color.Color
-	Green         color.Color
-	GreenDark     color.Color
-	Red           color.Color
-	RedDark       color.Color
-	Yellow        color.Color
+	// 语义颜色，用于工具渲染
+	Primary       color.Color // 主色调
+	Secondary     color.Color // 辅助色调
+	Tertiary      color.Color // 第三色调
+	BgBase        color.Color // 基础背景色
+	BgBaseLighter color.Color // 浅基础背景色
+	BgSubtle      color.Color // 细微背景色
+	BgOverlay     color.Color // 覆盖层背景色
+	FgBase        color.Color // 基础前景色
+	FgMuted       color.Color // 弱化前景色
+	FgHalfMuted   color.Color // 半弱化前景色
+	FgSubtle      color.Color // 细微前景色
+	Border        color.Color // 边框颜色
+	BorderColor   color.Color // 边框聚焦颜色
+	Error         color.Color // 错误颜色
+	Warning       color.Color // 警告颜色
+	Info          color.Color // 信息颜色
+	White         color.Color // 白色
+	BlueLight     color.Color // 浅蓝色
+	Blue          color.Color // 蓝色
+	BlueDark      color.Color // 深蓝色
+	GreenLight    color.Color // 浅绿色
+	Green         color.Color // 绿色
+	GreenDark     color.Color // 深绿色
+	Red           color.Color // 红色
+	RedDark       color.Color // 深红色
+	Yellow        color.Color // 黄色
 
-	// Section Title
+	// 节标题样式
 	Section struct {
-		Title lipgloss.Style
-		Line  lipgloss.Style
+		Title lipgloss.Style // 节标题样式
+		Line  lipgloss.Style // 节分隔线样式
 	}
 
-	// Initialize
+	// 初始化样式
 	Initialize struct {
-		Header  lipgloss.Style
-		Content lipgloss.Style
-		Accent  lipgloss.Style
+		Header  lipgloss.Style // 初始化头部样式
+		Content lipgloss.Style // 初始化内容样式
+		Accent  lipgloss.Style // 初始化强调样式
 	}
 
-	// LSP
+	// LSP样式
 	LSP struct {
-		ErrorDiagnostic   lipgloss.Style
-		WarningDiagnostic lipgloss.Style
-		HintDiagnostic    lipgloss.Style
-		InfoDiagnostic    lipgloss.Style
+		ErrorDiagnostic   lipgloss.Style // LSP错误诊断样式
+		WarningDiagnostic lipgloss.Style // LSP警告诊断样式
+		HintDiagnostic    lipgloss.Style // LSP提示诊断样式
+		InfoDiagnostic    lipgloss.Style // LSP信息诊断样式
 	}
 
-	// Files
+	// 文件样式
 	Files struct {
-		Path      lipgloss.Style
-		Additions lipgloss.Style
-		Deletions lipgloss.Style
+		Path      lipgloss.Style // 文件路径样式
+		Additions lipgloss.Style // 文件新增内容样式
+		Deletions lipgloss.Style // 文件删除内容样式
 	}
 
-	// Chat
+	// 聊天样式
 	Chat struct {
-		// Message item styles
+		// 消息项样式
 		Message struct {
-			UserBlurred      lipgloss.Style
-			UserFocused      lipgloss.Style
-			AssistantBlurred lipgloss.Style
-			AssistantFocused lipgloss.Style
-			NoContent        lipgloss.Style
-			Thinking         lipgloss.Style
-			ErrorTag         lipgloss.Style
-			ErrorTitle       lipgloss.Style
-			ErrorDetails     lipgloss.Style
-			ToolCallFocused  lipgloss.Style
-			ToolCallCompact  lipgloss.Style
-			ToolCallBlurred  lipgloss.Style
-			SectionHeader    lipgloss.Style
+			UserBlurred      lipgloss.Style // 用户消息失焦样式
+			UserFocused      lipgloss.Style // 用户消息聚焦样式
+			AssistantBlurred lipgloss.Style // 助手消息失焦样式
+			AssistantFocused lipgloss.Style // 助手消息聚焦样式
+			NoContent        lipgloss.Style // 无内容消息样式
+			Thinking         lipgloss.Style // 思考中消息样式
+			ErrorTag         lipgloss.Style // 错误标签样式
+			ErrorTitle       lipgloss.Style // 错误标题样式
+			ErrorDetails     lipgloss.Style // 错误详情样式
+			ToolCallFocused  lipgloss.Style // 工具调用聚焦样式
+			ToolCallCompact  lipgloss.Style // 工具调用紧凑样式
+			ToolCallBlurred  lipgloss.Style // 工具调用失焦样式
+			SectionHeader    lipgloss.Style // 节标题样式
 
-			// Thinking section styles
-			ThinkingBox            lipgloss.Style // Background for thinking content
-			ThinkingTruncationHint lipgloss.Style // "… (N lines hidden)" hint
-			ThinkingFooterTitle    lipgloss.Style // "Thought for" text
-			ThinkingFooterDuration lipgloss.Style // Duration value
-			AssistantInfoIcon      lipgloss.Style
-			AssistantInfoModel     lipgloss.Style
-			AssistantInfoProvider  lipgloss.Style
-			AssistantInfoDuration  lipgloss.Style
+			// 思考节样式
+			ThinkingBox            lipgloss.Style // 思考内容背景样式
+			ThinkingTruncationHint lipgloss.Style // "… (N行隐藏)" 提示样式
+			ThinkingFooterTitle    lipgloss.Style // "思考于" 文本样式
+			ThinkingFooterDuration lipgloss.Style // 时长值样式
+			AssistantInfoIcon      lipgloss.Style // 助手信息图标样式
+			AssistantInfoModel     lipgloss.Style // 助手信息模型样式
+			AssistantInfoProvider  lipgloss.Style // 助手信息提供者样式
+			AssistantInfoDuration  lipgloss.Style // 助手信息时长样式
 		}
 	}
 
-	// Tool - styles for tool call rendering
+	// 工具调用渲染样式
 	Tool struct {
-		// Icon styles with tool status
-		IconPending   lipgloss.Style // Pending operation icon
-		IconSuccess   lipgloss.Style // Successful operation icon
-		IconError     lipgloss.Style // Error operation icon
-		IconCancelled lipgloss.Style // Cancelled operation icon
+		// 带状态的图标样式
+		IconPending   lipgloss.Style // 等待操作图标样式
+		IconSuccess   lipgloss.Style // 成功操作图标样式
+		IconError     lipgloss.Style // 错误操作图标样式
+		IconCancelled lipgloss.Style // 取消操作图标样式
 
-		// Tool name styles
-		NameNormal lipgloss.Style // Normal tool name
-		NameNested lipgloss.Style // Nested tool name
+		// 工具名称样式
+		NameNormal lipgloss.Style // 普通工具名称样式
+		NameNested lipgloss.Style // 嵌套工具名称样式
 
-		// Parameter list styles
-		ParamMain lipgloss.Style // Main parameter
-		ParamKey  lipgloss.Style // Parameter keys
+		// 参数列表样式
+		ParamMain lipgloss.Style // 主要参数样式
+		ParamKey  lipgloss.Style // 参数键样式
 
-		// Content rendering styles
-		ContentLine           lipgloss.Style // Individual content line with background and width
-		ContentTruncation     lipgloss.Style // Truncation message "… (N lines)"
-		ContentCodeLine       lipgloss.Style // Code line with background and width
-		ContentCodeTruncation lipgloss.Style // Code truncation message with bgBase
-		ContentCodeBg         color.Color    // Background color for syntax highlighting
-		Body                  lipgloss.Style // Body content padding (PaddingLeft(2))
+		// 内容渲染样式
+		ContentLine           lipgloss.Style // 带背景和宽度的单个内容行样式
+		ContentTruncation     lipgloss.Style // 截断消息 "… (N行)" 样式
+		ContentCodeLine       lipgloss.Style // 带背景和宽度的代码行样式
+		ContentCodeTruncation lipgloss.Style // 带bgBase的代码截断消息样式
+		ContentCodeBg         color.Color    // 语法高亮背景色
+		Body                  lipgloss.Style // 主体内容内边距样式 (左内边距2)
 
-		// Deprecated - kept for backward compatibility
-		ContentBg         lipgloss.Style // Content background
-		ContentText       lipgloss.Style // Content text
-		ContentLineNumber lipgloss.Style // Line numbers in code
+		// 已弃用 - 为向后兼容性保留
+		ContentBg         lipgloss.Style // 内容背景样式
+		ContentText       lipgloss.Style // 内容文本样式
+		ContentLineNumber lipgloss.Style // 代码行号样式
 
-		// State message styles
-		StateWaiting   lipgloss.Style // "Waiting for tool response..."
-		StateCancelled lipgloss.Style // "Canceled."
+		// 状态消息样式
+		StateWaiting   lipgloss.Style // "等待工具响应..." 样式
+		StateCancelled lipgloss.Style // "已取消。" 样式
 
-		// Error styles
-		ErrorTag     lipgloss.Style // ERROR tag
-		ErrorMessage lipgloss.Style // Error message text
+		// 错误样式
+		ErrorTag     lipgloss.Style // ERROR标签样式
+		ErrorMessage lipgloss.Style // 错误消息文本样式
 
-		// Diff styles
-		DiffTruncation lipgloss.Style // Diff truncation message with padding
+		// 差异样式
+		DiffTruncation lipgloss.Style // 带内边距的差异截断消息样式
 
-		// Multi-edit note styles
-		NoteTag     lipgloss.Style // NOTE tag (yellow background)
-		NoteMessage lipgloss.Style // Note message text
+		// 多编辑注释样式
+		NoteTag     lipgloss.Style // NOTE标签样式 (黄色背景)
+		NoteMessage lipgloss.Style // 注释消息文本样式
 
-		// Job header styles (for bash jobs)
-		JobIconPending lipgloss.Style // Pending job icon (green dark)
-		JobIconError   lipgloss.Style // Error job icon (red dark)
-		JobIconSuccess lipgloss.Style // Success job icon (green)
-		JobToolName    lipgloss.Style // Job tool name "Bash" (blue)
-		JobAction      lipgloss.Style // Action text (Start, Output, Kill)
-		JobPID         lipgloss.Style // PID text
-		JobDescription lipgloss.Style // Description text
+		// Bash作业头部样式
+		JobIconPending lipgloss.Style // 等待作业图标样式 (深绿色)
+		JobIconError   lipgloss.Style // 错误作业图标样式 (深红色)
+		JobIconSuccess lipgloss.Style // 成功作业图标样式 (绿色)
+		JobToolName    lipgloss.Style // 作业工具名称 "Bash" 样式 (蓝色)
+		JobAction      lipgloss.Style // 操作文本样式 (启动、输出、终止)
+		JobPID         lipgloss.Style // PID文本样式
+		JobDescription lipgloss.Style // 描述文本样式
 
-		// Agent task styles
-		AgentTaskTag lipgloss.Style // Agent task tag (blue background, bold)
-		AgentPrompt  lipgloss.Style // Agent prompt text
+		// 代理任务样式
+		AgentTaskTag lipgloss.Style // 代理任务标签样式 (蓝色背景, 粗体)
+		AgentPrompt  lipgloss.Style // 代理提示文本样式
 
-		// Agentic fetch styles
-		AgenticFetchPromptTag lipgloss.Style // Agentic fetch prompt tag (green background, bold)
+		// 代理获取样式
+		AgenticFetchPromptTag lipgloss.Style // 代理获取提示标签样式 (绿色背景, 粗体)
 
-		// Todo styles
-		TodoRatio          lipgloss.Style // Todo ratio (e.g., "2/5")
-		TodoCompletedIcon  lipgloss.Style // Completed todo icon
-		TodoInProgressIcon lipgloss.Style // In-progress todo icon
-		TodoPendingIcon    lipgloss.Style // Pending todo icon
+		// 待办事项样式
+		TodoRatio          lipgloss.Style // 待办事项比率样式 (例如: "2/5")
+		TodoCompletedIcon  lipgloss.Style // 已完成待办事项图标样式
+		TodoInProgressIcon lipgloss.Style // 进行中待办事项图标样式
+		TodoPendingIcon    lipgloss.Style // 待处理待办事项图标样式
 
-		// MCP tools
-		MCPName     lipgloss.Style // The mcp name
-		MCPToolName lipgloss.Style // The mcp tool name
-		MCPArrow    lipgloss.Style // The mcp arrow icon
+		// MCP工具样式
+		MCPName     lipgloss.Style // MCP名称样式
+		MCPToolName lipgloss.Style // MCP工具名称样式
+		MCPArrow    lipgloss.Style // MCP箭头图标样式
 	}
 
 	// Dialog styles

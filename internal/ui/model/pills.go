@@ -11,7 +11,7 @@ import (
 	"github.com/charmbracelet/crush/internal/ui/styles"
 )
 
-// pillStyle returns the appropriate style for a pill based on focus state.
+// pillStyle 根据焦点状态返回药丸的适当样式。
 func pillStyle(focused, panelFocused bool, t *styles.Styles) lipgloss.Style {
 	if !panelFocused || focused {
 		return t.Pills.Focused
@@ -20,15 +20,15 @@ func pillStyle(focused, panelFocused bool, t *styles.Styles) lipgloss.Style {
 }
 
 const (
-	// pillHeightWithBorder is the height of a pill including its border.
+	// pillHeightWithBorder 是包含边框的药丸高度。
 	pillHeightWithBorder = 3
-	// maxTaskDisplayLength is the maximum length of a task name in the pill.
+	// maxTaskDisplayLength 是药丸中任务名称的最大长度。
 	maxTaskDisplayLength = 40
-	// maxQueueDisplayLength is the maximum length of a queue item in the list.
+	// maxQueueDisplayLength 是列表中队列项的最大长度。
 	maxQueueDisplayLength = 60
 )
 
-// pillSection represents which section of the pills panel is focused.
+// pillSection 表示药丸面板中哪个部分被聚焦。
 type pillSection int
 
 const (
@@ -36,7 +36,7 @@ const (
 	pillSectionQueue
 )
 
-// hasIncompleteTodos returns true if there are any non-completed todos.
+// hasIncompleteTodos 如果存在任何未完成的任务则返回true。
 func hasIncompleteTodos(todos []session.Todo) bool {
 	for _, todo := range todos {
 		if todo.Status != session.TodoStatusCompleted {
@@ -46,7 +46,7 @@ func hasIncompleteTodos(todos []session.Todo) bool {
 	return false
 }
 
-// hasInProgressTodo returns true if there is at least one in-progress todo.
+// hasInProgressTodo 如果至少有一个进行中的任务则返回true。
 func hasInProgressTodo(todos []session.Todo) bool {
 	for _, todo := range todos {
 		if todo.Status == session.TodoStatusInProgress {
@@ -56,7 +56,7 @@ func hasInProgressTodo(todos []session.Todo) bool {
 	return false
 }
 
-// queuePill renders the queue count pill with gradient triangles.
+// queuePill 渲染带有渐变三角形的队列计数药丸。
 func queuePill(queue int, focused, panelFocused bool, t *styles.Styles) string {
 	if queue <= 0 {
 		return ""
@@ -66,12 +66,12 @@ func queuePill(queue int, focused, panelFocused bool, t *styles.Styles) string {
 		triangles = triangles[:queue]
 	}
 
-	text := t.Base.Render(fmt.Sprintf("%d Queued", queue))
+	text := t.Base.Render(fmt.Sprintf("%d 个排队", queue))
 	content := fmt.Sprintf("%s %s", strings.Join(triangles, ""), text)
 	return pillStyle(focused, panelFocused, t).Render(content)
 }
 
-// todoPill renders the todo progress pill with optional spinner and task name.
+// todoPill 渲染带有可选旋转器和任务名称的任务进度药丸。
 func todoPill(todos []session.Todo, spinnerView string, focused, panelFocused bool, t *styles.Styles) string {
 	if !hasIncompleteTodos(todos) {
 		return ""
@@ -92,7 +92,7 @@ func todoPill(todos []session.Todo, spinnerView string, focused, panelFocused bo
 
 	total := len(todos)
 
-	label := t.Base.Render("To-Do")
+	label := t.Base.Render("待办")
 	progress := t.Muted.Render(fmt.Sprintf("%d/%d", completed, total))
 
 	var content string
@@ -115,12 +115,12 @@ func todoPill(todos []session.Todo, spinnerView string, focused, panelFocused bo
 	return pillStyle(focused, panelFocused, t).Render(content)
 }
 
-// todoList renders the expanded todo list.
+// todoList 渲染展开的任务列表。
 func todoList(sessionTodos []session.Todo, spinnerView string, t *styles.Styles, width int) string {
 	return chat.FormatTodosList(t, sessionTodos, spinnerView, width)
 }
 
-// queueList renders the expanded queue items list.
+// queueList 渲染展开的队列项列表。
 func queueList(queueItems []string, t *styles.Styles) string {
 	if len(queueItems) == 0 {
 		return ""
@@ -139,7 +139,7 @@ func queueList(queueItems []string, t *styles.Styles) string {
 	return strings.Join(lines, "\n")
 }
 
-// togglePillsExpanded toggles the pills panel expansion state.
+// togglePillsExpanded 切换药丸面板的展开状态。
 func (m *UI) togglePillsExpanded() tea.Cmd {
 	if !m.hasSession() {
 		return nil
@@ -165,7 +165,7 @@ func (m *UI) togglePillsExpanded() tea.Cmd {
 	return nil
 }
 
-// switchPillSection changes focus between todo and queue sections.
+// switchPillSection 在任务和队列部分之间切换焦点。
 func (m *UI) switchPillSection(dir int) tea.Cmd {
 	if !m.pillsExpanded || !m.hasSession() {
 		return nil
@@ -186,7 +186,7 @@ func (m *UI) switchPillSection(dir int) tea.Cmd {
 	return nil
 }
 
-// pillsAreaHeight calculates the total height needed for the pills area.
+// pillsAreaHeight 计算药丸区域所需的总高度。
 func (m *UI) pillsAreaHeight() int {
 	if !m.hasSession() {
 		return 0
@@ -209,7 +209,7 @@ func (m *UI) pillsAreaHeight() int {
 	return pillsAreaHeight
 }
 
-// renderPills renders the pills panel and stores it in m.pillsView.
+// renderPills 渲染药丸面板并将其存储在 m.pillsView 中。
 func (m *UI) renderPills() {
 	m.pillsView = ""
 	if !m.hasSession() {
@@ -266,9 +266,9 @@ func (m *UI) renderPills() {
 
 	pillsRow := lipgloss.JoinHorizontal(lipgloss.Top, pills...)
 
-	helpDesc := "open"
+	helpDesc := "收起"
 	if m.pillsExpanded {
-		helpDesc = "close"
+		helpDesc = "展开"
 	}
 	helpKey := t.Pills.HelpKey.Render("ctrl+space")
 	helpText := t.Pills.HelpText.Render(helpDesc)

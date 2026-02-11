@@ -1,28 +1,40 @@
-name: Update files
+# 文件自动更新工作流配置文件
+name: Update files  # 工作流名称：更新文件
 
+# 触发条件
 on:
   push:
-    branches: [main]
+    branches: [main]  # 当推送到 main 分支时
     paths:
-      - "internal/config/**"
-      - "internal/agent/hyper/**"
+      - "internal/config/**"  # 当配置相关文件变更时
+      - "internal/agent/hyper/**"  # 当 hyper agent 相关文件变更时
 
+# 任务定义
 jobs:
-  update-schema:
-    runs-on: ubuntu-latest
+  update-schema:  # 更新 schema 任务
+    runs-on: ubuntu-latest  # 运行环境：Ubuntu 最新版
     steps:
+      # 检出代码
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}  # 使用个人访问令牌
+      
+      # 设置 Go 环境
       - uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6.2.0
         with:
-          go-version-file: go.mod
+          go-version-file: go.mod  # 从 go.mod 文件读取 Go 版本
+      
+      # 生成 schema.json 文件
       - run: go run . schema > ./schema.json
+      
+      # 生成 hyper agent 相关代码
       - run: go generate ./internal/agent/hyper/...
+      
+      # 自动提交更新的文件
       - uses: stefanzweifel/git-auto-commit-action@04702edda442b2e678b25b537cec683a1493fcb9 # v5
         with:
-          commit_message: "chore: auto-update files"
-          branch: main
-          commit_user_name: Charm
-          commit_user_email: 124303983+charmcli@users.noreply.github.com
-          commit_author: Charm <124303983+charmcli@users.noreply.github.com>
+          commit_message: "chore: auto-update files"  # 提交信息
+          branch: main  # 目标分支
+          commit_user_name: Charm  # 提交用户名
+          commit_user_email: 124303983+charmcli@users.noreply.github.com  # 提交邮箱
+          commit_author: Charm <124303983+charmcli@users.noreply.github.com>  # 提交作者

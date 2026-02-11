@@ -11,7 +11,7 @@ import (
 	"github.com/sahilm/fuzzy"
 )
 
-// ModelsList is a list specifically for model items and groups.
+// ModelsList 是一个专门用于模型项目和组的列表。
 type ModelsList struct {
 	*list.List
 	groups []ModelGroup
@@ -19,7 +19,7 @@ type ModelsList struct {
 	t      *styles.Styles
 }
 
-// NewModelsList creates a new list suitable for model items and groups.
+// NewModelsList 创建一个适合模型项目和组的新列表。
 func NewModelsList(sty *styles.Styles, groups ...ModelGroup) *ModelsList {
 	f := &ModelsList{
 		List:   list.NewList(),
@@ -30,7 +30,7 @@ func NewModelsList(sty *styles.Styles, groups ...ModelGroup) *ModelsList {
 	return f
 }
 
-// Len returns the number of model items across all groups.
+// Len 返回所有组中的模型项目数量。
 func (f *ModelsList) Len() int {
 	n := 0
 	for _, g := range f.groups {
@@ -39,7 +39,7 @@ func (f *ModelsList) Len() int {
 	return n
 }
 
-// SetGroups sets the model groups and updates the list items.
+// SetGroups 设置模型组并更新列表项目。
 func (f *ModelsList) SetGroups(groups ...ModelGroup) {
 	f.groups = groups
 	items := []list.Item{}
@@ -48,20 +48,19 @@ func (f *ModelsList) SetGroups(groups ...ModelGroup) {
 		for _, item := range g.Items {
 			items = append(items, item)
 		}
-		// Add a space separator after each provider section
+		// 在每个提供者部分后添加一个空格分隔符
 		items = append(items, list.NewSpacerItem(1))
 	}
 	f.SetItems(items...)
 }
 
-// SetFilter sets the filter query and updates the list items.
+// SetFilter 设置过滤查询并更新列表项目。
 func (f *ModelsList) SetFilter(q string) {
 	f.query = q
 	f.SetItems(f.VisibleItems()...)
 }
 
-// SetSelected sets the selected item index. It overrides the base method to
-// skip non-model items.
+// SetSelected 设置选中的项目索引。它重写基类方法以跳过非模型项目。
 func (f *ModelsList) SetSelected(index int) {
 	if index < 0 || index >= f.Len() {
 		f.List.SetSelected(index)
@@ -82,7 +81,7 @@ func (f *ModelsList) SetSelected(index int) {
 	}
 }
 
-// SetSelectedItem sets the selected item in the list by item ID.
+// SetSelectedItem 通过项目 ID 设置列表中的选中项目。
 func (f *ModelsList) SetSelectedItem(itemID string) {
 	if itemID == "" {
 		f.SetSelected(0)
@@ -101,8 +100,7 @@ func (f *ModelsList) SetSelectedItem(itemID string) {
 	}
 }
 
-// SelectNext selects the next model item, skipping any non-focusable items
-// like group headers and spacers.
+// SelectNext 选择下一个模型项目，跳过任何不可聚焦的项目，如组标题和分隔符。
 func (f *ModelsList) SelectNext() (v bool) {
 	v = f.List.SelectNext()
 	for v {
@@ -115,8 +113,7 @@ func (f *ModelsList) SelectNext() (v bool) {
 	return v
 }
 
-// SelectPrev selects the previous model item, skipping any non-focusable items
-// like group headers and spacers.
+// SelectPrev 选择上一个模型项目，跳过任何不可聚焦的项目，如组标题和分隔符。
 func (f *ModelsList) SelectPrev() (v bool) {
 	v = f.List.SelectPrev()
 	for v {
@@ -129,7 +126,7 @@ func (f *ModelsList) SelectPrev() (v bool) {
 	return v
 }
 
-// SelectFirst selects the first model item in the list.
+// SelectFirst 选择列表中的第一个模型项目。
 func (f *ModelsList) SelectFirst() (v bool) {
 	v = f.List.SelectFirst()
 	for v {
@@ -143,7 +140,7 @@ func (f *ModelsList) SelectFirst() (v bool) {
 	return v
 }
 
-// SelectLast selects the last model item in the list.
+// SelectLast 选择列表中的最后一个模型项目。
 func (f *ModelsList) SelectLast() (v bool) {
 	v = f.List.SelectLast()
 	for v {
@@ -156,7 +153,7 @@ func (f *ModelsList) SelectLast() (v bool) {
 	return v
 }
 
-// IsSelectedFirst checks if the selected item is the first model item.
+// IsSelectedFirst 检查选中项目是否是第一个模型项目。
 func (f *ModelsList) IsSelectedFirst() bool {
 	originalIndex := f.Selected()
 	f.SelectFirst()
@@ -165,7 +162,7 @@ func (f *ModelsList) IsSelectedFirst() bool {
 	return isFirst
 }
 
-// IsSelectedLast checks if the selected item is the last model item.
+// IsSelectedLast 检查选中项目是否是最后一个模型项目。
 func (f *ModelsList) IsSelectedLast() bool {
 	originalIndex := f.Selected()
 	f.SelectLast()
@@ -174,12 +171,12 @@ func (f *ModelsList) IsSelectedLast() bool {
 	return isLast
 }
 
-// VisibleItems returns the visible items after filtering.
+// VisibleItems 返回过滤后的可见项目。
 func (f *ModelsList) VisibleItems() []list.Item {
 	query := strings.ToLower(strings.ReplaceAll(f.query, " ", ""))
 
 	if query == "" {
-		// No filter, return all items with group headers
+		// 无过滤，返回所有项目及组标题
 		items := []list.Item{}
 		for _, g := range f.groups {
 			items = append(items, &g)
@@ -187,7 +184,7 @@ func (f *ModelsList) VisibleItems() []list.Item {
 				item.SetMatch(fuzzy.Match{})
 				items = append(items, item)
 			}
-			// Add a space separator after each provider section
+			// 在每个提供者部分后添加一个空格分隔符
 			items = append(items, list.NewSpacerItem(1))
 		}
 		return items
@@ -203,8 +200,8 @@ func (f *ModelsList) VisibleItems() []list.Item {
 	items := []list.Item{}
 	visitedGroups := map[int]bool{}
 
-	// Reconstruct groups with matched items
-	// Find which group this item belongs to
+	// 使用匹配的项目重建组
+	// 查找此项目属于哪个组
 	for gi, g := range f.groups {
 		addedCount := 0
 		name := strings.ToLower(g.Title) + " "
@@ -224,7 +221,7 @@ func (f *ModelsList) VisibleItems() []list.Item {
 			item := filterableItems[match.Index].(*ModelItem)
 			idxs := []int{}
 			for _, idx := range match.MatchedIndexes {
-				// Adjusts removing provider name highlights
+				// 调整移除提供者名称高亮
 				if idx < len(name) {
 					continue
 				}
@@ -234,18 +231,18 @@ func (f *ModelsList) VisibleItems() []list.Item {
 			match.MatchedIndexes = idxs
 			if slices.Contains(g.Items, item) {
 				if !visitedGroups[gi] {
-					// Add section header
+					// 添加部分标题
 					items = append(items, &g)
 					visitedGroups[gi] = true
 				}
-				// Add the matched item
+				// 添加匹配的项目
 				item.SetMatch(match)
 				items = append(items, item)
 				addedCount++
 			}
 		}
 		if addedCount > 0 {
-			// Add a space separator after each provider section
+			// 在每个提供者部分后添加一个空格分隔符
 			items = append(items, list.NewSpacerItem(1))
 		}
 	}
@@ -253,7 +250,7 @@ func (f *ModelsList) VisibleItems() []list.Item {
 	return items
 }
 
-// Render renders the filterable list.
+// Render 渲染可过滤列表。
 func (f *ModelsList) Render() string {
 	f.SetItems(f.VisibleItems()...)
 	return f.List.Render()

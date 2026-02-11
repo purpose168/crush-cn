@@ -5,7 +5,7 @@ import (
 	"github.com/sahilm/fuzzy"
 )
 
-// CommandItem wraps a uicmd.Command to implement the ListItem interface.
+// CommandItem 包装一个 uicmd.Command 以实现 ListItem 接口。
 type CommandItem struct {
 	id       string
 	title    string
@@ -19,7 +19,7 @@ type CommandItem struct {
 
 var _ ListItem = &CommandItem{}
 
-// NewCommandItem creates a new CommandItem.
+// NewCommandItem 创建一个新的 CommandItem。
 func NewCommandItem(t *styles.Styles, id, title, shortcut string, action Action) *CommandItem {
 	return &CommandItem{
 		id:       id,
@@ -30,17 +30,17 @@ func NewCommandItem(t *styles.Styles, id, title, shortcut string, action Action)
 	}
 }
 
-// Filter implements ListItem.
+// Filter 实现 ListItem 接口。
 func (c *CommandItem) Filter() string {
 	return c.title
 }
 
-// ID implements ListItem.
+// ID 实现 ListItem 接口。
 func (c *CommandItem) ID() string {
 	return c.id
 }
 
-// SetFocused implements ListItem.
+// SetFocused 实现 ListItem 接口。
 func (c *CommandItem) SetFocused(focused bool) {
 	if c.focused != focused {
 		c.cache = nil
@@ -48,23 +48,23 @@ func (c *CommandItem) SetFocused(focused bool) {
 	c.focused = focused
 }
 
-// SetMatch implements ListItem.
+// SetMatch 实现 ListItem 接口。
 func (c *CommandItem) SetMatch(m fuzzy.Match) {
 	c.cache = nil
 	c.m = m
 }
 
-// Action returns the action associated with the command item.
+// Action 返回与命令项目关联的操作。
 func (c *CommandItem) Action() Action {
 	return c.action
 }
 
-// Shortcut returns the shortcut associated with the command item.
+// Shortcut 返回与命令项目关联的快捷键。
 func (c *CommandItem) Shortcut() string {
 	return c.shortcut
 }
 
-// Render implements ListItem.
+// Render 实现 ListItem 接口。
 func (c *CommandItem) Render(width int) string {
 	styles := ListItemStyles{
 		ItemBlurred:     c.t.Dialog.NormalItem,

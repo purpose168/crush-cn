@@ -1,71 +1,104 @@
-# NOTE(@andreynering): We should have a single entry per label, because if we
-# have multiple the action would only apply the label if ALL of them match.
+# 标签自动分类配置文件
+# 注意(@andreynering)：每个标签应该只有一个条目，因为如果有多个条目，
+# 只有当所有条目都匹配时，action 才会应用标签。
 
-"area: ci":
-  - "/^ci: /i"
-"area: crush run":
-  - "/crush run/i"
-  - "/headless/i"
-  - "/non-interactive/i"
-"area: diff":
-  - "/diff/i"
-"area: docs":
-  - "/(docs|documentation|readme)/i"
-"area: images":
-  - "/image/i"
-"area: lsp":
-  - "/lsp/i"
-"area: mcp":
-  - "/mcp/i"
-"area: mouse":
-  - "/(mouse|scroll)/i"
-"area: onboarding":
-  - "/(onboarding)/i"
-"area: permissions":
-  - "/permission/i"
-"area: releasing":
-  - "/(release|releasing|aur|brew|nix|npm|scoop|termux|winget)/i"
-"area: session":
-  - "/session/i"
-"area: shell":
-  - "/shell/i"
-"area: themes":
-  - "/theme/i"
-"area: tools":
-  - "/tool/i"
-"os: android":
-  - "/(android|termux)/i"
-"os: linux":
-  - "/(linux|fedora|debian|ubuntu)/i"
-"os: macos":
-  - "/(macos|osx|darwin)/i"
-"os: windows":
-  - "/(windows|win10|win11|win32|wsl|scoop|winget)/i"
-"panic / crash":
-  - "/(panic|crash|segfault)/i"
-"provider: anthropic claude":
-  - "/(anthropic|claude)/i"
-"provider: aws bedrock":
-  - "/(aws|bedrock)/i"
-"provider: azure":
-  - "/azure/i"
-"provider: github copilot":
-  - "/copilot/i"
-"provider: google gemini":
-  - "/gemini/i"
-"provider: google vertex":
-  - "/vertex/i"
-"provider: kimi":
-  - "/kimi/i"
-"provider: ollama":
-  - "/llama/i"
-"provider: openai chatgpt":
-  - "/(openai|gpt)/i"
-"provider: openrouter":
-  - "/openrouter/i"
-"provider: qwen":
-  - "/qwen/i"
-"provider: xai grok":
-  - "/(xai|x\\.ai|grok)/i"
-"security":
-  - "/(security|vulnerability|exploit)/i"
+"area: ci":  # CI 相关标签
+  - "/^ci: /i"  # 匹配以 "ci: " 开头的标题
+
+"area: crush run":  # Crush Run 相关标签
+  - "/crush run/i"  # 匹配包含 "crush run" 的内容
+  - "/headless/i"  # 匹配包含 "headless" 的内容
+  - "/non-interactive/i"  # 匹配包含 "non-interactive" 的内容
+
+"area: diff":  # 差异比较相关标签
+  - "/diff/i"  # 匹配包含 "diff" 的内容
+
+"area: docs":  # 文档相关标签
+  - "/(docs|documentation|readme)/i"  # 匹配包含 "docs"、"documentation" 或 "readme" 的内容
+
+"area: images":  # 图片相关标签
+  - "/image/i"  # 匹配包含 "image" 的内容
+
+"area: lsp":  # LSP (Language Server Protocol) 相关标签
+  - "/lsp/i"  # 匹配包含 "lsp" 的内容
+
+"area: mcp":  # MCP (Model Context Protocol) 相关标签
+  - "/mcp/i"  # 匹配包含 "mcp" 的内容
+
+"area: mouse":  # 鼠标相关标签
+  - "/(mouse|scroll)/i"  # 匹配包含 "mouse" 或 "scroll" 的内容
+
+"area: onboarding":  # 入职/引导相关标签
+  - "/(onboarding)/i"  # 匹配包含 "onboarding" 的内容
+
+"area: permissions":  # 权限相关标签
+  - "/permission/i"  # 匹配包含 "permission" 的内容
+
+"area: releasing":  # 发布相关标签
+  - "/(release|releasing|aur|brew|nix|npm|scoop|termux|winget)/i"  # 匹配包含发布相关关键词的内容
+
+"area: session":  # 会话相关标签
+  - "/session/i"  # 匹配包含 "session" 的内容
+
+"area: shell":  # Shell 相关标签
+  - "/shell/i"  # 匹配包含 "shell" 的内容
+
+"area: themes":  # 主题相关标签
+  - "/theme/i"  # 匹配包含 "theme" 的内容
+
+"area: tools":  # 工具相关标签
+  - "/tool/i"  # 匹配包含 "tool" 的内容
+
+"os: android":  # Android 操作系统标签
+  - "/(android|termux)/i"  # 匹配包含 "android" 或 "termux" 的内容
+
+"os: linux":  # Linux 操作系统标签
+  - "/(linux|fedora|debian|ubuntu)/i"  # 匹配包含 Linux 发行版名称的内容
+
+"os: macos":  # macOS 操作系统标签
+  - "/(macos|osx|darwin)/i"  # 匹配包含 macOS 相关名称的内容
+
+"os: windows":  # Windows 操作系统标签
+  - "/(windows|win10|win11|win32|wsl|scoop|winget)/i"  # 匹配包含 Windows 相关名称的内容
+
+"panic / crash":  # 崩溃相关标签
+  - "/(panic|crash|segfault)/i"  # 匹配包含崩溃相关关键词的内容
+
+"provider: anthropic claude":  # Anthropic Claude 提供商标签
+  - "/(anthropic|claude)/i"  # 匹配包含 "anthropic" 或 "claude" 的内容
+
+"provider: aws bedrock":  # AWS Bedrock 提供商标签
+  - "/(aws|bedrock)/i"  # 匹配包含 "aws" 或 "bedrock" 的内容
+
+"provider: azure":  # Azure 提供商标签
+  - "/azure/i"  # 匹配包含 "azure" 的内容
+
+"provider: github copilot":  # GitHub Copilot 提供商标签
+  - "/copilot/i"  # 匹配包含 "copilot" 的内容
+
+"provider: google gemini":  # Google Gemini 提供商标签
+  - "/gemini/i"  # 匹配包含 "gemini" 的内容
+
+"provider: google vertex":  # Google Vertex 提供商标签
+  - "/vertex/i"  # 匹配包含 "vertex" 的内容
+
+"provider: kimi":  # Kimi 提供商标签
+  - "/kimi/i"  # 匹配包含 "kimi" 的内容
+
+"provider: ollama":  # Ollama 提供商标签
+  - "/llama/i"  # 匹配包含 "llama" 的内容
+
+"provider: openai chatgpt":  # OpenAI ChatGPT 提供商标签
+  - "/(openai|gpt)/i"  # 匹配包含 "openai" 或 "gpt" 的内容
+
+"provider: openrouter":  # OpenRouter 提供商标签
+  - "/openrouter/i"  # 匹配包含 "openrouter" 的内容
+
+"provider: qwen":  # Qwen 提供商标签
+  - "/qwen/i"  # 匹配包含 "qwen" 的内容
+
+"provider: xai grok":  # XAI Grok 提供商标签
+  - "/(xai|x\\.ai|grok)/i"  # 匹配包含 "xai"、"x.ai" 或 "grok" 的内容
+
+"security":  # 安全相关标签
+  - "/(security|vulnerability|exploit)/i"  # 匹配包含安全相关关键词的内容

@@ -39,7 +39,7 @@ func (m *OAuthCopilot) initiateAuth() tea.Msg {
 
 	deviceCode, err := copilot.RequestDeviceCode(ctx)
 	if err != nil {
-		return ActionOAuthErrored{Error: fmt.Errorf("failed to initiate device auth: %w", err)}
+		return ActionOAuthErrored{Error: fmt.Errorf("无法启动设备认证: %w", err)}
 	}
 
 	m.deviceCode = deviceCode
@@ -61,7 +61,7 @@ func (m *OAuthCopilot) startPolling(deviceCode string, expiresIn int) tea.Cmd {
 		token, err := copilot.PollForToken(ctx, m.deviceCode)
 		if err != nil {
 			if ctx.Err() != nil {
-				return nil // cancelled, don't report error.
+				return nil // 已取消，不报告错误。
 			}
 			return ActionOAuthErrored{Error: err}
 		}

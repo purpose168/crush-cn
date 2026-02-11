@@ -26,7 +26,7 @@ type OAuthProvider interface {
 	stopPolling() tea.Msg
 }
 
-// OAuthState represents the current state of the device flow.
+// OAuthState 表示设备流程的当前状态。
 type OAuthState int
 
 const (
@@ -36,10 +36,10 @@ const (
 	OAuthStateError
 )
 
-// OAuthID is the identifier for the model selection dialog.
+// OAuthID 是模型选择对话框的标识符。
 const OAuthID = "oauth"
 
-// OAuth handles the OAuth flow authentication.
+// OAuth 处理 OAuth 流程认证。
 type OAuth struct {
 	com          *common.Common
 	isOnboarding bool
@@ -71,7 +71,7 @@ type OAuth struct {
 
 var _ Dialog = (*OAuth)(nil)
 
-// newOAuth creates a new device flow component.
+// newOAuth 创建一个新的设备流程组件。
 func newOAuth(
 	com *common.Common,
 	isOnboarding bool,
@@ -102,23 +102,23 @@ func newOAuth(
 
 	m.keyMap.Copy = key.NewBinding(
 		key.WithKeys("c"),
-		key.WithHelp("c", "copy code"),
+		key.WithHelp("c", "复制代码"),
 	)
 	m.keyMap.Submit = key.NewBinding(
 		key.WithKeys("enter", "ctrl+y"),
-		key.WithHelp("enter", "copy & open"),
+		key.WithHelp("enter", "复制并打开"),
 	)
 	m.keyMap.Close = CloseKey
 
 	return &m, tea.Batch(m.spinner.Tick, m.oAuthProvider.initiateAuth)
 }
 
-// ID implements Dialog.
+// ID 实现 Dialog 接口。
 func (m *OAuth) ID() string {
 	return OAuthID
 }
 
-// HandleMsg handles messages and state transitions.
+// HandleMsg 处理消息和状态转换。
 func (m *OAuth) HandleMsg(msg tea.Msg) Action {
 	switch msg := msg.(type) {
 	case spinner.TickMsg:
@@ -179,7 +179,7 @@ func (m *OAuth) HandleMsg(msg tea.Msg) Action {
 	return nil
 }
 
-// View renders the device flow dialog.
+// View 渲染设备流程对话框。
 func (m *OAuth) Draw(scr uv.Screen, area uv.Rectangle) *tea.Cursor {
 	var (
 		t           = m.com.Styles
@@ -222,7 +222,7 @@ func (m *OAuth) headerContent() string {
 		textStyle    = t.Dialog.PrimaryText
 		dialogStyle  = t.Dialog.View.Width(m.width)
 		headerOffset = titleStyle.GetHorizontalFrameSize() + dialogStyle.GetHorizontalFrameSize()
-		dialogTitle  = fmt.Sprintf("Authenticate with %s", m.oAuthProvider.name())
+		dialogTitle  = fmt.Sprintf("使用 %s 进行身份验证", m.oAuthProvider.name())
 	)
 	if m.isOnboarding {
 		return textStyle.Render(dialogTitle)
@@ -249,7 +249,7 @@ func (m *OAuth) innerDialogContent() string {
 			Align(lipgloss.Center).
 			Render(
 				greenStyle.Render(m.spinner.View()) +
-					mutedStyle.Render("Initializing..."),
+					mutedStyle.Render("正在初始化..."),
 			)
 
 	case OAuthStateDisplay:
@@ -257,9 +257,9 @@ func (m *OAuth) innerDialogContent() string {
 			Margin(0, 1).
 			Width(m.width - 2).
 			Render(
-				whiteStyle.Render("Press ") +
+				whiteStyle.Render("按 ") +
 					primaryStyle.Render("enter") +
-					whiteStyle.Render(" to copy the code below and open the browser."),
+					whiteStyle.Render(" 复制下面的代码并打开浏览器。"),
 			)
 
 		codeBox := lipgloss.NewStyle().
@@ -279,13 +279,13 @@ func (m *OAuth) innerDialogContent() string {
 		url := mutedStyle.
 			Margin(0, 1).
 			Width(m.width - 2).
-			Render("Browser not opening? Refer to\n" + link)
+			Render("浏览器没有打开？请访问\n" + link)
 
 		waiting := lipgloss.NewStyle().
 			Margin(0, 1).
 			Width(m.width - 2).
 			Render(
-				greenStyle.Render(m.spinner.View()) + mutedStyle.Render("Verifying..."),
+				greenStyle.Render(m.spinner.View()) + mutedStyle.Render("正在验证..."),
 			)
 
 		return lipgloss.JoinVertical(
@@ -305,25 +305,25 @@ func (m *OAuth) innerDialogContent() string {
 		return greenStyle.
 			Margin(1).
 			Width(m.width - 2).
-			Render("Authentication successful!")
+			Render("身份验证成功！")
 
 	case OAuthStateError:
 		return lipgloss.NewStyle().
 			Margin(1).
 			Width(m.width - 2).
-			Render(errorStyle.Render("Authentication failed."))
+			Render(errorStyle.Render("身份验证失败。"))
 
 	default:
 		return ""
 	}
 }
 
-// FullHelp returns the full help view.
+// FullHelp 返回完整的帮助视图。
 func (m *OAuth) FullHelp() [][]key.Binding {
 	return [][]key.Binding{m.ShortHelp()}
 }
 
-// ShortHelp returns the full help view.
+// ShortHelp 返回简短的帮助视图。
 func (m *OAuth) ShortHelp() []key.Binding {
 	switch m.State {
 	case OAuthStateError:
@@ -333,7 +333,7 @@ func (m *OAuth) ShortHelp() []key.Binding {
 		return []key.Binding{
 			key.NewBinding(
 				key.WithKeys("finish", "ctrl+y", "esc"),
-				key.WithHelp("enter", "finish"),
+				key.WithHelp("enter", "完成"),
 			),
 		}
 
@@ -352,7 +352,7 @@ func (d *OAuth) copyCode() tea.Cmd {
 	}
 	return tea.Sequence(
 		tea.SetClipboard(d.userCode),
-		util.ReportInfo("Code copied to clipboard"),
+		util.ReportInfo("代码已复制到剪贴板"),
 	)
 }
 
@@ -364,11 +364,11 @@ func (d *OAuth) copyCodeAndOpenURL() tea.Cmd {
 		tea.SetClipboard(d.userCode),
 		func() tea.Msg {
 			if err := browser.OpenURL(d.verificationURL); err != nil {
-				return ActionOAuthErrored{fmt.Errorf("failed to open browser: %w", err)}
+				return ActionOAuthErrored{fmt.Errorf("无法打开浏览器: %w", err)}
 			}
 			return nil
 		},
-		util.ReportInfo("Code copied and URL opened"),
+		util.ReportInfo("代码已复制且 URL 已打开"),
 	)
 }
 
@@ -377,7 +377,7 @@ func (m *OAuth) saveKeyAndContinue() Action {
 
 	err := cfg.SetProviderAPIKey(string(m.provider.ID), m.token)
 	if err != nil {
-		return ActionCmd{util.ReportError(fmt.Errorf("failed to save API key: %w", err))}
+		return ActionCmd{util.ReportError(fmt.Errorf("无法保存 API 密钥: %w", err))}
 	}
 
 	return ActionSelectModel{

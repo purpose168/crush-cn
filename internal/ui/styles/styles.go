@@ -12,8 +12,8 @@ import (
 	"charm.land/glamour/v2/ansi"
 	"charm.land/lipgloss/v2"
 	"github.com/alecthomas/chroma/v2"
-	"github.com/charmbracelet/crush/internal/ui/diffview"
 	"github.com/charmbracelet/x/exp/charmtone"
+	"github.com/purpose168/crush-cn/internal/ui/diffview"
 )
 
 // 图标常量定义

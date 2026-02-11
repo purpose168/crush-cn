@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/charmbracelet/crush/internal/config"
 	"github.com/invopop/jsonschema"
+	"github.com/purpose168/crush-cn/internal/config"
 	"github.com/spf13/cobra"
 )
 

@@ -3,7 +3,7 @@ package common
 import (
 	"strings"
 
-	"github.com/charmbracelet/crush/internal/ui/styles"
+	"github.com/purpose168/crush-cn/internal/ui/styles"
 )
 
 // Scrollbar 根据内容和视口大小渲染垂直滚动条。

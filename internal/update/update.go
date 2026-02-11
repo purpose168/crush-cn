@@ -13,7 +13,7 @@ import (
 
 const (
 	// githubApiUrl GitHub API URL，用于获取最新发布版本
-	githubApiUrl = "https://api.github.com/repos/charmbracelet/crush/releases/latest"
+	githubApiUrl = "https://api.github.com/repos/purpose168/crush-cn/releases/latest"
 	// userAgent HTTP 请求的用户代理
 	userAgent = "crush/1.0"
 )

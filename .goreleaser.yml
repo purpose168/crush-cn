@@ -71,7 +71,7 @@ builds:
       - goos: windows
         goarch: arm
     ldflags:
-      - -s -w -X github.com/charmbracelet/crush/internal/version.Version={{.Version}}  # 设置版本信息
+      - -s -w -X github.com/purpose168/crush-cn/internal/version.Version={{.Version}}  # 设置版本信息
     flags:
       - -trimpath  # 移除构建路径中的绝对路径
 
@@ -117,7 +117,7 @@ aur_sources:
       export CGO_CXXFLAGS="${CXXFLAGS}"
       export CGO_LDFLAGS="${LDFLAGS}"
       export GOFLAGS="-buildmode=pie -trimpath -mod=readonly -modcacherw"
-      go build -ldflags="-w -s -buildid='' -linkmode=external -X github.com/charmbracelet/crush/internal/version.Version=v${pkgver}" .
+      go build -ldflags="-w -s -buildid='' -linkmode=external -X github.com/purpose168/crush-cn/internal/version.Version=v${pkgver}" .
       ./crush completion bash >./completions/crush.bash
       ./crush completion zsh >./completions/crush.zsh
       ./crush completion fish >./completions/crush.fish
@@ -212,8 +212,8 @@ scoops:
 
 npms:
   - name: "@charmland/crush"  # NPM 包名
-    repository: "git+https://github.com/charmbracelet/crush.git"  # 仓库 URL
-    bugs: https://github.com/charmbracelet/crush/issues  # Bug 报告 URL
+    repository: "git+https://github.com/purpose168/crush-cn.git"  # 仓库 URL
+    bugs: https://github.com/purpose168/crush-cn/issues  # Bug 报告 URL
     access: public  # 公开访问
     disable: "{{ with .Prerelease }}true{{ end }}"  # 预发布版本时禁用
 
@@ -279,8 +279,8 @@ winget:
   - publisher: charmbracelet
     copyright: Charmbracelet, Inc
     publisher_url: https://charm.land
-    release_notes_url: "https://github.com/charmbracelet/crush/releases/tag/{{.Tag}}"  # 发布说明 URL
-    license_url: https://github.com/charmbracelet/crush/blob/main/LICENSE.md  # 许可证 URL
+    release_notes_url: "https://github.com/purpose168/crush-cn/releases/tag/{{.Tag}}"  # 发布说明 URL
+    license_url: https://github.com/purpose168/crush-cn/blob/main/LICENSE.md  # 许可证 URL
     skip_upload: "{{ with .Prerelease }}true{{ end }}"  # 预发布版本时跳过上传
     commit_author:
       name: "Charm"

@@ -7,11 +7,11 @@ import (
 	"strings"
 
 	"charm.land/lipgloss/v2"
-	"github.com/charmbracelet/crush/internal/app"
-	"github.com/charmbracelet/crush/internal/lsp"
-	"github.com/charmbracelet/crush/internal/ui/common"
-	"github.com/charmbracelet/crush/internal/ui/styles"
 	"github.com/charmbracelet/x/powernap/pkg/lsp/protocol"
+	"github.com/purpose168/crush-cn/internal/app"
+	"github.com/purpose168/crush-cn/internal/lsp"
+	"github.com/purpose168/crush-cn/internal/ui/common"
+	"github.com/purpose168/crush-cn/internal/ui/styles"
 )
 
 // LSPInfo 包装LSP客户端信息，按严重程度分类的诊断计数。

@@ -9,12 +9,12 @@ import (
 	"charm.land/bubbles/v2/spinner"
 	"charm.land/bubbles/v2/textinput"
 	tea "charm.land/bubbletea/v2"
-	"github.com/charmbracelet/crush/internal/commands"
-	"github.com/charmbracelet/crush/internal/config"
-	"github.com/charmbracelet/crush/internal/ui/common"
-	"github.com/charmbracelet/crush/internal/ui/list"
-	"github.com/charmbracelet/crush/internal/ui/styles"
 	uv "github.com/charmbracelet/ultraviolet"
+	"github.com/purpose168/crush-cn/internal/commands"
+	"github.com/purpose168/crush-cn/internal/config"
+	"github.com/purpose168/crush-cn/internal/ui/common"
+	"github.com/purpose168/crush-cn/internal/ui/list"
+	"github.com/purpose168/crush-cn/internal/ui/styles"
 )
 
 // CommandsID 是命令对话框的标识符。

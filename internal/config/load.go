@@ -17,13 +17,13 @@ import (
 	"testing"
 
 	"charm.land/catwalk/pkg/catwalk"
-	"github.com/charmbracelet/crush/internal/agent/hyper"
-	"github.com/charmbracelet/crush/internal/csync"
-	"github.com/charmbracelet/crush/internal/env"
-	"github.com/charmbracelet/crush/internal/fsext"
-	"github.com/charmbracelet/crush/internal/home"
-	"github.com/charmbracelet/crush/internal/log"
 	powernapConfig "github.com/charmbracelet/x/powernap/pkg/config"
+	"github.com/purpose168/crush-cn/internal/agent/hyper"
+	"github.com/purpose168/crush-cn/internal/csync"
+	"github.com/purpose168/crush-cn/internal/env"
+	"github.com/purpose168/crush-cn/internal/fsext"
+	"github.com/purpose168/crush-cn/internal/home"
+	"github.com/purpose168/crush-cn/internal/log"
 	"github.com/qjebbs/go-jsons"
 )
 

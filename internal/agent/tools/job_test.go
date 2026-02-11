@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/charmbracelet/crush/internal/shell"
+	"github.com/purpose168/crush-cn/internal/shell"
 	"github.com/stretchr/testify/require"
 )
 

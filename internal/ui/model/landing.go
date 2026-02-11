@@ -2,9 +2,9 @@ package model
 
 import (
 	"charm.land/lipgloss/v2"
-	"github.com/charmbracelet/crush/internal/agent"
-	"github.com/charmbracelet/crush/internal/ui/common"
 	"github.com/charmbracelet/ultraviolet/layout"
+	"github.com/purpose168/crush-cn/internal/agent"
+	"github.com/purpose168/crush-cn/internal/ui/common"
 )
 
 // selectedLargeModel 返回从代理协调器中当前选中的大语言模型（如果存在）。

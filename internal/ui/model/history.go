@@ -6,7 +6,7 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 
-	"github.com/charmbracelet/crush/internal/message"
+	"github.com/purpose168/crush-cn/internal/message"
 )
 
 // promptHistoryLoadedMsg 当提示历史加载完成时发送的消息类型。

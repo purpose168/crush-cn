@@ -9,11 +9,11 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
 
-	"github.com/charmbracelet/crush/internal/agent"
-	"github.com/charmbracelet/crush/internal/config"
-	"github.com/charmbracelet/crush/internal/home"
-	"github.com/charmbracelet/crush/internal/ui/common"
-	"github.com/charmbracelet/crush/internal/ui/util"
+	"github.com/purpose168/crush-cn/internal/agent"
+	"github.com/purpose168/crush-cn/internal/config"
+	"github.com/purpose168/crush-cn/internal/home"
+	"github.com/purpose168/crush-cn/internal/ui/common"
+	"github.com/purpose168/crush-cn/internal/ui/util"
 )
 
 // markProjectInitialized 在配置中将当前项目标记为已初始化。

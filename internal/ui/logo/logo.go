@@ -8,9 +8,9 @@ import (
 
 	"charm.land/lipgloss/v2"
 	"github.com/MakeNowJust/heredoc"
-	"github.com/charmbracelet/crush/internal/ui/styles"
 	"github.com/charmbracelet/x/ansi"
 	"github.com/charmbracelet/x/exp/slice"
+	"github.com/purpose168/crush-cn/internal/ui/styles"
 )
 
 // letterform 表示字母形式。可以通过布尔参数将其水平拉伸

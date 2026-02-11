@@ -13,12 +13,12 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/charmbracelet/crush/internal/config"
-	"github.com/charmbracelet/crush/internal/csync"
-	"github.com/charmbracelet/crush/internal/home"
 	powernap "github.com/charmbracelet/x/powernap/pkg/lsp"
 	"github.com/charmbracelet/x/powernap/pkg/lsp/protocol"
 	"github.com/charmbracelet/x/powernap/pkg/transport"
+	"github.com/purpose168/crush-cn/internal/config"
+	"github.com/purpose168/crush-cn/internal/csync"
+	"github.com/purpose168/crush-cn/internal/home"
 )
 
 // DiagnosticCounts holds the count of diagnostics by severity.

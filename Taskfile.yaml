@@ -44,7 +44,7 @@ tasks:
   build:
     desc: 构建项目
     vars:
-      LDFLAGS: '{{if .VERSION}}-ldflags="-X github.com/charmbracelet/crush/internal/version.Version={{.VERSION}}"{{end}}'  # 构建标志，设置版本信息
+      LDFLAGS: '{{if .VERSION}}-ldflags="-X github.com/purpose168/crush-cn/internal/version.Version={{.VERSION}}"{{end}}'  # 构建标志，设置版本信息
     cmds:
       - "go build {{if .RACE}}-race{{end}} {{.LDFLAGS}} ."  # 构建项目，根据需要启用竞态检测
     generates:
@@ -88,7 +88,7 @@ tasks:
   install:
     desc: 安装应用程序
     vars:
-      LDFLAGS: '{{if .VERSION}}-ldflags="-X github.com/charmbracelet/crush/internal/version.Version={{.VERSION}}"{{end}}'  # 构建标志，设置版本信息
+      LDFLAGS: '{{if .VERSION}}-ldflags="-X github.com/purpose168/crush-cn/internal/version.Version={{.VERSION}}"{{end}}'  # 构建标志，设置版本信息
     cmds:
       - task: fetch-tags  # 先获取标签
       - go install {{.LDFLAGS}} -v .  # 安装应用程序

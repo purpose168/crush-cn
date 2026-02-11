@@ -1,4 +1,4 @@
-module github.com/charmbracelet/crush
+module github.com/purpose168/crush-cn
 
 go 1.25.5
 

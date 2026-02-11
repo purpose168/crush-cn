@@ -40,7 +40,7 @@ jobs:
           # CLA 签名存储路径
           path-to-signatures: ".github/cla-signatures.json"
           # CLA 文档路径
-          path-to-document: "https://github.com/charmbracelet/crush/blob/main/CLA.md"
+          path-to-document: "https://github.com/purpose168/crush-cn/blob/main/CLA.md"
           # 目标分支
           branch: "main"
           # 豁免列表：不需要签署 CLA 的用户/机器人
@@ -48,7 +48,7 @@ jobs:
           # 自定义 PR 签名评论
           custom-pr-sign-comment: "I have read the Contributor License Agreement (CLA) and hereby sign the CLA."
           # 自定义未签名 PR 评论
-          custom-notsigned-prcomment: "Thank you for your submission. We really appreciate it! Like many open-source projects, we ask that you sign our [Contributor License Agreement](https://github.com/charmbracelet/crush/blob/main/CLA.md) before we can accept your contribution. You can sign the CLA by just posting a Pull Request comment same as the below format."
+          custom-notsigned-prcomment: "Thank you for your submission. We really appreciate it! Like many open-source projects, we ask that you sign our [Contributor License Agreement](https://github.com/purpose168/crush-cn/blob/main/CLA.md) before we can accept your contribution. You can sign the CLA by just posting a Pull Request comment same as the below format."
           # 合并后是否锁定 PR
           lock-pullrequest-aftermerge: false
           # 签名后的提交信息

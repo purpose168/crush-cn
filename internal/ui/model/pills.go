@@ -6,9 +6,9 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
-	"github.com/charmbracelet/crush/internal/session"
-	"github.com/charmbracelet/crush/internal/ui/chat"
-	"github.com/charmbracelet/crush/internal/ui/styles"
+	"github.com/purpose168/crush-cn/internal/session"
+	"github.com/purpose168/crush-cn/internal/ui/chat"
+	"github.com/purpose168/crush-cn/internal/ui/styles"
 )
 
 // pillStyle 根据焦点状态返回药丸的适当样式。

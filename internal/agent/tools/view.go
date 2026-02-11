@@ -13,10 +13,10 @@ import (
 	"unicode/utf8"
 
 	"charm.land/fantasy"
-	"github.com/charmbracelet/crush/internal/filepathext"
-	"github.com/charmbracelet/crush/internal/filetracker"
-	"github.com/charmbracelet/crush/internal/lsp"
-	"github.com/charmbracelet/crush/internal/permission"
+	"github.com/purpose168/crush-cn/internal/filepathext"
+	"github.com/purpose168/crush-cn/internal/filetracker"
+	"github.com/purpose168/crush-cn/internal/lsp"
+	"github.com/purpose168/crush-cn/internal/permission"
 )
 
 //go:embed view.md

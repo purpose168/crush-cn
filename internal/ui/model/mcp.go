@@ -5,9 +5,9 @@ import (
 	"strings"
 
 	"charm.land/lipgloss/v2"
-	"github.com/charmbracelet/crush/internal/agent/tools/mcp"
-	"github.com/charmbracelet/crush/internal/ui/common"
-	"github.com/charmbracelet/crush/internal/ui/styles"
+	"github.com/purpose168/crush-cn/internal/agent/tools/mcp"
+	"github.com/purpose168/crush-cn/internal/ui/common"
+	"github.com/purpose168/crush-cn/internal/ui/styles"
 )
 
 // mcpInfo 渲染MCP状态部分，显示活动的MCP客户端及其工具/提示计数。

@@ -8,10 +8,10 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/charmbracelet/crush/internal/db"
-	"github.com/charmbracelet/crush/internal/event"
-	"github.com/charmbracelet/crush/internal/pubsub"
 	"github.com/google/uuid"
+	"github.com/purpose168/crush-cn/internal/db"
+	"github.com/purpose168/crush-cn/internal/event"
+	"github.com/purpose168/crush-cn/internal/pubsub"
 )
 
 type TodoStatus string

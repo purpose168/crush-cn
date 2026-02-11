@@ -12,11 +12,11 @@ import (
 	"sync"
 
 	tea "charm.land/bubbletea/v2"
-	"github.com/charmbracelet/crush/internal/ui/util"
 	"github.com/charmbracelet/x/ansi"
 	"github.com/charmbracelet/x/ansi/kitty"
 	"github.com/disintegration/imaging"
 	paintbrush "github.com/jordanella/go-ansi-paintbrush"
+	"github.com/purpose168/crush-cn/internal/ui/util"
 )
 
 // TransmittedMsg 是一条消息，指示图像已传输到终端。

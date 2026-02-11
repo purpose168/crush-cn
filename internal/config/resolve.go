@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/charmbracelet/crush/internal/env"
-	"github.com/charmbracelet/crush/internal/shell"
+	"github.com/purpose168/crush-cn/internal/env"
+	"github.com/purpose168/crush-cn/internal/shell"
 )
 
 type VariableResolver interface {

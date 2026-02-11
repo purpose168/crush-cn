@@ -9,8 +9,8 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/charmbracelet/crush/internal/version"
 	"github.com/posthog/posthog-go"
+	"github.com/purpose168/crush-cn/internal/version"
 )
 
 const (

@@ -7,9 +7,9 @@ import (
 	"strings"
 
 	"charm.land/lipgloss/v2"
-	"github.com/charmbracelet/crush/internal/home"
-	"github.com/charmbracelet/crush/internal/ui/styles"
 	"github.com/charmbracelet/x/ansi"
+	"github.com/purpose168/crush-cn/internal/home"
+	"github.com/purpose168/crush-cn/internal/ui/styles"
 )
 
 // PrettyPath 格式化文件路径，使用主目录缩写并应用静音样式。

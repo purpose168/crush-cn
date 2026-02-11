@@ -6,8 +6,8 @@ import (
 	_ "net/http/pprof"
 	"os"
 
-	"github.com/charmbracelet/crush/internal/cmd"
 	_ "github.com/joho/godotenv/autoload"
+	"github.com/purpose168/crush-cn/internal/cmd"
 )
 
 func main() {

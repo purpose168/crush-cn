@@ -2,8 +2,8 @@
 
 <p align="center">
     <a href="https://stuff.charm.sh/crush/charm-crush.png"><img width="450" alt="Charm Crush Logo" src="https://github.com/user-attachments/assets/cf8ca3ce-8b02-43f0-9d0f-5a331488da4b" /></a><br />
-    <a href="https://github.com/charmbracelet/crush/releases"><img src="https://img.shields.io/github/release/charmbracelet/crush" alt="Latest Release"></a>
-    <a href="https://github.com/charmbracelet/crush/actions"><img src="https://github.com/charmbracelet/crush/actions/workflows/build.yml/badge.svg" alt="Build Status"></a>
+    <a href="https://github.com/purpose168/crush-cn/releases"><img src="https://img.shields.io/github/release/purpose168/crush-cn" alt="Latest Release"></a>
+    <a href="https://github.com/purpose168/crush-cn/actions"><img src="https://github.com/purpose168/crush-cn/actions/workflows/build.yml/badge.svg" alt="Build Status"></a>
 </p>
 
 <p align="center">你编程的新搭档，现已登陆你最爱的终端。<br />无缝集成你的工具、代码与工作流，支持你选择的 LLM 模型。</p>
@@ -163,13 +163,13 @@ sudo yum install crush
 - [Packages][releases] 提供 Debian 和 RPM 格式的安装包
 - [Binaries][releases] 提供适用于 Linux、macOS、Windows、FreeBSD、OpenBSD 和 NetBSD 的二进制文件
 
-[releases]: https://github.com/charmbracelet/crush/releases
+[releases]: https://github.com/purpose168/crush-cn/releases
 
 或者使用 Go 安装：
 
 ```
 # 使用 Go 命令安装最新版 Crush
-go install github.com/charmbracelet/crush@latest
+go install github.com/purpose168/crush-cn@latest
 ```
 
 > [!WARNING]
@@ -357,7 +357,7 @@ Crush 还支持通过三种传输类型的 Model Context Protocol (MCP) 服务�
 
 要禁用 MCP 服务器的工具，请参阅 [MCP 配置部分](#mcps)。
 
-### Agent Skills
+### 智能体技能
 
 Crush 支持 [Agent Skills](https://agentskills.io) 开放标准，通过可重用的技能包扩展代理功能。技能是包含 `SKILL.md` 文件的文件夹，其中包含 Crush 可以发现并按需激活的指令。
 
@@ -678,8 +678,8 @@ crush update-providers --help
 
 Crush 记录假名使用指标（与设备特定哈希关联），维护者依靠这些指标来指导开发和支持优先级。这些指标仅包含使用元数据；提示和响应永远不会被收集。
 
-关于具体收集内容的详细信息在源代码中（[这里](https://github.com/charmbracelet/crush/tree/main/internal/event)
-和 [这里](https://github.com/charmbracelet/crush/blob/main/internal/llm/agent/event.go)）。
+关于具体收集内容的详细信息在源代码中（[这里](https://github.com/purpose168/crush-cn/tree/main/internal/event)
+和 [这里](https://github.com/purpose168/crush-cn/blob/main/internal/llm/agent/event.go)）。
 
 你可以通过在环境中设置以下环境变量随时选择退出指标收集：
 
@@ -702,7 +702,7 @@ Crush 还尊重 `DO_NOT_TRACK` 约定，可以通过 `export DO_NOT_TRACK=1` 启
 
 ## 贡献
 
-请参阅 [贡献指南](https://github.com/charmbracelet/crush?tab=contributing-ov-file#contributing)。
+请参阅 [贡献指南](https://github.com/purpose168/crush-cn?tab=contributing-ov-file#contributing)。
 
 ## 你觉得怎么样？
 
@@ -718,13 +718,5 @@ Crush 还尊重 `DO_NOT_TRACK` 约定，可以通过 `export DO_NOT_TRACK=1` 启
 
 ## 许可证
 
-[FSL-1.1-MIT](https://github.com/charmbracelet/crush/raw/main/LICENSE.md)
+[FSL-1.1-MIT](https://github.com/purpose168/crush-cn/raw/main/LICENSE.md)
 
----
-
-属于 [Charm](https://charm.land)。
-
-<a href="https://charm.land/"><img alt="The Charm logo" width="400" src="https://stuff.charm.sh/charm-banner-next.jpg" /></a>
-
-<!--prettier-ignore-->
-Charm热爱开源 • Charm loves open source

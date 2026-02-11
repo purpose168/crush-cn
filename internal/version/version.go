@@ -9,7 +9,7 @@ import "runtime/debug"
 var Version = "devel"
 
 // 初始化函数，用于从构建信息中获取版本号
-// 当用户使用 `go install github.com/charmbracelet/crush@latest` 安装时
+// 当用户使用 `go install github.com/purpose168/crush-cn@latest` 安装时
 // 没有 -ldflags 参数，此时上面的版本号未设置
 // 作为 workaround，我们使用 `go install` 时会设置的嵌入式构建版本
 // （此版本号仅在 `go install` 时设置，`go build` 时不会设置）

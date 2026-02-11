@@ -2,7 +2,7 @@ package common
 
 import (
 	"charm.land/glamour/v2"
-	"github.com/charmbracelet/crush/internal/ui/styles"
+	"github.com/purpose168/crush-cn/internal/ui/styles"
 )
 
 // MarkdownRenderer 返回一个使用给定样式和宽度配置的 glamour [glamour.TermRenderer]。

@@ -31,25 +31,28 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 )
 
-// fakeEnv is an environment for testing.
+// fakeEnv 是测试用的环境
 type fakeEnv struct {
-	workingDir  string
-	sessions    session.Service
-	messages    message.Service
-	permissions permission.Service
-	history     history.Service
-	filetracker *filetracker.Service
-	lspClients  *csync.Map[string, *lsp.Client]
+	workingDir  string // 工作目录
+	sessions    session.Service // 会话服务
+	messages    message.Service // 消息服务
+	permissions permission.Service // 权限服务
+	history     history.Service // 历史服务
+	filetracker *filetracker.Service // 文件追踪服务
+	lspClients  *csync.Map[string, *lsp.Client] // LSP 客户端映射
 }
 
+// builderFunc 构建语言模型的函数类型
 type builderFunc func(t *testing.T, r *vcr.Recorder) (fantasy.LanguageModel, error)
 
+// modelPair 模型对，包含大型模型和小型模型
 type modelPair struct {
-	name       string
-	largeModel builderFunc
-	smallModel builderFunc
+	name       string // 模型对名称
+	largeModel builderFunc // 大型模型构建函数
+	smallModel builderFunc // 小型模型构建函数
 }
 
+// anthropicBuilder 创建 Anthropic 模型构建器
 func anthropicBuilder(model string) builderFunc {
 	return func(t *testing.T, r *vcr.Recorder) (fantasy.LanguageModel, error) {
 		provider, err := anthropic.New(
@@ -63,6 +66,7 @@ func anthropicBuilder(model string) builderFunc {
 	}
 }
 
+// openaiBuilder 创建 OpenAI 模型构建器
 func openaiBuilder(model string) builderFunc {
 	return func(t *testing.T, r *vcr.Recorder) (fantasy.LanguageModel, error) {
 		provider, err := openai.New(
@@ -76,6 +80,7 @@ func openaiBuilder(model string) builderFunc {
 	}
 }
 
+// openRouterBuilder 创建 OpenRouter 模型构建器
 func openRouterBuilder(model string) builderFunc {
 	return func(t *testing.T, r *vcr.Recorder) (fantasy.LanguageModel, error) {
 		provider, err := openrouter.New(
@@ -89,6 +94,7 @@ func openRouterBuilder(model string) builderFunc {
 	}
 }
 
+// zAIBuilder 创建 ZAI 模型构建器
 func zAIBuilder(model string) builderFunc {
 	return func(t *testing.T, r *vcr.Recorder) (fantasy.LanguageModel, error) {
 		provider, err := openaicompat.New(
@@ -103,6 +109,7 @@ func zAIBuilder(model string) builderFunc {
 	}
 }
 
+// testEnv 创建测试环境
 func testEnv(t *testing.T) fakeEnv {
 	workingDir := filepath.Join("/tmp/crush-test/", t.Name())
 	os.RemoveAll(workingDir)
@@ -138,6 +145,7 @@ func testEnv(t *testing.T) fakeEnv {
 	}
 }
 
+// testSessionAgent 创建测试会话代理
 func testSessionAgent(env fakeEnv, large, small fantasy.LanguageModel, systemPrompt string, tools ...fantasy.AgentTool) SessionAgent {
 	largeModel := Model{
 		Model: large,
@@ -157,6 +165,7 @@ func testSessionAgent(env fakeEnv, large, small fantasy.LanguageModel, systemPro
 	return agent
 }
 
+// coderAgent 创建编码代理
 func coderAgent(r *vcr.Recorder, env fakeEnv, large, small fantasy.LanguageModel) (SessionAgent, error) {
 	fixedTime := func() time.Time {
 		t, _ := time.Parse("1/2/2006", "1/1/2025")
@@ -175,19 +184,19 @@ func coderAgent(r *vcr.Recorder, env fakeEnv, large, small fantasy.LanguageModel
 		return nil, err
 	}
 
-	// NOTE(@andreynering): Set a fixed config to ensure cassettes match
-	// independently of user config on `$HOME/.config/crush/crush.json`.
+	// NOTE(@andreynering): 设置固定配置以确保磁带匹配
+	// 独立于 `$HOME/.config/crush/crush.json` 上的用户配置。
 	cfg.Options.Attribution = &config.Attribution{
 		TrailerStyle:  "co-authored-by",
 		GeneratedWith: true,
 	}
 
-	// Clear skills paths to ensure test reproducibility - user's skills
-	// would be included in prompt and break VCR cassette matching.
+	// 清除技能路径以确保测试可重复性 - 用户的技能
+	// 会包含在提示中并破坏 VCR 磁带匹配。
 	cfg.Options.SkillsPaths = []string{}
 
-	// Clear LSP config to ensure test reproducibility - user's LSP config
-	// would be included in prompt and break VCR cassette matching.
+	// 清除 LSP 配置以确保测试可重复性 - 用户的 LSP 配置
+	// 会包含在提示中并破坏 VCR 磁带匹配。
 	cfg.LSP = nil
 
 	systemPrompt, err := prompt.Build(context.TODO(), large.Provider(), large.Model(), *cfg)
@@ -195,8 +204,8 @@ func coderAgent(r *vcr.Recorder, env fakeEnv, large, small fantasy.LanguageModel
 		return nil, err
 	}
 
-	// Get the model name for the bash tool
-	modelName := large.Model() // fallback to ID if Name not available
+	// 获取 bash 工具的模型名称
+	modelName := large.Model() // 如果 Name 不可用，则回退到 ID
 	if model := cfg.GetModel(large.Provider(), large.Model()); model != nil {
 		modelName = model.Name
 	}
@@ -218,8 +227,8 @@ func coderAgent(r *vcr.Recorder, env fakeEnv, large, small fantasy.LanguageModel
 	return testSessionAgent(env, large, small, systemPrompt, allTools...), nil
 }
 
-// createSimpleGoProject creates a simple Go project structure in the given directory.
-// It creates a go.mod file and a main.go file with a basic hello world program.
+// createSimpleGoProject 在给定目录中创建简单的 Go 项目结构
+// 创建 go.mod 文件和带有基本 hello world 程序的 main.go 文件
 func createSimpleGoProject(t *testing.T, dir string) {
 	goMod := `module example.com/testproject
 

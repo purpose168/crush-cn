@@ -23,9 +23,9 @@ import (
 var viewDescription []byte
 
 type ViewParams struct {
-	FilePath string `json:"file_path" description:"The path to the file to read"`
-	Offset   int    `json:"offset,omitempty" description:"The line number to start reading from (0-based)"`
-	Limit    int    `json:"limit,omitempty" description:"The number of lines to read (defaults to 2000)"`
+	FilePath string `json:"file_path" description:"要读取的文件路径"`
+	Offset   int    `json:"offset,omitempty" description:"开始读取的行号（从 0 开始）"`
+	Limit    int    `json:"limit,omitempty" description:"要读取的行数（默认为 2000）"`
 }
 
 type ViewPermissionsParams struct {
@@ -58,21 +58,21 @@ func NewViewTool(
 		string(viewDescription),
 		func(ctx context.Context, params ViewParams, call fantasy.ToolCall) (fantasy.ToolResponse, error) {
 			if params.FilePath == "" {
-				return fantasy.NewTextErrorResponse("file_path is required"), nil
+				return fantasy.NewTextErrorResponse("需要提供 file_path"), nil
 			}
 
-			// Handle relative paths
+			// 处理相对路径
 			filePath := filepathext.SmartJoin(workingDir, params.FilePath)
 
-			// Check if file is outside working directory and request permission if needed
+			// 检查文件是否在工作目录外，如需请求权限
 			absWorkingDir, err := filepath.Abs(workingDir)
 			if err != nil {
-				return fantasy.ToolResponse{}, fmt.Errorf("error resolving working directory: %w", err)
+				return fantasy.ToolResponse{}, fmt.Errorf("解析工作目录错误: %w", err)
 			}
 
 			absFilePath, err := filepath.Abs(filePath)
 			if err != nil {
-				return fantasy.ToolResponse{}, fmt.Errorf("error resolving file path: %w", err)
+				return fantasy.ToolResponse{}, fmt.Errorf("解析文件路径错误: %w", err)
 			}
 
 			relPath, err := filepath.Rel(absWorkingDir, absFilePath)
@@ -81,10 +81,10 @@ func NewViewTool(
 
 			sessionID := GetSessionFromContext(ctx)
 			if sessionID == "" {
-				return fantasy.ToolResponse{}, fmt.Errorf("session ID is required for accessing files outside working directory")
+				return fantasy.ToolResponse{}, fmt.Errorf("访问工作目录外的文件需要会话 ID")
 			}
 
-			// Request permission for files outside working directory, unless it's a skill file.
+			// 为工作目录外的文件请求权限，除非是技能文件
 			if isOutsideWorkDir && !isSkillFile {
 				granted, err := permissions.Request(ctx,
 					permission.CreatePermissionRequest{
@@ -93,7 +93,7 @@ func NewViewTool(
 						ToolCallID:  call.ID,
 						ToolName:    ViewToolName,
 						Action:      "read",
-						Description: fmt.Sprintf("Read file outside working directory: %s", absFilePath),
+						Description: fmt.Sprintf("读取工作目录外的文件: %s", absFilePath),
 						Params:      ViewPermissionsParams(params),
 					},
 				)
@@ -105,11 +105,11 @@ func NewViewTool(
 				}
 			}
 
-			// Check if file exists
+			// 检查文件是否存在
 			fileInfo, err := os.Stat(filePath)
 			if err != nil {
 				if os.IsNotExist(err) {
-					// Try to offer suggestions for similarly named files
+					// 尝试提供名称相似的文件建议
 					dir := filepath.Dir(filePath)
 					base := filepath.Base(filePath)
 
@@ -127,31 +127,31 @@ func NewViewTool(
 						}
 
 						if len(suggestions) > 0 {
-							return fantasy.NewTextErrorResponse(fmt.Sprintf("File not found: %s\n\nDid you mean one of these?\n%s",
+							return fantasy.NewTextErrorResponse(fmt.Sprintf("文件未找到: %s\n\n您是指以下文件之一吗？\n%s",
 								filePath, strings.Join(suggestions, "\n"))), nil
 						}
 					}
 
-					return fantasy.NewTextErrorResponse(fmt.Sprintf("File not found: %s", filePath)), nil
+					return fantasy.NewTextErrorResponse(fmt.Sprintf("文件未找到: %s", filePath)), nil
 				}
-				return fantasy.ToolResponse{}, fmt.Errorf("error accessing file: %w", err)
+				return fantasy.ToolResponse{}, fmt.Errorf("访问文件错误: %w", err)
 			}
 
-			// Check if it's a directory
+			// 检查是否为目录
 			if fileInfo.IsDir() {
-				return fantasy.NewTextErrorResponse(fmt.Sprintf("Path is a directory, not a file: %s", filePath)), nil
+				return fantasy.NewTextErrorResponse(fmt.Sprintf("路径是目录，不是文件: %s", filePath)), nil
 			}
 
-			// Based on the specifications we should not limit the skills read.
+			// 根据规范，我们不应该限制技能文件的读取
 			if !isSkillFile && fileInfo.Size() > MaxReadSize {
-				return fantasy.NewTextErrorResponse(fmt.Sprintf("File is too large (%d bytes). Maximum size is %d bytes",
+				return fantasy.NewTextErrorResponse(fmt.Sprintf("文件太大 (%d 字节)。最大大小为 %d 字节",
 					fileInfo.Size(), MaxReadSize)), nil
 			}
 
-			// Set default limit if not provided (no limit for SKILL.md files)
+			// 如果未提供限制，则设置默认限制（SKILL.md 文件无限制）
 			if params.Limit <= 0 {
 				if isSkillFile {
-					params.Limit = 1000000 // Effectively no limit for skill files
+					params.Limit = 1000000 // 技能文件实际上无限制
 				} else {
 					params.Limit = DefaultReadLimit
 				}
@@ -161,36 +161,36 @@ func NewViewTool(
 			if isSupportedImage {
 				if !GetSupportsImagesFromContext(ctx) {
 					modelName := GetModelNameFromContext(ctx)
-					return fantasy.NewTextErrorResponse(fmt.Sprintf("This model (%s) does not support image data.", modelName)), nil
+					return fantasy.NewTextErrorResponse(fmt.Sprintf("此模型 (%s) 不支持图像数据。", modelName)), nil
 				}
 
 				imageData, err := os.ReadFile(filePath)
 				if err != nil {
-					return fantasy.ToolResponse{}, fmt.Errorf("error reading image file: %w", err)
+					return fantasy.ToolResponse{}, fmt.Errorf("读取图像文件错误: %w", err)
 				}
 
 				encoded := base64.StdEncoding.EncodeToString(imageData)
 				return fantasy.NewImageResponse([]byte(encoded), mimeType), nil
 			}
 
-			// Read the file content
+			// 读取文件内容
 			content, lineCount, err := readTextFile(filePath, params.Offset, params.Limit)
 			isValidUt8 := utf8.ValidString(content)
 			if !isValidUt8 {
-				return fantasy.NewTextErrorResponse("File content is not valid UTF-8"), nil
+				return fantasy.NewTextErrorResponse("文件内容不是有效的 UTF-8"), nil
 			}
 			if err != nil {
-				return fantasy.ToolResponse{}, fmt.Errorf("error reading file: %w", err)
+				return fantasy.ToolResponse{}, fmt.Errorf("读取文件错误: %w", err)
 			}
 
 			notifyLSPs(ctx, lspManager, filePath)
 			output := "<file>\n"
-			// Format the output with line numbers
+			// 格式化输出，添加行号
 			output += addLineNumbers(content, params.Offset+1)
 
-			// Add a note if the content was truncated
+			// 如果内容被截断，添加说明
 			if lineCount > params.Offset+len(strings.Split(content, "\n")) {
-				output += fmt.Sprintf("\n\n(File has more lines. Use 'offset' parameter to read beyond line %d)",
+				output += fmt.Sprintf("\n\n(文件还有更多行。使用 'offset' 参数读取第 %d 行之后的内容)",
 					params.Offset+len(strings.Split(content, "\n")))
 			}
 			output += "\n</file>\n"
@@ -257,7 +257,7 @@ func readTextFile(filePath string, offset, limit int) (string, int, error) {
 		}
 	}
 
-	// Pre-allocate slice with expected capacity
+	// 预分配具有预期容量的切片
 	lines := make([]string, 0, limit)
 	lineCount = offset
 
@@ -270,7 +270,7 @@ func readTextFile(filePath string, offset, limit int) (string, int, error) {
 		lines = append(lines, lineText)
 	}
 
-	// Continue scanning to get total line count
+	// 继续扫描以获取总行数
 	for scanner.Scan() {
 		lineCount++
 	}
@@ -304,8 +304,8 @@ type LineScanner struct {
 
 func NewLineScanner(r io.Reader) *LineScanner {
 	scanner := bufio.NewScanner(r)
-	// Increase buffer size to handle large lines (e.g., minified JSON, HTML)
-	// Default is 64KB, set to 1MB
+	// 增加缓冲区大小以处理大行（例如，压缩的 JSON、HTML）
+	// 默认值为 64KB，设置为 1MB
 	buf := make([]byte, 0, 64*1024)
 	scanner.Buffer(buf, 1024*1024)
 	return &LineScanner{
@@ -325,12 +325,10 @@ func (s *LineScanner) Err() error {
 	return s.scanner.Err()
 }
 
-// isInSkillsPath checks if filePath is within any of the configured skills
-// directories. Returns true for files that can be read without permission
-// prompts and without size limits.
+// isInSkillsPath 检查 filePath 是否在任何配置的技能目录中
+// 对于可以无权限提示读取且无大小限制的文件返回 true
 //
-// Note that symlinks are resolved to prevent path traversal attacks via
-// symbolic links.
+// 注意：解析符号链接以防止通过符号链接进行路径遍历攻击
 func isInSkillsPath(filePath string, skillsPaths []string) bool {
 	if len(skillsPaths) == 0 {
 		return false

@@ -79,7 +79,7 @@ func TestApplyEditToContentPartialSuccess(t *testing.T) {
 
 	content := "line 1\nline 2\nline 3\n"
 
-	// Test successful edit.
+	// 测试成功的编辑操作。
 	newContent, err := applyEditToContent(content, MultiEditOperation{
 		OldString: "line 1",
 		NewString: "LINE 1",
@@ -88,7 +88,7 @@ func TestApplyEditToContentPartialSuccess(t *testing.T) {
 	require.Contains(t, newContent, "LINE 1")
 	require.Contains(t, newContent, "line 2")
 
-	// Test failed edit (string not found).
+	// 测试失败的编辑操作（字符串未找到）。
 	_, err = applyEditToContent(content, MultiEditOperation{
 		OldString: "line 99",
 		NewString: "LINE 99",
@@ -103,20 +103,20 @@ func TestMultiEditSequentialApplication(t *testing.T) {
 	tmpDir := t.TempDir()
 	testFile := filepath.Join(tmpDir, "test.txt")
 
-	// Create test file.
+	// 创建测试文件。
 	content := "line 1\nline 2\nline 3\nline 4\n"
 	err := os.WriteFile(testFile, []byte(content), 0o644)
 	require.NoError(t, err)
 
-	// Manually test the sequential application logic.
+	// 手动测试顺序应用逻辑。
 	currentContent := content
 
-	// Apply edits sequentially, tracking failures.
+	// 顺序应用编辑，跟踪失败情况。
 	edits := []MultiEditOperation{
-		{OldString: "line 1", NewString: "LINE 1"},   // Should succeed
-		{OldString: "line 99", NewString: "LINE 99"}, // Should fail - doesn't exist
-		{OldString: "line 3", NewString: "LINE 3"},   // Should succeed
-		{OldString: "line 2", NewString: "LINE 2"},   // Should succeed - still exists
+		{OldString: "line 1", NewString: "LINE 1"},   // 应该成功
+		{OldString: "line 99", NewString: "LINE 99"}, // 应该失败 - 不存在
+		{OldString: "line 3", NewString: "LINE 3"},   // 应该成功
+		{OldString: "line 2", NewString: "LINE 2"},   // 应该成功 - 仍然存在
 	}
 
 	var failedEdits []FailedEdit
@@ -136,19 +136,19 @@ func TestMultiEditSequentialApplication(t *testing.T) {
 		successCount++
 	}
 
-	// Verify results.
-	require.Equal(t, 3, successCount, "Expected 3 successful edits")
-	require.Len(t, failedEdits, 1, "Expected 1 failed edit")
+	// 验证结果。
+	require.Equal(t, 3, successCount, "期望3次成功的编辑")
+	require.Len(t, failedEdits, 1, "期望1次失败的编辑")
 
-	// Check failed edit details.
+	// 检查失败编辑的详细信息。
 	require.Equal(t, 2, failedEdits[0].Index)
 	require.Contains(t, failedEdits[0].Error, "not found")
 
-	// Verify content changes.
+	// 验证内容变更。
 	require.Contains(t, currentContent, "LINE 1")
 	require.Contains(t, currentContent, "LINE 2")
 	require.Contains(t, currentContent, "LINE 3")
-	require.Contains(t, currentContent, "line 4") // Original unchanged
+	require.Contains(t, currentContent, "line 4") // 原始内容未改变
 	require.NotContains(t, currentContent, "LINE 99")
 }
 
@@ -169,7 +169,7 @@ func TestMultiEditAllEditsSucceed(t *testing.T) {
 	for _, edit := range edits {
 		newContent, err := applyEditToContent(currentContent, edit)
 		if err != nil {
-			t.Fatalf("Unexpected error: %v", err)
+			t.Fatalf("意外错误: %v", err)
 		}
 		currentContent = newContent
 		successCount++
@@ -208,5 +208,5 @@ func TestMultiEditAllEditsFail(t *testing.T) {
 	}
 
 	require.Len(t, failedEdits, 2)
-	require.Equal(t, content, currentContent, "Content should be unchanged")
+	require.Equal(t, content, currentContent, "内容应该保持不变")
 }

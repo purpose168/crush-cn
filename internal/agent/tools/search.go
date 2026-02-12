@@ -15,14 +15,16 @@ import (
 	"golang.org/x/net/html"
 )
 
-// SearchResult represents a single search result from DuckDuckGo.
+// SearchResult 表示来自DuckDuckGo的单个搜索结果
+
 type SearchResult struct {
-	Title    string
-	Link     string
-	Snippet  string
-	Position int
+	Title    string // 搜索结果标题
+	Link     string // 搜索结果链接
+	Snippet  string // 搜索结果摘要
+	Position int    // 搜索结果位置
 }
 
+// userAgents 是一个用户代理字符串列表，用于随机化HTTP请求头
 var userAgents = []string{
 	"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
 	"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
@@ -37,6 +39,7 @@ var userAgents = []string{
 	"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0",
 }
 
+// acceptLanguages 是一个接受语言字符串列表，用于随机化HTTP请求头
 var acceptLanguages = []string{
 	"en-US,en;q=0.9",
 	"en-US,en;q=0.9,es;q=0.8",
@@ -45,6 +48,12 @@ var acceptLanguages = []string{
 	"en-CA,en;q=0.9,en-US;q=0.8",
 }
 
+// searchDuckDuckGo 使用DuckDuckGo进行网络搜索
+// ctx: 上下文对象
+// client: HTTP客户端
+// query: 搜索查询
+// maxResults: 最大结果数
+// 返回搜索结果列表
 func searchDuckDuckGo(ctx context.Context, client *http.Client, query string, maxResults int) ([]SearchResult, error) {
 	if maxResults <= 0 {
 		maxResults = 10
@@ -54,29 +63,31 @@ func searchDuckDuckGo(ctx context.Context, client *http.Client, query string, ma
 
 	req, err := http.NewRequestWithContext(ctx, "GET", searchURL, nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
+		return nil, fmt.Errorf("创建请求失败: %w", err)
 	}
 
 	setRandomizedHeaders(req)
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to execute search: %w", err)
+		return nil, fmt.Errorf("执行搜索失败: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusAccepted {
-		return nil, fmt.Errorf("search failed with status code: %d", resp.StatusCode)
+		return nil, fmt.Errorf("搜索失败，状态码: %d", resp.StatusCode)
 	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read response: %w", err)
+		return nil, fmt.Errorf("读取响应失败: %w", err)
 	}
 
 	return parseLiteSearchResults(string(body), maxResults)
 }
 
+// setRandomizedHeaders 为HTTP请求设置随机化的请求头
+// req: HTTP请求对象
 func setRandomizedHeaders(req *http.Request) {
 	req.Header.Set("User-Agent", userAgents[rand.IntN(len(userAgents))])
 	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
@@ -94,10 +105,14 @@ func setRandomizedHeaders(req *http.Request) {
 	}
 }
 
+// parseLiteSearchResults 解析DuckDuckGo Lite搜索结果
+// htmlContent: HTML内容
+// maxResults: 最大结果数
+// 返回搜索结果列表
 func parseLiteSearchResults(htmlContent string, maxResults int) ([]SearchResult, error) {
 	doc, err := html.Parse(strings.NewReader(htmlContent))
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse HTML: %w", err)
+		return nil, fmt.Errorf("解析HTML失败: %w", err)
 	}
 
 	var results []SearchResult
@@ -144,6 +159,10 @@ func parseLiteSearchResults(htmlContent string, maxResults int) ([]SearchResult,
 	return results, nil
 }
 
+// hasClass 检查HTML节点是否包含指定的class
+// n: HTML节点
+// class: 要检查的class名称
+// 返回节点是否包含指定的class
 func hasClass(n *html.Node, class string) bool {
 	for _, attr := range n.Attr {
 		if attr.Key == "class" {
@@ -155,6 +174,9 @@ func hasClass(n *html.Node, class string) bool {
 	return false
 }
 
+// getTextContent 获取HTML节点的文本内容
+// n: HTML节点
+// 返回节点的文本内容
 func getTextContent(n *html.Node) string {
 	var text strings.Builder
 	var traverse func(*html.Node)
@@ -170,6 +192,9 @@ func getTextContent(n *html.Node) string {
 	return strings.TrimSpace(text.String())
 }
 
+// cleanDuckDuckGoURL 清理DuckDuckGo URL，去除重定向参数
+// rawURL: 原始URL
+// 返回清理后的URL
 func cleanDuckDuckGoURL(rawURL string) string {
 	if strings.HasPrefix(rawURL, "//duckduckgo.com/l/?uddg=") {
 		if idx := strings.Index(rawURL, "uddg="); idx != -1 {
@@ -185,27 +210,30 @@ func cleanDuckDuckGoURL(rawURL string) string {
 	return rawURL
 }
 
+// formatSearchResults 格式化搜索结果为人类可读的字符串
+// results: 搜索结果列表
+// 返回格式化的搜索结果字符串
 func formatSearchResults(results []SearchResult) string {
 	if len(results) == 0 {
-		return "No results found. Try rephrasing your search."
+		return "未找到结果。请尝试重新表述您的搜索。"
 	}
 
 	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("Found %d search results:\n\n", len(results)))
+	sb.WriteString(fmt.Sprintf("找到 %d 个搜索结果:\n\n", len(results)))
 	for _, result := range results {
 		sb.WriteString(fmt.Sprintf("%d. %s\n", result.Position, result.Title))
 		sb.WriteString(fmt.Sprintf("   URL: %s\n", result.Link))
-		sb.WriteString(fmt.Sprintf("   Summary: %s\n\n", result.Snippet))
+		sb.WriteString(fmt.Sprintf("   摘要: %s\n\n", result.Snippet))
 	}
 	return sb.String()
 }
 
 var (
-	lastSearchMu   sync.Mutex
-	lastSearchTime time.Time
+	lastSearchMu   sync.Mutex    // 保护lastSearchTime的互斥锁
+	lastSearchTime time.Time     // 上次搜索的时间
 )
 
-// maybeDelaySearch adds a random delay if the last search was recent.
+// maybeDelaySearch 如果上次搜索是最近的，则添加随机延迟
 func maybeDelaySearch() {
 	lastSearchMu.Lock()
 	defer lastSearchMu.Unlock()

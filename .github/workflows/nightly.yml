@@ -36,7 +36,7 @@ jobs:
     needs: check  # 依赖于 check 任务
     if: needs.check.outputs.should_run == 'true'  # 仅当 should_run 为 true 时运行
     # 复用 charmbracelet/meta 仓库的夜间构建工作流配置
-    uses: charmbracelet/meta/.github/workflows/nightly.yml@main
+    uses: purpose168/meta-cn/.github/workflows/nightly.yml@main
     secrets:
       # 传递 Goreleaser 密钥
       goreleaser_key: ${{ secrets.GORELEASER_KEY }}

@@ -43,37 +43,52 @@ import (
 	"github.com/qjebbs/go-jsons"
 )
 
+// Coordinator 协调器接口
+// INFO: (kujtim) 这个接口尚未完全使用，当我们有多个代理时会使用
+// SetMainAgent(string)
+
 type Coordinator interface {
-	// INFO: (kujtim) this is not used yet we will use this when we have multiple agents
-	// SetMainAgent(string)
+	// Run 运行代理，执行指定的提示
 	Run(ctx context.Context, sessionID, prompt string, attachments ...message.Attachment) (*fantasy.AgentResult, error)
+	// Cancel 取消指定会话的运行
 	Cancel(sessionID string)
+	// CancelAll 取消所有运行
 	CancelAll()
+	// IsSessionBusy 检查指定会话是否忙碌
 	IsSessionBusy(sessionID string) bool
+	// IsBusy 检查协调器是否忙碌
 	IsBusy() bool
+	// QueuedPrompts 获取指定会话的队列提示数量
 	QueuedPrompts(sessionID string) int
+	// QueuedPromptsList 获取指定会话的队列提示列表
 	QueuedPromptsList(sessionID string) []string
+	// ClearQueue 清除指定会话的队列
 	ClearQueue(sessionID string)
+	// Summarize 总结指定会话
 	Summarize(context.Context, string) error
+	// Model 获取当前模型
 	Model() Model
+	// UpdateModels 更新模型
 	UpdateModels(ctx context.Context) error
 }
 
+// coordinator 协调器实现
 type coordinator struct {
-	cfg         *config.Config
-	sessions    session.Service
-	messages    message.Service
-	permissions permission.Service
-	history     history.Service
-	filetracker filetracker.Service
-	lspManager  *lsp.Manager
+	cfg         *config.Config // 配置
+	sessions    session.Service // 会话服务
+	messages    message.Service // 消息服务
+	permissions permission.Service // 权限服务
+	history     history.Service // 历史服务
+	filetracker filetracker.Service // 文件追踪服务
+	lspManager  *lsp.Manager // LSP 管理器
 
-	currentAgent SessionAgent
-	agents       map[string]SessionAgent
+	currentAgent SessionAgent // 当前代理
+	agents       map[string]SessionAgent // 代理映射
 
-	readyWg errgroup.Group
+	readyWg errgroup.Group // 就绪等待组
 }
 
+// NewCoordinator 创建新的协调器
 func NewCoordinator(
 	ctx context.Context,
 	cfg *config.Config,
@@ -97,10 +112,10 @@ func NewCoordinator(
 
 	agentCfg, ok := cfg.Agents[config.AgentCoder]
 	if !ok {
-		return nil, errors.New("coder agent not configured")
+		return nil, errors.New("编码代理未配置")
 	}
 
-	// TODO: make this dynamic when we support multiple agents
+	// TODO: 当我们支持多个代理时，使其动态化
 	prompt, err := coderPrompt(prompt.WithWorkingDir(c.cfg.WorkingDir()))
 	if err != nil {
 		return nil, err
@@ -115,15 +130,15 @@ func NewCoordinator(
 	return c, nil
 }
 
-// Run implements Coordinator.
+// Run 实现 Coordinator 接口的 Run 方法
 func (c *coordinator) Run(ctx context.Context, sessionID string, prompt string, attachments ...message.Attachment) (*fantasy.AgentResult, error) {
 	if err := c.readyWg.Wait(); err != nil {
 		return nil, err
 	}
 
-	// refresh models before each run
+	// 每次运行前刷新模型
 	if err := c.UpdateModels(ctx); err != nil {
-		return nil, fmt.Errorf("failed to update models: %w", err)
+		return nil, fmt.Errorf("更新模型失败: %w", err)
 	}
 
 	model := c.currentAgent.Model()
@@ -133,7 +148,7 @@ func (c *coordinator) Run(ctx context.Context, sessionID string, prompt string, 
 	}
 
 	if !model.CatwalkCfg.SupportsImages && attachments != nil {
-		// filter out image attachments
+		// 过滤掉图像附件
 		filteredAttachments := make([]message.Attachment, 0, len(attachments))
 		for _, att := range attachments {
 			if att.IsText() {
@@ -145,7 +160,7 @@ func (c *coordinator) Run(ctx context.Context, sessionID string, prompt string, 
 
 	providerCfg, ok := c.cfg.Providers.Get(model.ModelCfg.Provider)
 	if !ok {
-		return nil, errors.New("model provider not configured")
+		return nil, errors.New("模型提供商未配置")
 	}
 
 	mergedOptions, temp, topP, topK, freqPenalty, presPenalty := mergeCallOptions(model, providerCfg)
@@ -195,6 +210,7 @@ func (c *coordinator) Run(ctx context.Context, sessionID string, prompt string, 
 	return result, originalErr
 }
 
+// getProviderOptions 获取提供商选项
 func getProviderOptions(model Model, providerCfg config.ProviderConfig) fantasy.ProviderOptions {
 	options := fantasy.ProviderOptions{}
 
@@ -231,7 +247,7 @@ func getProviderOptions(model Model, providerCfg config.ProviderConfig) fantasy.
 
 	got, err := jsons.Merge(readers)
 	if err != nil {
-		slog.Error("Could not merge call config", "err", err)
+		slog.Error("无法合并调用配置", "err", err)
 		return options
 	}
 
@@ -239,7 +255,7 @@ func getProviderOptions(model Model, providerCfg config.ProviderConfig) fantasy.
 
 	err = json.Unmarshal([]byte(got), &mergedOptions)
 	if err != nil {
-		slog.Error("Could not create config for call", "err", err)
+		slog.Error("无法创建调用配置", "err", err)
 		return options
 	}
 
@@ -340,6 +356,7 @@ func getProviderOptions(model Model, providerCfg config.ProviderConfig) fantasy.
 	return options
 }
 
+// mergeCallOptions 合并调用选项
 func mergeCallOptions(model Model, cfg config.ProviderConfig) (fantasy.ProviderOptions, *float64, *float64, *int64, *float64, *float64) {
 	modelOptions := getProviderOptions(model, cfg)
 	temp := cmp.Or(model.ModelCfg.Temperature, model.CatwalkCfg.Options.Temperature)
@@ -350,6 +367,7 @@ func mergeCallOptions(model Model, cfg config.ProviderConfig) (fantasy.ProviderO
 	return modelOptions, temp, topP, topK, freqPenalty, presPenalty
 }
 
+// buildAgent 构建代理
 func (c *coordinator) buildAgent(ctx context.Context, prompt *prompt.Prompt, agent config.Agent, isSubAgent bool) (SessionAgent, error) {
 	large, small, err := c.buildAgentModels(ctx, isSubAgent)
 	if err != nil {
@@ -391,6 +409,7 @@ func (c *coordinator) buildAgent(ctx context.Context, prompt *prompt.Prompt, age
 	return result, nil
 }
 
+// buildTools 构建工具列表
 func (c *coordinator) buildTools(ctx context.Context, agent config.Agent) ([]fantasy.AgentTool, error) {
 	var allTools []fantasy.AgentTool
 	if slices.Contains(agent.AllowedTools, AgentToolName) {
@@ -409,7 +428,7 @@ func (c *coordinator) buildTools(ctx context.Context, agent config.Agent) ([]fan
 		allTools = append(allTools, agenticFetchTool)
 	}
 
-	// Get the model name for the agent
+	// 获取代理的模型名称
 	modelName := ""
 	if modelCfg, ok := c.cfg.Models[agent.Model]; ok {
 		if model := c.cfg.GetModel(modelCfg.Provider, modelCfg.Model); model != nil {
@@ -434,7 +453,7 @@ func (c *coordinator) buildTools(ctx context.Context, agent config.Agent) ([]fan
 		tools.NewWriteTool(c.lspManager, c.permissions, c.history, c.filetracker, c.cfg.WorkingDir()),
 	)
 
-	// Add LSP tools if user has configured LSPs or auto_lsp is enabled (nil or true).
+	// 如果用户配置了 LSP 或启用了 auto_lsp，则添加 LSP 工具
 	if len(c.cfg.LSP) > 0 || c.cfg.Options.AutoLSP == nil || *c.cfg.Options.AutoLSP {
 		allTools = append(allTools, tools.NewDiagnosticsTool(c.lspManager), tools.NewReferencesTool(c.lspManager), tools.NewLSPRestartTool(c.lspManager))
 	}
@@ -456,12 +475,12 @@ func (c *coordinator) buildTools(ctx context.Context, agent config.Agent) ([]fan
 
 	for _, tool := range tools.GetMCPTools(c.permissions, c.cfg, c.cfg.WorkingDir()) {
 		if agent.AllowedMCP == nil {
-			// No MCP restrictions
+			// 无 MCP 限制
 			filteredTools = append(filteredTools, tool)
 			continue
 		}
 		if len(agent.AllowedMCP) == 0 {
-			// No MCPs allowed
+			// 不允许任何 MCP
 			slog.Debug("No MCPs allowed", "tool", tool.Name(), "agent", agent.Name)
 			break
 		}
@@ -482,20 +501,21 @@ func (c *coordinator) buildTools(ctx context.Context, agent config.Agent) ([]fan
 	return filteredTools, nil
 }
 
-// TODO: when we support multiple agents we need to change this so that we pass in the agent specific model config
+// buildAgentModels 构建代理模型
+// TODO: 当我们支持多个代理时，需要修改此函数，以便传入代理特定的模型配置
 func (c *coordinator) buildAgentModels(ctx context.Context, isSubAgent bool) (Model, Model, error) {
 	largeModelCfg, ok := c.cfg.Models[config.SelectedModelTypeLarge]
 	if !ok {
-		return Model{}, Model{}, errors.New("large model not selected")
+		return Model{}, Model{}, errors.New("大型模型未选择")
 	}
 	smallModelCfg, ok := c.cfg.Models[config.SelectedModelTypeSmall]
 	if !ok {
-		return Model{}, Model{}, errors.New("small model not selected")
+		return Model{}, Model{}, errors.New("小型模型未选择")
 	}
 
 	largeProviderCfg, ok := c.cfg.Providers.Get(largeModelCfg.Provider)
 	if !ok {
-		return Model{}, Model{}, errors.New("large model provider not configured")
+		return Model{}, Model{}, errors.New("大型模型提供商未配置")
 	}
 
 	largeProvider, err := c.buildProvider(largeProviderCfg, largeModelCfg, isSubAgent)
@@ -505,7 +525,7 @@ func (c *coordinator) buildAgentModels(ctx context.Context, isSubAgent bool) (Mo
 
 	smallProviderCfg, ok := c.cfg.Providers.Get(smallModelCfg.Provider)
 	if !ok {
-		return Model{}, Model{}, errors.New("large model provider not configured")
+		return Model{}, Model{}, errors.New("小型模型提供商未配置")
 	}
 
 	smallProvider, err := c.buildProvider(smallProviderCfg, largeModelCfg, true)
@@ -528,11 +548,11 @@ func (c *coordinator) buildAgentModels(ctx context.Context, isSubAgent bool) (Mo
 	}
 
 	if largeCatwalkModel == nil {
-		return Model{}, Model{}, errors.New("large model not found in provider config")
+		return Model{}, Model{}, errors.New("在提供商配置中未找到大型模型")
 	}
 
 	if smallCatwalkModel == nil {
-		return Model{}, Model{}, errors.New("small model not found in provider config")
+		return Model{}, Model{}, errors.New("在提供商配置中未找到小型模型")
 	}
 
 	largeModelID := largeModelCfg.Model
@@ -560,9 +580,9 @@ func (c *coordinator) buildAgentModels(ctx context.Context, isSubAgent bool) (Mo
 			CatwalkCfg: *largeCatwalkModel,
 			ModelCfg:   largeModelCfg,
 		}, Model{
-			Model:      smallModel,
-			CatwalkCfg: *smallCatwalkModel,
-			ModelCfg:   smallModelCfg,
+		Model:      smallModel,
+		CatwalkCfg: *smallCatwalkModel,
+		ModelCfg:   smallModelCfg,
 		}, nil
 }
 

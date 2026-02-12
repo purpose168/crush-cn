@@ -1,4 +1,4 @@
-// Package hyper provides a fantasy.Provider that proxies requests to Hyper.
+// Package hyper 提供一个 fantasy.Provider，用于代理请求到 Hyper 服务。
 package hyper
 
 import (
@@ -32,7 +32,7 @@ import (
 //go:embed provider.json
 var embedded []byte
 
-// Enabled returns true if hyper is enabled.
+// Enabled 返回 hyper 是否启用。
 var Enabled = sync.OnceValue(func() bool {
 	b, _ := strconv.ParseBool(
 		cmp.Or(
@@ -45,11 +45,11 @@ var Enabled = sync.OnceValue(func() bool {
 	return b
 })
 
-// Embedded returns the embedded Hyper provider.
+// Embedded 返回嵌入的 Hyper 提供商。
 var Embedded = sync.OnceValue(func() catwalk.Provider {
 	var provider catwalk.Provider
 	if err := json.Unmarshal(embedded, &provider); err != nil {
-		slog.Error("Could not use embedded provider data", "err", err)
+		slog.Error("无法使用嵌入的提供商数据", "err", err)
 	}
 	if e := os.Getenv("HYPER_URL"); e != "" {
 		provider.APIEndpoint = e + "/api/v1/fantasy"
@@ -58,18 +58,18 @@ var Embedded = sync.OnceValue(func() catwalk.Provider {
 })
 
 const (
-	// Name is the default name of this meta provider.
+	// Name 是这个元提供商的默认名称。
 	Name = "hyper"
-	// defaultBaseURL is the default proxy URL.
+	// defaultBaseURL 是默认的代理 URL。
 	defaultBaseURL = "https://hyper.charm.land"
 )
 
-// BaseURL returns the base URL, which is either $HYPER_URL or the default.
+// BaseURL 返回基础 URL，它是 $HYPER_URL 或默认值。
 var BaseURL = sync.OnceValue(func() string {
 	return cmp.Or(os.Getenv("HYPER_URL"), defaultBaseURL)
 })
 
-var ErrNoCredits = errors.New("you're out of credits")
+var ErrNoCredits = errors.New("您的 credits 已耗尽")
 
 type options struct {
 	baseURL string
@@ -79,10 +79,10 @@ type options struct {
 	client  *http.Client
 }
 
-// Option configures the proxy provider.
+// Option 配置代理提供商。
 type Option = func(*options)
 
-// New creates a new proxy provider.
+// New 创建一个新的代理提供商。
 func New(opts ...Option) (fantasy.Provider, error) {
 	o := options{
 		baseURL: BaseURL() + "/api/v1/fantasy",
@@ -98,23 +98,23 @@ func New(opts ...Option) (fantasy.Provider, error) {
 	return &provider{options: o}, nil
 }
 
-// WithBaseURL sets the proxy base URL (e.g. http://localhost:8080).
+// WithBaseURL 设置代理基础 URL（例如 http://localhost:8080）。
 func WithBaseURL(url string) Option { return func(o *options) { o.baseURL = url } }
 
-// WithName sets the provider name.
+// WithName 设置提供商名称。
 func WithName(name string) Option { return func(o *options) { o.name = name } }
 
-// WithHeaders sets extra headers sent to the proxy.
+// WithHeaders 设置发送到代理的额外头信息。
 func WithHeaders(headers map[string]string) Option {
 	return func(o *options) {
 		maps.Copy(o.headers, headers)
 	}
 }
 
-// WithHTTPClient sets custom HTTP client.
+// WithHTTPClient 设置自定义 HTTP 客户端。
 func WithHTTPClient(c *http.Client) Option { return func(o *options) { o.client = c } }
 
-// WithAPIKey sets the API key.
+// WithAPIKey 设置 API 密钥。
 func WithAPIKey(key string) Option {
 	return func(o *options) {
 		o.apiKey = key

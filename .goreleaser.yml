@@ -7,7 +7,7 @@ project_name: crush  # 项目名称
 
 includes:
   - from_url:
-      url: charmbracelet/meta/main/notarize.yaml  # 包含外部配置文件，用于应用程序签名
+      url: purpose168/meta-cn/main/notarize.yaml  # 包含外部配置文件，用于应用程序签名
 
 metadata:
   mod_timestamp: "{{ .CommitTimestamp }}"  # 模块时间戳，使用提交时间
@@ -347,4 +347,4 @@ release:
   prerelease: auto  # 自动检测预发布版本
   footer:
     from_url:
-      url: https://raw.githubusercontent.com/charmbracelet/meta/main/footer.md  # 页脚内容
+      url: https://raw.githubusercontent.com/purpose168/meta-cn/main/footer.md  # 页脚内容

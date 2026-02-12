@@ -1,48 +1,48 @@
 package tools
 
-// AgenticFetchToolName is the name of the agentic fetch tool.
+// AgenticFetchToolName 是智能抓取工具的名称
 const AgenticFetchToolName = "agentic_fetch"
 
-// WebFetchToolName is the name of the web_fetch tool.
+// WebFetchToolName 是网络抓取工具的名称
 const WebFetchToolName = "web_fetch"
 
-// WebSearchToolName is the name of the web_search tool for sub-agents.
+// WebSearchToolName 是子代理的网络搜索工具名称
 const WebSearchToolName = "web_search"
 
-// LargeContentThreshold is the size threshold for saving content to a file.
+// LargeContentThreshold 是将内容保存到文件的大小阈值
 const LargeContentThreshold = 50000 // 50KB
 
-// AgenticFetchParams defines the parameters for the agentic fetch tool.
+// AgenticFetchParams 定义智能抓取工具的参数
 type AgenticFetchParams struct {
-	URL    string `json:"url,omitempty" description:"The URL to fetch content from (optional - if not provided, the agent will search the web)"`
-	Prompt string `json:"prompt" description:"The prompt describing what information to find or extract"`
+	URL    string `json:"url,omitempty" description:"要抓取内容的URL（可选 - 如果未提供，代理将搜索网络）"`
+	Prompt string `json:"prompt" description:"描述要查找或提取的信息的提示词"`
 }
 
-// AgenticFetchPermissionsParams defines the permission parameters for the agentic fetch tool.
+// AgenticFetchPermissionsParams 定义智能抓取工具的权限参数
 type AgenticFetchPermissionsParams struct {
 	URL    string `json:"url,omitempty"`
 	Prompt string `json:"prompt"`
 }
 
-// WebFetchParams defines the parameters for the web_fetch tool.
+// WebFetchParams 定义网络抓取工具的参数
 type WebFetchParams struct {
-	URL string `json:"url" description:"The URL to fetch content from"`
+	URL string `json:"url" description:"要抓取内容的URL"`
 }
 
-// WebSearchParams defines the parameters for the web_search tool.
+// WebSearchParams 定义网络搜索工具的参数
 type WebSearchParams struct {
-	Query      string `json:"query" description:"The search query to find information on the web"`
-	MaxResults int    `json:"max_results,omitempty" description:"Maximum number of results to return (default: 10, max: 20)"`
+	Query      string `json:"query" description:"在网络上查找信息的搜索查询"`
+	MaxResults int    `json:"max_results,omitempty" description:"要返回的最大结果数（默认：10，最大：20）"`
 }
 
-// FetchParams defines the parameters for the simple fetch tool.
+// FetchParams 定义简单抓取工具的参数
 type FetchParams struct {
-	URL     string `json:"url" description:"The URL to fetch content from"`
-	Format  string `json:"format" description:"The format to return the content in (text, markdown, or html)"`
-	Timeout int    `json:"timeout,omitempty" description:"Optional timeout in seconds (max 120)"`
+	URL     string `json:"url" description:"要抓取内容的URL"`
+	Format  string `json:"format" description:"返回内容的格式（text、markdown或html）"`
+	Timeout int    `json:"timeout,omitempty" description:"可选的超时时间（秒），最大120"`
 }
 
-// FetchPermissionsParams defines the permission parameters for the simple fetch tool.
+// FetchPermissionsParams 定义简单抓取工具的权限参数
 type FetchPermissionsParams struct {
 	URL     string `json:"url"`
 	Format  string `json:"format"`

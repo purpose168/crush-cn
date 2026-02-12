@@ -18,7 +18,7 @@ concurrency:
 jobs:
   goreleaser:  # Goreleaser 任务
     # 复用 charmbracelet/meta 仓库的 Goreleaser 工作流配置
-    uses: charmbracelet/meta/.github/workflows/goreleaser.yml@main
+    uses: purpose168/meta-cn/.github/workflows/goreleaser.yml@main
     with:
       # Go 版本
       go_version: "1.25"

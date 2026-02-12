@@ -15,7 +15,7 @@ import (
 //go:embed web_fetch.md
 var webFetchToolDescription []byte
 
-// NewWebFetchTool creates a simple web fetch tool for sub-agents (no permissions needed).
+// NewWebFetchTool 创建一个简单的网络获取工具，供子代理使用（不需要权限）。
 func NewWebFetchTool(workingDir string, client *http.Client) fantasy.AgentTool {
 	if client == nil {
 		transport := http.DefaultTransport.(*http.Transport).Clone()

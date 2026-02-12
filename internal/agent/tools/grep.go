@@ -22,22 +22,22 @@ import (
 	"github.com/purpose168/crush-cn/internal/fsext"
 )
 
-// regexCache provides thread-safe caching of compiled regex patterns
+// regexCache 提供编译正则表达式模式的线程安全缓存
 type regexCache struct {
 	cache map[string]*regexp.Regexp
 	mu    sync.RWMutex
 }
 
-// newRegexCache creates a new regex cache
+// newRegexCache 创建一个新的正则表达式缓存
 func newRegexCache() *regexCache {
 	return &regexCache{
 		cache: make(map[string]*regexp.Regexp),
 	}
 }
 
-// get retrieves a compiled regex from cache or compiles and caches it
+// get 从缓存中检索编译后的正则表达式，或编译并缓存它
 func (rc *regexCache) get(pattern string) (*regexp.Regexp, error) {
-	// Try to get from cache first (read lock)
+	// 首先尝试从缓存获取（读锁）
 	rc.mu.RLock()
 	if regex, exists := rc.cache[pattern]; exists {
 		rc.mu.RUnlock()
@@ -45,16 +45,16 @@ func (rc *regexCache) get(pattern string) (*regexp.Regexp, error) {
 	}
 	rc.mu.RUnlock()
 
-	// Compile the regex (write lock)
+	// 编译正则表达式（写锁）
 	rc.mu.Lock()
 	defer rc.mu.Unlock()
 
-	// Double-check in case another goroutine compiled it while we waited
+	// 再次检查，以防另一个 goroutine 在我们等待时编译了它
 	if regex, exists := rc.cache[pattern]; exists {
 		return regex, nil
 	}
 
-	// Compile and cache the regex
+	// 编译并缓存正则表达式
 	regex, err := regexp.Compile(pattern)
 	if err != nil {
 		return nil, err
@@ -64,19 +64,19 @@ func (rc *regexCache) get(pattern string) (*regexp.Regexp, error) {
 	return regex, nil
 }
 
-// Global regex cache instances
+// 全局正则表达式缓存实例
 var (
 	searchRegexCache = newRegexCache()
 	globRegexCache   = newRegexCache()
-	// Pre-compiled regex for glob conversion (used frequently)
+	// 用于 glob 转换的预编译正则表达式（频繁使用）
 	globBraceRegex = regexp.MustCompile(`\{([^}]+)\}`)
 )
 
 type GrepParams struct {
-	Pattern     string `json:"pattern" description:"The regex pattern to search for in file contents"`
-	Path        string `json:"path,omitempty" description:"The directory to search in. Defaults to the current working directory."`
-	Include     string `json:"include,omitempty" description:"File pattern to include in the search (e.g. \"*.js\", \"*.{ts,tsx}\")"`
-	LiteralText bool   `json:"literal_text,omitempty" description:"If true, the pattern will be treated as literal text with special regex characters escaped. Default is false."`
+	Pattern     string `json:"pattern" description:"在文件内容中搜索的正则表达式模式"`
+	Path        string `json:"path,omitempty" description:"要搜索的目录。默认为当前工作目录。"`
+	Include     string `json:"include,omitempty" description:"要包含在搜索中的文件模式（例如 \"*.js\"，\"*.{ts,tsx}\"）"`
+	LiteralText bool   `json:"literal_text,omitempty" description:"如果为 true，模式将被视为字面文本，特殊正则表达式字符会被转义。默认为 false。"`
 }
 
 type grepMatch struct {
@@ -100,7 +100,7 @@ const (
 //go:embed grep.md
 var grepDescription []byte
 
-// escapeRegexPattern escapes special regex characters so they're treated as literal characters
+// escapeRegexPattern 转义特殊正则表达式字符，使其被视为字面字符
 func escapeRegexPattern(pattern string) string {
 	specialChars := []string{"\\", ".", "+", "*", "?", "(", ")", "[", "]", "{", "}", "^", "$", "|"}
 	escaped := pattern
@@ -118,10 +118,10 @@ func NewGrepTool(workingDir string) fantasy.AgentTool {
 		string(grepDescription),
 		func(ctx context.Context, params GrepParams, call fantasy.ToolCall) (fantasy.ToolResponse, error) {
 			if params.Pattern == "" {
-				return fantasy.NewTextErrorResponse("pattern is required"), nil
+				return fantasy.NewTextErrorResponse("需要提供模式"), nil
 			}
 
-			// If literal_text is true, escape the pattern
+			// 如果 literal_text 为 true，转义模式
 			searchPattern := params.Pattern
 			if params.LiteralText {
 				searchPattern = escapeRegexPattern(params.Pattern)
@@ -134,14 +134,14 @@ func NewGrepTool(workingDir string) fantasy.AgentTool {
 
 			matches, truncated, err := searchFiles(ctx, searchPattern, searchPath, params.Include, 100)
 			if err != nil {
-				return fantasy.NewTextErrorResponse(fmt.Sprintf("error searching files: %v", err)), nil
+				return fantasy.NewTextErrorResponse(fmt.Sprintf("搜索文件错误: %v", err)), nil
 			}
 
 			var output strings.Builder
 			if len(matches) == 0 {
-				output.WriteString("No files found")
+				output.WriteString("未找到文件")
 			} else {
-				fmt.Fprintf(&output, "Found %d matches\n", len(matches))
+				fmt.Fprintf(&output, "找到 %d 个匹配项\n", len(matches))
 
 				currentFile := ""
 				for _, match := range matches {
@@ -158,9 +158,9 @@ func NewGrepTool(workingDir string) fantasy.AgentTool {
 							lineText = lineText[:maxGrepContentWidth] + "..."
 						}
 						if match.charNum > 0 {
-							fmt.Fprintf(&output, "  Line %d, Char %d: %s\n", match.lineNum, match.charNum, lineText)
+							fmt.Fprintf(&output, "  第 %d 行，第 %d 字符: %s\n", match.lineNum, match.charNum, lineText)
 						} else {
-							fmt.Fprintf(&output, "  Line %d: %s\n", match.lineNum, lineText)
+							fmt.Fprintf(&output, "  第 %d 行: %s\n", match.lineNum, lineText)
 						}
 					} else {
 						fmt.Fprintf(&output, "  %s\n", match.path)
@@ -168,7 +168,7 @@ func NewGrepTool(workingDir string) fantasy.AgentTool {
 				}
 
 				if truncated {
-					output.WriteString("\n(Results are truncated. Consider using a more specific path or pattern.)")
+					output.WriteString("\n(结果已截断。考虑使用更具体的路径或模式。)")
 				}
 			}
 
@@ -206,10 +206,10 @@ func searchFiles(ctx context.Context, pattern, rootPath, include string, limit i
 func searchWithRipgrep(ctx context.Context, pattern, path, include string) ([]grepMatch, error) {
 	cmd := getRgSearchCmd(ctx, pattern, path, include)
 	if cmd == nil {
-		return nil, fmt.Errorf("ripgrep not found in $PATH")
+		return nil, fmt.Errorf("在 $PATH 中未找到 ripgrep")
 	}
 
-	// Only add ignore files if they exist
+	// 仅在忽略文件存在时添加
 	for _, ignoreFile := range []string{".gitignore", ".crushignore"} {
 		ignorePath := filepath.Join(path, ignoreFile)
 		if _, err := os.Stat(ignorePath); err == nil {
@@ -240,16 +240,16 @@ func searchWithRipgrep(ctx context.Context, pattern, path, include string) ([]gr
 		for _, m := range match.Data.Submatches {
 			fi, err := os.Stat(match.Data.Path.Text)
 			if err != nil {
-				continue // Skip files we can't access
+				continue // 跳过无法访问的文件
 			}
 			matches = append(matches, grepMatch{
 				path:     match.Data.Path.Text,
 				modTime:  fi.ModTime(),
 				lineNum:  match.Data.LineNumber,
-				charNum:  m.Start + 1, // ensure 1-based
+				charNum:  m.Start + 1, // 确保从 1 开始
 				lineText: strings.TrimSpace(match.Data.Lines.Text),
 			})
-			// only get the first match of each line
+			// 只获取每行的第一个匹配项
 			break
 		}
 	}
@@ -275,10 +275,10 @@ type ripgrepMatch struct {
 func searchFilesWithRegex(pattern, rootPath, include string) ([]grepMatch, error) {
 	matches := []grepMatch{}
 
-	// Use cached regex compilation
+	// 使用缓存的正则表达式编译
 	regex, err := searchRegexCache.get(pattern)
 	if err != nil {
-		return nil, fmt.Errorf("invalid regex pattern: %w", err)
+		return nil, fmt.Errorf("无效的正则表达式模式: %w", err)
 	}
 
 	var includePattern *regexp.Regexp
@@ -286,32 +286,32 @@ func searchFilesWithRegex(pattern, rootPath, include string) ([]grepMatch, error
 		regexPattern := globToRegex(include)
 		includePattern, err = globRegexCache.get(regexPattern)
 		if err != nil {
-			return nil, fmt.Errorf("invalid include pattern: %w", err)
+			return nil, fmt.Errorf("无效的包含模式: %w", err)
 		}
 	}
 
-	// Create walker with gitignore and crushignore support
+	// 创建支持 gitignore 和 crushignore 的遍历器
 	walker := fsext.NewFastGlobWalker(rootPath)
 
 	err = filepath.Walk(rootPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			return nil // Skip errors
+			return nil // 跳过错误
 		}
 
 		if info.IsDir() {
-			// Check if directory should be skipped
+			// 检查是否应该跳过目录
 			if walker.ShouldSkip(path) {
 				return filepath.SkipDir
 			}
-			return nil // Continue into directory
+			return nil // 继续进入目录
 		}
 
-		// Use walker's shouldSkip method for files
+		// 对文件使用遍历器的 shouldSkip 方法
 		if walker.ShouldSkip(path) {
 			return nil
 		}
 
-		// Skip hidden files (starting with a dot) to match ripgrep's default behavior
+		// 跳过隐藏文件（以点开头）以匹配 ripgrep 的默认行为
 		base := filepath.Base(path)
 		if base != "." && strings.HasPrefix(base, ".") {
 			return nil
@@ -323,7 +323,7 @@ func searchFilesWithRegex(pattern, rootPath, include string) ([]grepMatch, error
 
 		match, lineNum, charNum, lineText, err := fileContainsPattern(path, regex)
 		if err != nil {
-			return nil // Skip files we can't read
+			return nil // 跳过无法读取的文件
 		}
 
 		if match {
@@ -350,7 +350,7 @@ func searchFilesWithRegex(pattern, rootPath, include string) ([]grepMatch, error
 }
 
 func fileContainsPattern(filePath string, pattern *regexp.Regexp) (bool, int, int, string, error) {
-	// Only search text files.
+	// 只搜索文本文件
 	if !isTextFile(filePath) {
 		return false, 0, 0, "", nil
 	}
@@ -375,7 +375,7 @@ func fileContainsPattern(filePath string, pattern *regexp.Regexp) (bool, int, in
 	return false, 0, 0, "", scanner.Err()
 }
 
-// isTextFile checks if a file is a text file by examining its MIME type.
+// isTextFile 通过检查文件的 MIME 类型来判断它是否为文本文件
 func isTextFile(filePath string) bool {
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -383,17 +383,17 @@ func isTextFile(filePath string) bool {
 	}
 	defer file.Close()
 
-	// Read first 512 bytes for MIME type detection.
+	// 读取前 512 字节用于 MIME 类型检测
 	buffer := make([]byte, 512)
 	n, err := file.Read(buffer)
 	if err != nil && err != io.EOF {
 		return false
 	}
 
-	// Detect content type.
+	// 检测内容类型
 	contentType := http.DetectContentType(buffer[:n])
 
-	// Check if it's a text MIME type.
+	// 检查是否为文本 MIME 类型
 	return strings.HasPrefix(contentType, "text/") ||
 		contentType == "application/json" ||
 		contentType == "application/xml" ||
@@ -406,7 +406,7 @@ func globToRegex(glob string) string {
 	regexPattern = strings.ReplaceAll(regexPattern, "*", ".*")
 	regexPattern = strings.ReplaceAll(regexPattern, "?", ".")
 
-	// Use pre-compiled regex instead of compiling each time
+	// 使用预编译的正则表达式而不是每次都编译
 	regexPattern = globBraceRegex.ReplaceAllStringFunc(regexPattern, func(match string) string {
 		inner := match[1 : len(match)-1]
 		return "(" + strings.ReplaceAll(inner, ",", "|") + ")"

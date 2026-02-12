@@ -16,78 +16,83 @@ import (
 	"golang.org/x/net/html"
 )
 
-// BrowserUserAgent is a realistic browser User-Agent for better compatibility.
+// BrowserUserAgent 是一个逼真的浏览器用户代理，用于更好的兼容性
 const BrowserUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 
 var multipleNewlinesRe = regexp.MustCompile(`\n{3,}`)
 
-// FetchURLAndConvert fetches a URL and converts HTML content to markdown.
+// FetchURLAndConvert 抓取URL并将HTML内容转换为markdown格式
+// ctx: 上下文对象
+// client: HTTP客户端
+// url: 要抓取的URL
+// 返回处理后的内容
 func FetchURLAndConvert(ctx context.Context, client *http.Client, url string) (string, error) {
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
-		return "", fmt.Errorf("failed to create request: %w", err)
+		return "", fmt.Errorf("创建请求失败: %w", err)
 	}
 
-	// Use realistic browser headers for better compatibility.
+	// 使用逼真的浏览器头信息以获得更好的兼容性
 	req.Header.Set("User-Agent", BrowserUserAgent)
 	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
 	req.Header.Set("Accept-Language", "en-US,en;q=0.5")
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("failed to fetch URL: %w", err)
+		return "", fmt.Errorf("抓取URL失败: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("request failed with status code: %d", resp.StatusCode)
+		return "", fmt.Errorf("请求失败，状态码: %d", resp.StatusCode)
 	}
 
 	maxSize := int64(5 * 1024 * 1024) // 5MB
 	body, err := io.ReadAll(io.LimitReader(resp.Body, maxSize))
 	if err != nil {
-		return "", fmt.Errorf("failed to read response body: %w", err)
+		return "", fmt.Errorf("读取响应体失败: %w", err)
 	}
 
 	content := string(body)
 
 	if !utf8.ValidString(content) {
-		return "", errors.New("response content is not valid UTF-8")
+		return "", errors.New("响应内容不是有效的UTF-8")
 	}
 
 	contentType := resp.Header.Get("Content-Type")
 
-	// Convert HTML to markdown for better AI processing.
+	// 将HTML转换为markdown以获得更好的AI处理效果
 	if strings.Contains(contentType, "text/html") {
-		// Remove noisy elements before conversion.
+		// 在转换前移除噪声元素
 		cleanedHTML := removeNoisyElements(content)
 		markdown, err := ConvertHTMLToMarkdown(cleanedHTML)
 		if err != nil {
-			return "", fmt.Errorf("failed to convert HTML to markdown: %w", err)
+			return "", fmt.Errorf("将HTML转换为markdown失败: %w", err)
 		}
 		content = cleanupMarkdown(markdown)
 	} else if strings.Contains(contentType, "application/json") || strings.Contains(contentType, "text/json") {
-		// Format JSON for better readability.
+		// 格式化JSON以提高可读性
 		formatted, err := FormatJSON(content)
 		if err == nil {
 			content = formatted
 		}
-		// If formatting fails, keep original content.
+		// 如果格式化失败，保留原始内容
 	}
 
 	return content, nil
 }
 
-// removeNoisyElements removes script, style, nav, header, footer, and other
-// noisy elements from HTML to improve content extraction.
+// removeNoisyElements 从HTML中移除script、style、nav、header、footer等噪声元素，以改善内容提取
+// htmlContent: HTML内容
+// 返回清理后的HTML内容
 func removeNoisyElements(htmlContent string) string {
 	doc, err := html.Parse(strings.NewReader(htmlContent))
 	if err != nil {
-		// If parsing fails, return original content.
+		// 如果解析失败，返回原始内容
 		return htmlContent
 	}
 
-	// Elements to remove entirely.
+	// 要完全移除的元素
 	noisyTags := map[string]bool{
 		"script":   true,
 		"style":    true,
@@ -127,25 +132,29 @@ func removeNoisyElements(htmlContent string) string {
 	return buf.String()
 }
 
-// cleanupMarkdown removes excessive whitespace and blank lines from markdown.
+// cleanupMarkdown 从markdown中移除过多的空白字符和空行
+// content: markdown内容
+// 返回清理后的markdown内容
 func cleanupMarkdown(content string) string {
-	// Collapse multiple blank lines into at most two.
+	// 将多个空行折叠为最多两个
 	content = multipleNewlinesRe.ReplaceAllString(content, "\n\n")
 
-	// Remove trailing whitespace from each line.
+	// 移除每行末尾的空白字符
 	lines := strings.Split(content, "\n")
 	for i, line := range lines {
 		lines[i] = strings.TrimRight(line, " \t")
 	}
 	content = strings.Join(lines, "\n")
 
-	// Trim leading/trailing whitespace.
+	// 修剪开头和结尾的空白字符
 	content = strings.TrimSpace(content)
 
 	return content
 }
 
-// ConvertHTMLToMarkdown converts HTML content to markdown format.
+// ConvertHTMLToMarkdown 将HTML内容转换为markdown格式
+// htmlContent: HTML内容
+// 返回转换后的markdown内容
 func ConvertHTMLToMarkdown(htmlContent string) (string, error) {
 	converter := md.NewConverter("", true, nil)
 
@@ -157,7 +166,9 @@ func ConvertHTMLToMarkdown(htmlContent string) (string, error) {
 	return markdown, nil
 }
 
-// FormatJSON formats JSON content with proper indentation.
+// FormatJSON 用适当的缩进格式化JSON内容
+// content: JSON内容
+// 返回格式化后的JSON内容
 func FormatJSON(content string) (string, error) {
 	var data any
 	if err := json.Unmarshal([]byte(content), &data); err != nil {

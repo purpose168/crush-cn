@@ -22,10 +22,10 @@ import (
 )
 
 type EditParams struct {
-	FilePath   string `json:"file_path" description:"The absolute path to the file to modify"`
-	OldString  string `json:"old_string" description:"The text to replace"`
-	NewString  string `json:"new_string" description:"The text to replace it with"`
-	ReplaceAll bool   `json:"replace_all,omitempty" description:"Replace all occurrences of old_string (default false)"`
+	FilePath   string `json:"file_path" description:"要修改的文件的绝对路径"`
+	OldString  string `json:"old_string" description:"要替换的文本"`
+	NewString  string `json:"new_string" description:"替换后的文本"`
+	ReplaceAll bool   `json:"replace_all,omitempty" description:"替换所有出现的 old_string（默认 false）"`
 }
 
 type EditPermissionsParams struct {
@@ -44,8 +44,8 @@ type EditResponseMetadata struct {
 const EditToolName = "edit"
 
 var (
-	oldStringNotFoundErr        = fantasy.NewTextErrorResponse("old_string not found in file. Make sure it matches exactly, including whitespace and line breaks.")
-	oldStringMultipleMatchesErr = fantasy.NewTextErrorResponse("old_string appears multiple times in the file. Please provide more context to ensure a unique match, or set replace_all to true")
+	oldStringNotFoundErr        = fantasy.NewTextErrorResponse("在文件中未找到 old_string。确保它完全匹配，包括空白字符和换行符。")
+	oldStringMultipleMatchesErr = fantasy.NewTextErrorResponse("old_string 在文件中出现多次。请提供更多上下文以确保唯一匹配，或设置 replace_all 为 true")
 )
 
 //go:embed edit.md
@@ -71,7 +71,7 @@ func NewEditTool(
 		string(editDescription),
 		func(ctx context.Context, params EditParams, call fantasy.ToolCall) (fantasy.ToolResponse, error) {
 			if params.FilePath == "" {
-				return fantasy.NewTextErrorResponse("file_path is required"), nil
+				return fantasy.NewTextErrorResponse("需要提供 file_path"), nil
 			}
 
 			params.FilePath = filepathext.SmartJoin(workingDir, params.FilePath)
@@ -93,8 +93,8 @@ func NewEditTool(
 				return response, err
 			}
 			if response.IsError {
-				// Return early if there was an error during content replacement
-				// This prevents unnecessary LSP diagnostics processing
+				// 如果内容替换过程中出错，提前返回
+				// 这可以防止不必要的 LSP 诊断处理
 				return response, nil
 			}
 
@@ -111,21 +111,21 @@ func createNewFile(edit editContext, filePath, content string, call fantasy.Tool
 	fileInfo, err := os.Stat(filePath)
 	if err == nil {
 		if fileInfo.IsDir() {
-			return fantasy.NewTextErrorResponse(fmt.Sprintf("path is a directory, not a file: %s", filePath)), nil
+			return fantasy.NewTextErrorResponse(fmt.Sprintf("路径是目录，不是文件: %s", filePath)), nil
 		}
-		return fantasy.NewTextErrorResponse(fmt.Sprintf("file already exists: %s", filePath)), nil
+		return fantasy.NewTextErrorResponse(fmt.Sprintf("文件已存在: %s", filePath)), nil
 	} else if !os.IsNotExist(err) {
-		return fantasy.ToolResponse{}, fmt.Errorf("failed to access file: %w", err)
+		return fantasy.ToolResponse{}, fmt.Errorf("访问文件失败: %w", err)
 	}
 
 	dir := filepath.Dir(filePath)
 	if err = os.MkdirAll(dir, 0o755); err != nil {
-		return fantasy.ToolResponse{}, fmt.Errorf("failed to create parent directories: %w", err)
+		return fantasy.ToolResponse{}, fmt.Errorf("创建父目录失败: %w", err)
 	}
 
 	sessionID := GetSessionFromContext(edit.ctx)
 	if sessionID == "" {
-		return fantasy.ToolResponse{}, fmt.Errorf("session ID is required for creating a new file")
+		return fantasy.ToolResponse{}, fmt.Errorf("创建新文件需要会话 ID")
 	}
 
 	_, additions, removals := diff.GenerateDiff(
@@ -140,7 +140,7 @@ func createNewFile(edit editContext, filePath, content string, call fantasy.Tool
 			ToolCallID:  call.ID,
 			ToolName:    EditToolName,
 			Action:      "write",
-			Description: fmt.Sprintf("Create file %s", filePath),
+			Description: fmt.Sprintf("创建文件 %s", filePath),
 			Params: EditPermissionsParams{
 				FilePath:   filePath,
 				OldContent: "",
@@ -157,27 +157,27 @@ func createNewFile(edit editContext, filePath, content string, call fantasy.Tool
 
 	err = os.WriteFile(filePath, []byte(content), 0o644)
 	if err != nil {
-		return fantasy.ToolResponse{}, fmt.Errorf("failed to write file: %w", err)
+		return fantasy.ToolResponse{}, fmt.Errorf("写入文件失败: %w", err)
 	}
 
-	// File can't be in the history so we create a new file history
+	// 文件不可能在历史记录中，所以我们创建一个新的文件历史
 	_, err = edit.files.Create(edit.ctx, sessionID, filePath, "")
 	if err != nil {
-		// Log error but don't fail the operation
-		return fantasy.ToolResponse{}, fmt.Errorf("error creating file history: %w", err)
+		// 记录错误但不中断操作
+		return fantasy.ToolResponse{}, fmt.Errorf("创建文件历史错误: %w", err)
 	}
 
-	// Add the new content to the file history
+	// 将新内容添加到文件历史
 	_, err = edit.files.CreateVersion(edit.ctx, sessionID, filePath, content)
 	if err != nil {
-		// Log error but don't fail the operation
-		slog.Error("Error creating file history version", "error", err)
+		// 记录错误但不中断操作
+		slog.Error("创建文件历史版本错误", "error", err)
 	}
 
 	edit.filetracker.RecordRead(edit.ctx, sessionID, filePath)
 
 	return fantasy.WithResponseMetadata(
-		fantasy.NewTextResponse("File created: "+filePath),
+		fantasy.NewTextResponse("文件已创建: "+filePath),
 		EditResponseMetadata{
 			OldContent: "",
 			NewContent: content,
@@ -191,36 +191,36 @@ func deleteContent(edit editContext, filePath, oldString string, replaceAll bool
 	fileInfo, err := os.Stat(filePath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return fantasy.NewTextErrorResponse(fmt.Sprintf("file not found: %s", filePath)), nil
+			return fantasy.NewTextErrorResponse(fmt.Sprintf("文件未找到: %s", filePath)), nil
 		}
-		return fantasy.ToolResponse{}, fmt.Errorf("failed to access file: %w", err)
+		return fantasy.ToolResponse{}, fmt.Errorf("访问文件失败: %w", err)
 	}
 
 	if fileInfo.IsDir() {
-		return fantasy.NewTextErrorResponse(fmt.Sprintf("path is a directory, not a file: %s", filePath)), nil
+		return fantasy.NewTextErrorResponse(fmt.Sprintf("路径是目录，不是文件: %s", filePath)), nil
 	}
 
 	sessionID := GetSessionFromContext(edit.ctx)
 	if sessionID == "" {
-		return fantasy.ToolResponse{}, fmt.Errorf("session ID is required for deleting content")
+		return fantasy.ToolResponse{}, fmt.Errorf("删除内容需要会话 ID")
 	}
 
 	lastRead := edit.filetracker.LastReadTime(edit.ctx, sessionID, filePath)
 	if lastRead.IsZero() {
-		return fantasy.NewTextErrorResponse("you must read the file before editing it. Use the View tool first"), nil
+		return fantasy.NewTextErrorResponse("编辑文件前必须先读取它。请先使用 View 工具"), nil
 	}
 
 	modTime := fileInfo.ModTime().Truncate(time.Second)
 	if modTime.After(lastRead) {
 		return fantasy.NewTextErrorResponse(
-			fmt.Sprintf("file %s has been modified since it was last read (mod time: %s, last read: %s)",
+			fmt.Sprintf("文件 %s 自上次读取后已被修改（修改时间: %s，上次读取: %s）",
 				filePath, modTime.Format(time.RFC3339), lastRead.Format(time.RFC3339),
 			)), nil
 	}
 
 	content, err := os.ReadFile(filePath)
 	if err != nil {
-		return fantasy.ToolResponse{}, fmt.Errorf("failed to read file: %w", err)
+		return fantasy.ToolResponse{}, fmt.Errorf("读取文件失败: %w", err)
 	}
 
 	oldContent, isCrlf := fsext.ToUnixLineEndings(string(content))
@@ -240,7 +240,7 @@ func deleteContent(edit editContext, filePath, oldString string, replaceAll bool
 
 		lastIndex := strings.LastIndex(oldContent, oldString)
 		if index != lastIndex {
-			return fantasy.NewTextErrorResponse("old_string appears multiple times in the file. Please provide more context to ensure a unique match, or set replace_all to true"), nil
+			return fantasy.NewTextErrorResponse("old_string 在文件中出现多次。请提供更多上下文以确保唯一匹配，或设置 replace_all 为 true"), nil
 		}
 
 		newContent = oldContent[:index] + oldContent[index+len(oldString):]
@@ -259,7 +259,7 @@ func deleteContent(edit editContext, filePath, oldString string, replaceAll bool
 			ToolCallID:  call.ID,
 			ToolName:    EditToolName,
 			Action:      "write",
-			Description: fmt.Sprintf("Delete content from file %s", filePath),
+			Description: fmt.Sprintf("从文件 %s 中删除内容", filePath),
 			Params: EditPermissionsParams{
 				FilePath:   filePath,
 				OldContent: oldContent,
@@ -280,35 +280,35 @@ func deleteContent(edit editContext, filePath, oldString string, replaceAll bool
 
 	err = os.WriteFile(filePath, []byte(newContent), 0o644)
 	if err != nil {
-		return fantasy.ToolResponse{}, fmt.Errorf("failed to write file: %w", err)
+		return fantasy.ToolResponse{}, fmt.Errorf("写入文件失败: %w", err)
 	}
 
-	// Check if file exists in history
+	// 检查文件是否存在于历史记录中
 	file, err := edit.files.GetByPathAndSession(edit.ctx, filePath, sessionID)
 	if err != nil {
 		_, err = edit.files.Create(edit.ctx, sessionID, filePath, oldContent)
 		if err != nil {
-			// Log error but don't fail the operation
-			return fantasy.ToolResponse{}, fmt.Errorf("error creating file history: %w", err)
+			// 记录错误但不中断操作
+			return fantasy.ToolResponse{}, fmt.Errorf("创建文件历史错误: %w", err)
 		}
 	}
 	if file.Content != oldContent {
-		// User manually changed the content; store an intermediate version
+		// 用户手动更改了内容；存储中间版本
 		_, err = edit.files.CreateVersion(edit.ctx, sessionID, filePath, oldContent)
 		if err != nil {
-			slog.Error("Error creating file history version", "error", err)
+			slog.Error("创建文件历史版本错误", "error", err)
 		}
 	}
-	// Store the new version
+	// 存储新版本
 	_, err = edit.files.CreateVersion(edit.ctx, sessionID, filePath, newContent)
 	if err != nil {
-		slog.Error("Error creating file history version", "error", err)
+		slog.Error("创建文件历史版本错误", "error", err)
 	}
 
 	edit.filetracker.RecordRead(edit.ctx, sessionID, filePath)
 
 	return fantasy.WithResponseMetadata(
-		fantasy.NewTextResponse("Content deleted from file: "+filePath),
+		fantasy.NewTextResponse("已从文件中删除内容: "+filePath),
 		EditResponseMetadata{
 			OldContent: oldContent,
 			NewContent: newContent,
@@ -322,36 +322,36 @@ func replaceContent(edit editContext, filePath, oldString, newString string, rep
 	fileInfo, err := os.Stat(filePath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return fantasy.NewTextErrorResponse(fmt.Sprintf("file not found: %s", filePath)), nil
+			return fantasy.NewTextErrorResponse(fmt.Sprintf("文件未找到: %s", filePath)), nil
 		}
-		return fantasy.ToolResponse{}, fmt.Errorf("failed to access file: %w", err)
+		return fantasy.ToolResponse{}, fmt.Errorf("访问文件失败: %w", err)
 	}
 
 	if fileInfo.IsDir() {
-		return fantasy.NewTextErrorResponse(fmt.Sprintf("path is a directory, not a file: %s", filePath)), nil
+		return fantasy.NewTextErrorResponse(fmt.Sprintf("路径是目录，不是文件: %s", filePath)), nil
 	}
 
 	sessionID := GetSessionFromContext(edit.ctx)
 	if sessionID == "" {
-		return fantasy.ToolResponse{}, fmt.Errorf("session ID is required for edit a file")
+		return fantasy.ToolResponse{}, fmt.Errorf("编辑文件需要会话 ID")
 	}
 
 	lastRead := edit.filetracker.LastReadTime(edit.ctx, sessionID, filePath)
 	if lastRead.IsZero() {
-		return fantasy.NewTextErrorResponse("you must read the file before editing it. Use the View tool first"), nil
+		return fantasy.NewTextErrorResponse("编辑文件前必须先读取它。请先使用 View 工具"), nil
 	}
 
 	modTime := fileInfo.ModTime().Truncate(time.Second)
 	if modTime.After(lastRead) {
 		return fantasy.NewTextErrorResponse(
-			fmt.Sprintf("file %s has been modified since it was last read (mod time: %s, last read: %s)",
+			fmt.Sprintf("文件 %s 自上次读取后已被修改（修改时间: %s，上次读取: %s）",
 				filePath, modTime.Format(time.RFC3339), lastRead.Format(time.RFC3339),
 			)), nil
 	}
 
 	content, err := os.ReadFile(filePath)
 	if err != nil {
-		return fantasy.ToolResponse{}, fmt.Errorf("failed to read file: %w", err)
+		return fantasy.ToolResponse{}, fmt.Errorf("读取文件失败: %w", err)
 	}
 
 	oldContent, isCrlf := fsext.ToUnixLineEndings(string(content))
@@ -375,7 +375,7 @@ func replaceContent(edit editContext, filePath, oldString, newString string, rep
 	}
 
 	if oldContent == newContent {
-		return fantasy.NewTextErrorResponse("new content is the same as old content. No changes made."), nil
+		return fantasy.NewTextErrorResponse("新内容与旧内容相同。未进行任何更改。"), nil
 	}
 	_, additions, removals := diff.GenerateDiff(
 		oldContent,
@@ -390,7 +390,7 @@ func replaceContent(edit editContext, filePath, oldString, newString string, rep
 			ToolCallID:  call.ID,
 			ToolName:    EditToolName,
 			Action:      "write",
-			Description: fmt.Sprintf("Replace content in file %s", filePath),
+			Description: fmt.Sprintf("替换文件 %s 中的内容", filePath),
 			Params: EditPermissionsParams{
 				FilePath:   filePath,
 				OldContent: oldContent,
@@ -411,35 +411,35 @@ func replaceContent(edit editContext, filePath, oldString, newString string, rep
 
 	err = os.WriteFile(filePath, []byte(newContent), 0o644)
 	if err != nil {
-		return fantasy.ToolResponse{}, fmt.Errorf("failed to write file: %w", err)
+		return fantasy.ToolResponse{}, fmt.Errorf("写入文件失败: %w", err)
 	}
 
-	// Check if file exists in history
+	// 检查文件是否存在于历史记录中
 	file, err := edit.files.GetByPathAndSession(edit.ctx, filePath, sessionID)
 	if err != nil {
 		_, err = edit.files.Create(edit.ctx, sessionID, filePath, oldContent)
 		if err != nil {
-			// Log error but don't fail the operation
-			return fantasy.ToolResponse{}, fmt.Errorf("error creating file history: %w", err)
+			// 记录错误但不中断操作
+			return fantasy.ToolResponse{}, fmt.Errorf("创建文件历史错误: %w", err)
 		}
 	}
 	if file.Content != oldContent {
-		// User manually changed the content; store an intermediate version
+		// 用户手动更改了内容；存储中间版本
 		_, err = edit.files.CreateVersion(edit.ctx, sessionID, filePath, oldContent)
 		if err != nil {
-			slog.Debug("Error creating file history version", "error", err)
+			slog.Debug("创建文件历史版本错误", "error", err)
 		}
 	}
-	// Store the new version
+	// 存储新版本
 	_, err = edit.files.CreateVersion(edit.ctx, sessionID, filePath, newContent)
 	if err != nil {
-		slog.Error("Error creating file history version", "error", err)
+		slog.Error("创建文件历史版本错误", "error", err)
 	}
 
 	edit.filetracker.RecordRead(edit.ctx, sessionID, filePath)
 
 	return fantasy.WithResponseMetadata(
-		fantasy.NewTextResponse("Content replaced in file: "+filePath),
+		fantasy.NewTextResponse("已替换文件中的内容: "+filePath),
 		EditResponseMetadata{
 			OldContent: oldContent,
 			NewContent: newContent,

@@ -19,26 +19,26 @@ import (
 //go:embed templates/agentic_fetch.md
 var agenticFetchToolDescription []byte
 
-// agenticFetchValidationResult holds the validated parameters from the tool call context.
+// agenticFetchValidationResult 保存从工具调用上下文中验证后的参数。
 type agenticFetchValidationResult struct {
 	SessionID      string
 	AgentMessageID string
 }
 
-// validateAgenticFetchParams validates the tool call parameters and extracts required context values.
+// validateAgenticFetchParams 验证工具调用参数并提取所需的上下文值。
 func validateAgenticFetchParams(ctx context.Context, params tools.AgenticFetchParams) (agenticFetchValidationResult, error) {
 	if params.Prompt == "" {
-		return agenticFetchValidationResult{}, errors.New("prompt is required")
+		return agenticFetchValidationResult{}, errors.New("提示词是必需的")
 	}
 
 	sessionID := tools.GetSessionFromContext(ctx)
 	if sessionID == "" {
-		return agenticFetchValidationResult{}, errors.New("session id missing from context")
+		return agenticFetchValidationResult{}, errors.New("上下文中缺少会话 ID")
 	}
 
 	agentMessageID := tools.GetMessageFromContext(ctx)
 	if agentMessageID == "" {
-		return agenticFetchValidationResult{}, errors.New("agent message id missing from context")
+		return agenticFetchValidationResult{}, errors.New("上下文中缺少代理消息 ID")
 	}
 
 	return agenticFetchValidationResult{
@@ -50,8 +50,10 @@ func validateAgenticFetchParams(ctx context.Context, params tools.AgenticFetchPa
 //go:embed templates/agentic_fetch_prompt.md.tpl
 var agenticFetchPromptTmpl []byte
 
+// agenticFetchTool 创建一个用于获取和分析网络内容的代理工具。
 func (c *coordinator) agenticFetchTool(_ context.Context, client *http.Client) (fantasy.AgentTool, error) {
 	if client == nil {
+		// 如果没有提供 HTTP 客户端，创建一个带有合理配置的客户端
 		transport := http.DefaultTransport.(*http.Transport).Clone()
 		transport.MaxIdleConns = 100
 		transport.MaxIdleConnsPerHost = 10
@@ -67,19 +69,21 @@ func (c *coordinator) agenticFetchTool(_ context.Context, client *http.Client) (
 		tools.AgenticFetchToolName,
 		string(agenticFetchToolDescription),
 		func(ctx context.Context, params tools.AgenticFetchParams, call fantasy.ToolCall) (fantasy.ToolResponse, error) {
+			// 验证工具调用参数
 			validationResult, err := validateAgenticFetchParams(ctx, params)
 			if err != nil {
 				return fantasy.NewTextErrorResponse(err.Error()), nil
 			}
 
-			// Determine description based on mode.
+			// 根据模式确定描述
 			var description string
 			if params.URL != "" {
-				description = fmt.Sprintf("Fetch and analyze content from URL: %s", params.URL)
+				description = fmt.Sprintf("获取并分析来自 URL 的内容: %s", params.URL)
 			} else {
-				description = "Search the web and analyze results"
+				description = "搜索网络并分析结果"
 			}
 
+			// 请求权限
 			p, err := c.permissions.Request(ctx,
 				permission.CreatePermissionRequest{
 					SessionID:   validationResult.SessionID,
@@ -98,69 +102,78 @@ func (c *coordinator) agenticFetchTool(_ context.Context, client *http.Client) (
 				return fantasy.ToolResponse{}, permission.ErrorPermissionDenied
 			}
 
+			// 创建临时目录用于存储获取的内容
 			tmpDir, err := os.MkdirTemp(c.cfg.Options.DataDirectory, "crush-fetch-*")
 			if err != nil {
-				return fantasy.NewTextErrorResponse(fmt.Sprintf("Failed to create temporary directory: %s", err)), nil
+				return fantasy.NewTextErrorResponse(fmt.Sprintf("创建临时目录失败: %s", err)), nil
 			}
 			defer os.RemoveAll(tmpDir)
 
 			var fullPrompt string
 
 			if params.URL != "" {
-				// URL mode: fetch the URL content first.
+				// URL 模式: 先获取 URL 内容
 				content, err := tools.FetchURLAndConvert(ctx, client, params.URL)
 				if err != nil {
-					return fantasy.NewTextErrorResponse(fmt.Sprintf("Failed to fetch URL: %s", err)), nil
+					return fantasy.NewTextErrorResponse(fmt.Sprintf("获取 URL 失败: %s", err)), nil
 				}
 
 				hasLargeContent := len(content) > tools.LargeContentThreshold
 
 				if hasLargeContent {
+					// 内容过大，保存到临时文件
 					tempFile, err := os.CreateTemp(tmpDir, "page-*.md")
 					if err != nil {
-						return fantasy.NewTextErrorResponse(fmt.Sprintf("Failed to create temporary file: %s", err)), nil
+						return fantasy.NewTextErrorResponse(fmt.Sprintf("创建临时文件失败: %s", err)), nil
 					}
 					tempFilePath := tempFile.Name()
 
 					if _, err := tempFile.WriteString(content); err != nil {
 						tempFile.Close()
-						return fantasy.NewTextErrorResponse(fmt.Sprintf("Failed to write content to file: %s", err)), nil
+						return fantasy.NewTextErrorResponse(fmt.Sprintf("写入内容到文件失败: %s", err)), nil
 					}
 					tempFile.Close()
 
-					fullPrompt = fmt.Sprintf("%s\n\nThe web page from %s has been saved to: %s\n\nUse the view and grep tools to analyze this file and extract the requested information.", params.Prompt, params.URL, tempFilePath)
+					fullPrompt = fmt.Sprintf("%s\n\n来自 %s 的网页已保存到: %s\n\n使用 view 和 grep 工具分析此文件并提取请求的信息。", params.Prompt, params.URL, tempFilePath)
 				} else {
-					fullPrompt = fmt.Sprintf("%s\n\nWeb page URL: %s\n\n<webpage_content>\n%s\n</webpage_content>", params.Prompt, params.URL, content)
+					// 内容适中，直接包含在提示词中
+					fullPrompt = fmt.Sprintf("%s\n\n网页 URL: %s\n\n<webpage_content>\n%s\n</webpage_content>", params.Prompt, params.URL, content)
 				}
 			} else {
-				// Search mode: let the sub-agent search and fetch as needed.
-				fullPrompt = fmt.Sprintf("%s\n\nUse the web_search tool to find relevant information. Break down the question into smaller, focused searches if needed. After searching, use web_fetch to get detailed content from the most relevant results.", params.Prompt)
+				// 搜索模式: 让子代理根据需要进行搜索和获取
+				fullPrompt = fmt.Sprintf("%s\n\n使用 web_search 工具查找相关信息。如果需要，将问题分解为更小、更集中的搜索。搜索后，使用 web_fetch 从最相关的结果中获取详细内容。", params.Prompt)
 			}
 
+			// 创建提示词选项
 			promptOpts := []prompt.Option{
 				prompt.WithWorkingDir(tmpDir),
 			}
 
+			// 构建提示词模板
 			promptTemplate, err := prompt.NewPrompt("agentic_fetch", string(agenticFetchPromptTmpl), promptOpts...)
 			if err != nil {
-				return fantasy.ToolResponse{}, fmt.Errorf("error creating prompt: %s", err)
+				return fantasy.ToolResponse{}, fmt.Errorf("创建提示词失败: %s", err)
 			}
 
+			// 构建代理模型
 			_, small, err := c.buildAgentModels(ctx, true)
 			if err != nil {
-				return fantasy.ToolResponse{}, fmt.Errorf("error building models: %s", err)
+				return fantasy.ToolResponse{}, fmt.Errorf("构建模型失败: %s", err)
 			}
 
+			// 构建系统提示词
 			systemPrompt, err := promptTemplate.Build(ctx, small.Model.Provider(), small.Model.Model(), *c.cfg)
 			if err != nil {
-				return fantasy.ToolResponse{}, fmt.Errorf("error building system prompt: %s", err)
+				return fantasy.ToolResponse{}, fmt.Errorf("构建系统提示词失败: %s", err)
 			}
 
+			// 获取小型模型提供商配置
 			smallProviderCfg, ok := c.cfg.Providers.Get(small.ModelCfg.Provider)
 			if !ok {
-				return fantasy.ToolResponse{}, errors.New("small model provider not configured")
+				return fantasy.ToolResponse{}, errors.New("小型模型提供商未配置")
 			}
 
+			// 创建网络工具
 			webFetchTool := tools.NewWebFetchTool(tmpDir, client)
 			webSearchTool := tools.NewWebSearchTool(client)
 			fetchTools := []fantasy.AgentTool{
@@ -172,8 +185,9 @@ func (c *coordinator) agenticFetchTool(_ context.Context, client *http.Client) (
 				tools.NewViewTool(c.lspManager, c.permissions, c.filetracker, tmpDir),
 			}
 
+			// 创建会话代理
 			agent := NewSessionAgent(SessionAgentOptions{
-				LargeModel:           small, // Use small model for both (fetch doesn't need large)
+				LargeModel:           small, // 对两者都使用小型模型（获取不需要大型模型）
 				SmallModel:           small,
 				SystemPromptPrefix:   smallProviderCfg.SystemPromptPrefix,
 				SystemPrompt:         systemPrompt,
@@ -184,20 +198,23 @@ func (c *coordinator) agenticFetchTool(_ context.Context, client *http.Client) (
 				Tools:                fetchTools,
 			})
 
+			// 创建代理工具会话
 			agentToolSessionID := c.sessions.CreateAgentToolSessionID(validationResult.AgentMessageID, call.ID)
 			session, err := c.sessions.CreateTaskSession(ctx, agentToolSessionID, validationResult.SessionID, "Fetch Analysis")
 			if err != nil {
-				return fantasy.ToolResponse{}, fmt.Errorf("error creating session: %s", err)
+				return fantasy.ToolResponse{}, fmt.Errorf("创建会话失败: %s", err)
 			}
 
+			// 自动批准会话权限
 			c.permissions.AutoApproveSession(session.ID)
 
-			// Use small model for web content analysis (faster and cheaper)
+			// 使用小型模型进行网络内容分析（更快更便宜）
 			maxTokens := small.CatwalkCfg.DefaultMaxTokens
 			if small.ModelCfg.MaxTokens != 0 {
 				maxTokens = small.ModelCfg.MaxTokens
 			}
 
+			// 运行代理
 			result, err := agent.Run(ctx, SessionAgentCall{
 				SessionID:        session.ID,
 				Prompt:           fullPrompt,
@@ -210,25 +227,28 @@ func (c *coordinator) agenticFetchTool(_ context.Context, client *http.Client) (
 				PresencePenalty:  small.ModelCfg.PresencePenalty,
 			})
 			if err != nil {
-				return fantasy.NewTextErrorResponse("error generating response"), nil
+				return fantasy.NewTextErrorResponse("生成响应失败"), nil
 			}
 
+			// 更新父会话的成本
 			updatedSession, err := c.sessions.Get(ctx, session.ID)
 			if err != nil {
-				return fantasy.ToolResponse{}, fmt.Errorf("error getting session: %s", err)
+				return fantasy.ToolResponse{}, fmt.Errorf("获取会话失败: %s", err)
 			}
 			parentSession, err := c.sessions.Get(ctx, validationResult.SessionID)
 			if err != nil {
-				return fantasy.ToolResponse{}, fmt.Errorf("error getting parent session: %s", err)
+				return fantasy.ToolResponse{}, fmt.Errorf("获取父会话失败: %s", err)
 			}
 
 			parentSession.Cost += updatedSession.Cost
 
+			// 保存更新后的父会话
 			_, err = c.sessions.Save(ctx, parentSession)
 			if err != nil {
-				return fantasy.ToolResponse{}, fmt.Errorf("error saving parent session: %s", err)
+				return fantasy.ToolResponse{}, fmt.Errorf("保存父会话失败: %s", err)
 			}
 
+			// 返回代理的响应
 			return fantasy.NewTextResponse(result.Response.Content.Text()), nil
 		}), nil
 }

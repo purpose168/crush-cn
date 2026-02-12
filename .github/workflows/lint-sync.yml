@@ -17,4 +17,4 @@ permissions:
 jobs:
   lint:  # lint 任务
     # 复用 charmbracelet/meta 仓库的 lint-sync 工作流配置
-    uses: charmbracelet/meta/.github/workflows/lint-sync.yml@main
+    uses: purpose168/meta-cn/.github/workflows/lint-sync.yml@main

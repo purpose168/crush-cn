@@ -1,10 +1,7 @@
-// Package agent is the core orchestration layer for Crush AI agents.
+// Package agent 是 Crush AI 代理的核心编排层。
 //
-// It provides session-based AI agent functionality for managing
-// conversations, tool execution, and message handling. It coordinates
-// interactions between language models, messages, sessions, and tools while
-// handling features like automatic summarization, queuing, and token
-// management.
+// 它提供基于会话的 AI 代理功能，用于管理对话、工具执行和消息处理。
+// 它协调语言模型、消息、会话和工具之间的交互，同时处理自动摘要、队列和令牌管理等功能。
 package agent
 
 import (
@@ -46,7 +43,7 @@ import (
 const (
 	defaultSessionName = "Untitled Session"
 
-	// Constants for auto-summarization thresholds
+	// 自动摘要阈值常量
 	largeContextWindowThreshold = 200_000
 	largeContextWindowBuffer    = 20_000
 	smallContextWindowRatio     = 0.2
@@ -58,7 +55,7 @@ var titlePrompt []byte
 //go:embed templates/summary.md
 var summaryPrompt []byte
 
-// Used to remove <think> tags from generated titles.
+// 用于从生成的标题中移除 <think> 标签。
 var thinkTagRegex = regexp.MustCompile(`<think>.*?</think>`)
 
 type SessionAgentCall struct {
@@ -75,18 +72,31 @@ type SessionAgentCall struct {
 }
 
 type SessionAgent interface {
+	// Run 执行会话代理调用，处理用户提示并返回代理结果
 	Run(context.Context, SessionAgentCall) (*fantasy.AgentResult, error)
+	// SetModels 设置大小模型
 	SetModels(large Model, small Model)
+	// SetTools 设置代理工具
 	SetTools(tools []fantasy.AgentTool)
+	// SetSystemPrompt 设置系统提示
 	SetSystemPrompt(systemPrompt string)
+	// Cancel 取消指定会话的请求
 	Cancel(sessionID string)
+	// CancelAll 取消所有会话的请求
 	CancelAll()
+	// IsSessionBusy 检查指定会话是否忙碌
 	IsSessionBusy(sessionID string) bool
+	// IsBusy 检查是否有任何会话忙碌
 	IsBusy() bool
+	// QueuedPrompts 获取指定会话的排队提示数量
 	QueuedPrompts(sessionID string) int
+	// QueuedPromptsList 获取指定会话的排队提示列表
 	QueuedPromptsList(sessionID string) []string
+	// ClearQueue 清除指定会话的提示队列
 	ClearQueue(sessionID string)
+	// Summarize 总结指定会话
 	Summarize(context.Context, string, fantasy.ProviderOptions) error
+	// Model 获取当前使用的模型
 	Model() Model
 }
 
@@ -153,7 +163,7 @@ func (a *sessionAgent) Run(ctx context.Context, call SessionAgentCall) (*fantasy
 		return nil, ErrSessionMissing
 	}
 
-	// Queue the message if busy
+	// 如果忙碌则排队消息
 	if a.IsSessionBusy(call.SessionID) {
 		existing, ok := a.messageQueue.Get(call.SessionID)
 		if !ok {
@@ -164,7 +174,7 @@ func (a *sessionAgent) Run(ctx context.Context, call SessionAgentCall) (*fantasy
 		return nil, nil
 	}
 
-	// Copy mutable fields under lock to avoid races with SetTools/SetModels.
+	// 在锁下复制可变字段，以避免与 SetTools/SetModels 发生竞争。
 	agentTools := a.tools.Copy()
 	largeModel := a.largeModel.Get()
 	systemPrompt := a.systemPrompt.Get()
@@ -186,7 +196,7 @@ func (a *sessionAgent) Run(ctx context.Context, call SessionAgentCall) (*fantasy
 	}
 
 	if len(agentTools) > 0 {
-		// Add Anthropic caching to the last tool.
+		// 为最后一个工具添加 Anthropic 缓存。
 		agentTools[len(agentTools)-1].SetProviderOptions(a.getCacheControlOptions())
 	}
 
@@ -199,31 +209,31 @@ func (a *sessionAgent) Run(ctx context.Context, call SessionAgentCall) (*fantasy
 	sessionLock := sync.Mutex{}
 	currentSession, err := a.sessions.Get(ctx, call.SessionID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get session: %w", err)
+		return nil, fmt.Errorf("获取会话失败: %w", err)
 	}
 
 	msgs, err := a.getSessionMessages(ctx, currentSession)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get session messages: %w", err)
+		return nil, fmt.Errorf("获取会话消息失败: %w", err)
 	}
 
 	var wg sync.WaitGroup
-	// Generate title if first message.
+	// 如果是第一条消息则生成标题。
 	if len(msgs) == 0 {
-		titleCtx := ctx // Copy to avoid race with ctx reassignment below.
+		titleCtx := ctx // 复制以避免与下面的 ctx 重新分配发生竞争。
 		wg.Go(func() {
 			a.generateTitle(titleCtx, call.SessionID, call.Prompt)
 		})
 	}
 	defer wg.Wait()
 
-	// Add the user message to the session.
+	// 将用户消息添加到会话中。
 	_, err = a.createUserMessage(ctx, call)
 	if err != nil {
 		return nil, err
 	}
 
-	// Add the session to the context.
+	// 将会话添加到上下文中。
 	ctx = context.WithValue(ctx, tools.SessionIDContextKey, call.SessionID)
 
 	genCtx, cancel := context.WithCancel(ctx)
@@ -333,9 +343,8 @@ func (a *sessionAgent) Run(ctx context.Context, call SessionAgentCall) (*fantasy
 			return a.messages.Update(genCtx, *currentAssistant)
 		},
 		OnTextDelta: func(id string, text string) error {
-			// Strip leading newline from initial text content. This is is
-			// particularly important in non-interactive mode where leading
-			// newlines are very visible.
+			// 从初始文本内容中去除前导换行符。这在非交互模式下尤为重要，
+			// 因为前导换行符非常明显。
 			if len(currentAssistant.Parts) == 0 {
 				text = strings.TrimPrefix(text, "\n")
 			}
@@ -354,7 +363,7 @@ func (a *sessionAgent) Run(ctx context.Context, call SessionAgentCall) (*fantasy
 			return a.messages.Update(genCtx, *currentAssistant)
 		},
 		OnRetry: func(err *fantasy.ProviderError, delay time.Duration) {
-			// TODO: implement
+			// TODO: 实现
 		},
 		OnToolCall: func(tc fantasy.ToolCallContent) error {
 			toolCall := message.ToolCall{
@@ -431,10 +440,10 @@ func (a *sessionAgent) Run(ctx context.Context, call SessionAgentCall) (*fantasy
 		if currentAssistant == nil {
 			return result, err
 		}
-		// Ensure we finish thinking on error to close the reasoning state.
+		// 确保在错误时完成思考以关闭推理状态。
 		currentAssistant.FinishThinking()
 		toolCalls := currentAssistant.ToolCalls()
-		// INFO: we use the parent context here because the genCtx has been cancelled.
+		// 信息：我们在这里使用父上下文，因为 genCtx 已被取消。
 		msgs, createErr := a.messages.List(ctx, currentAssistant.SessionID)
 		if createErr != nil {
 			return nil, createErr
@@ -467,11 +476,11 @@ func (a *sessionAgent) Run(ctx context.Context, call SessionAgentCall) (*fantasy
 			if found {
 				continue
 			}
-			content := "There was an error while executing the tool"
+			content := "执行工具时出错"
 			if isCancelErr {
-				content = "Tool execution canceled by user"
+				content = "用户取消了工具执行"
 			} else if isPermissionErr {
-				content = "User denied permission"
+				content = "用户拒绝了权限"
 			}
 			toolResult := message.ToolResult{
 				ToolCallID: tc.ID,
@@ -494,21 +503,21 @@ func (a *sessionAgent) Run(ctx context.Context, call SessionAgentCall) (*fantasy
 		const defaultTitle = "Provider Error"
 		linkStyle := lipgloss.NewStyle().Foreground(charmtone.Guac).Underline(true)
 		if isCancelErr {
-			currentAssistant.AddFinish(message.FinishReasonCanceled, "User canceled request", "")
+			currentAssistant.AddFinish(message.FinishReasonCanceled, "用户取消了请求", "")
 		} else if isPermissionErr {
-			currentAssistant.AddFinish(message.FinishReasonPermissionDenied, "User denied permission", "")
+			currentAssistant.AddFinish(message.FinishReasonPermissionDenied, "用户拒绝了权限", "")
 		} else if errors.Is(err, hyper.ErrNoCredits) {
 			url := hyper.BaseURL()
 			link := linkStyle.Hyperlink(url, "id=hyper").Render(url)
-			currentAssistant.AddFinish(message.FinishReasonError, "No credits", "You're out of credits. Add more at "+link)
+			currentAssistant.AddFinish(message.FinishReasonError, "无 credits", "您的 credits 已用完。请在 "+link+" 添加更多。")
 		} else if errors.As(err, &providerErr) {
 			if providerErr.Message == "The requested model is not supported." {
 				url := "https://github.com/settings/copilot/features"
 				link := linkStyle.Hyperlink(url, "id=copilot").Render(url)
 				currentAssistant.AddFinish(
 					message.FinishReasonError,
-					"Copilot model not enabled",
-					fmt.Sprintf("%q is not enabled in Copilot. Go to the following page to enable it. Then, wait 5 minutes before trying again. %s", largeModel.CatwalkCfg.Name, link),
+					"Copilot 模型未启用",
+					fmt.Sprintf("%q 在 Copilot 中未启用。请前往以下页面启用它。然后，等待 5 分钟后再试。 %s", largeModel.CatwalkCfg.Name, link),
 				)
 			} else {
 				currentAssistant.AddFinish(message.FinishReasonError, cmp.Or(stringext.Capitalize(providerErr.Title), defaultTitle), providerErr.Message)
@@ -518,8 +527,7 @@ func (a *sessionAgent) Run(ctx context.Context, call SessionAgentCall) (*fantasy
 		} else {
 			currentAssistant.AddFinish(message.FinishReasonError, defaultTitle, err.Error())
 		}
-		// Note: we use the parent context here because the genCtx has been
-		// cancelled.
+		// 注意：我们在这里使用父上下文，因为 genCtx 已被取消。
 		updateErr := a.messages.Update(ctx, *currentAssistant)
 		if updateErr != nil {
 			return nil, updateErr
@@ -563,20 +571,20 @@ func (a *sessionAgent) Summarize(ctx context.Context, sessionID string, opts fan
 		return ErrSessionBusy
 	}
 
-	// Copy mutable fields under lock to avoid races with SetModels.
+	// 在锁下复制可变字段，以避免与 SetModels 发生竞争。
 	largeModel := a.largeModel.Get()
 	systemPromptPrefix := a.systemPromptPrefix.Get()
 
 	currentSession, err := a.sessions.Get(ctx, sessionID)
 	if err != nil {
-		return fmt.Errorf("failed to get session: %w", err)
+		return fmt.Errorf("获取会话失败: %w", err)
 	}
 	msgs, err := a.getSessionMessages(ctx, currentSession)
 	if err != nil {
 		return err
 	}
 	if len(msgs) == 0 {
-		// Nothing to summarize.
+		// 没有内容需要总结。
 		return nil
 	}
 
@@ -635,7 +643,7 @@ func (a *sessionAgent) Summarize(ctx context.Context, sessionID string, opts fan
 	if err != nil {
 		isCancelErr := errors.Is(err, context.Canceled)
 		if isCancelErr {
-			// User cancelled summarize we need to remove the summary message.
+			// 用户取消了总结，我们需要删除总结消息。
 			deleteErr := a.messages.Delete(ctx, summaryMessage.ID)
 			return deleteErr
 		}
@@ -765,7 +773,7 @@ func (a *sessionAgent) getSessionMessages(ctx context.Context, session session.S
 	return msgs, nil
 }
 
-// generateTitle generates a session titled based on the initial prompt.
+// generateTitle 根据初始提示生成会话标题。
 func (a *sessionAgent) generateTitle(ctx context.Context, sessionID string, userPrompt string) {
 	if userPrompt == "" {
 		return
@@ -920,30 +928,30 @@ func (a *sessionAgent) updateSessionUsage(model Model, session *session.Session,
 }
 
 func (a *sessionAgent) Cancel(sessionID string) {
-	// Cancel regular requests. Don't use Take() here - we need the entry to
-	// remain in activeRequests so IsBusy() returns true until the goroutine
-	// fully completes (including error handling that may access the DB).
-	// The defer in processRequest will clean up the entry.
+	// 取消常规请求。不要在这里使用 Take() - 我们需要条目
+	// 保留在 activeRequests 中，以便 IsBusy() 在 goroutine 完全完成之前返回 true
+	//（包括可能访问数据库的错误处理）。
+	// processRequest 中的 defer 会清理条目。
 	if cancel, ok := a.activeRequests.Get(sessionID); ok && cancel != nil {
-		slog.Debug("Request cancellation initiated", "session_id", sessionID)
+		slog.Debug("请求取消已启动", "session_id", sessionID)
 		cancel()
 	}
 
-	// Also check for summarize requests.
+	// 同时检查总结请求。
 	if cancel, ok := a.activeRequests.Get(sessionID + "-summarize"); ok && cancel != nil {
-		slog.Debug("Summarize cancellation initiated", "session_id", sessionID)
+		slog.Debug("总结取消已启动", "session_id", sessionID)
 		cancel()
 	}
 
 	if a.QueuedPrompts(sessionID) > 0 {
-		slog.Debug("Clearing queued prompts", "session_id", sessionID)
+		slog.Debug("清除排队的提示", "session_id", sessionID)
 		a.messageQueue.Del(sessionID)
 	}
 }
 
 func (a *sessionAgent) ClearQueue(sessionID string) {
 	if a.QueuedPrompts(sessionID) > 0 {
-		slog.Debug("Clearing queued prompts", "session_id", sessionID)
+		slog.Debug("清除排队的提示", "session_id", sessionID)
 		a.messageQueue.Del(sessionID)
 	}
 }
@@ -1020,7 +1028,7 @@ func (a *sessionAgent) Model() Model {
 	return a.largeModel.Get()
 }
 
-// convertToToolResult converts a fantasy tool result to a message tool result.
+// convertToToolResult 将 fantasy 工具结果转换为消息工具结果。
 func (a *sessionAgent) convertToToolResult(result fantasy.ToolResultContent) message.ToolResult {
 	baseResult := message.ToolResult{
 		ToolCallID: result.ToolCallID,
@@ -1053,27 +1061,26 @@ func (a *sessionAgent) convertToToolResult(result fantasy.ToolResultContent) mes
 	return baseResult
 }
 
-// workaroundProviderMediaLimitations converts media content in tool results to
-// user messages for providers that don't natively support images in tool results.
+// workaroundProviderMediaLimitations 将工具结果中的媒体内容转换为用户消息，
+// 用于那些不原生支持工具结果中包含图像的提供商。
 //
-// Problem: OpenAI, Google, OpenRouter, and other OpenAI-compatible providers
-// don't support sending images/media in tool result messages - they only accept
-// text in tool results. However, they DO support images in user messages.
+// 问题：OpenAI、Google、OpenRouter 和其他与 OpenAI 兼容的提供商
+// 不支持在工具结果消息中发送图像/媒体 - 它们只接受工具结果中的文本。
+// 但是，它们确实支持在用户消息中包含图像。
 //
-// If we send media in tool results to these providers, the API returns an error.
+// 如果我们向这些提供商发送包含媒体的工具结果，API 会返回错误。
 //
-// Solution: For these providers, we:
-//  1. Replace the media in the tool result with a text placeholder
-//  2. Inject a user message immediately after with the image as a file attachment
-//  3. This maintains the tool execution flow while working around API limitations
+// 解决方案：对于这些提供商，我们：
+//  1. 用文本占位符替换工具结果中的媒体
+//  2. 在此后立即注入一条用户消息，将图像作为文件附件
+//  3. 这样可以在绕过 API 限制的同时保持工具执行流程
 //
-// Anthropic and Bedrock support images natively in tool results, so we skip
-// this workaround for them.
+// Anthropic 和 Bedrock 原生支持工具结果中的图像，因此我们为它们跳过此解决方法。
 //
-// Example transformation:
+// 转换示例：
 //
-//	BEFORE: [tool result: image data]
-//	AFTER:  [tool result: "Image loaded - see attached"], [user: image attachment]
+//	转换前：[工具结果: 图像数据]
+//	转换后：[工具结果: "图像已加载 - 请查看附件"], [用户: 图像附件]
 func (a *sessionAgent) workaroundProviderMediaLimitations(messages []fantasy.Message, largeModel Model) []fantasy.Message {
 	providerSupportsMedia := largeModel.ModelCfg.Provider == string(catwalk.InferenceProviderAnthropic) ||
 		largeModel.ModelCfg.Provider == string(catwalk.InferenceProviderBedrock)
@@ -1142,7 +1149,7 @@ func (a *sessionAgent) workaroundProviderMediaLimitations(messages []fantasy.Mes
 	return convertedMessages
 }
 
-// buildSummaryPrompt constructs the prompt text for session summarization.
+// buildSummaryPrompt 构建会话摘要的提示文本。
 func buildSummaryPrompt(todos []session.Todo) string {
 	var sb strings.Builder
 	sb.WriteString("Provide a detailed summary of our conversation above.")

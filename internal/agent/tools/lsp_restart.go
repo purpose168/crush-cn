@@ -19,18 +19,20 @@ const LSPRestartToolName = "lsp_restart"
 var lspRestartDescription []byte
 
 type LSPRestartParams struct {
-	// Name is the optional name of a specific LSP client to restart.
-	// If empty, all LSP clients will be restarted.
+	// Name 是要重启的特定LSP客户端的可选名称
+	// 如果为空，将重启所有LSP客户端
 	Name string `json:"name,omitempty"`
 }
 
+// NewLSPRestartTool 创建一个新的LSP重启工具实例
+// lspManager: LSP客户端管理器
 func NewLSPRestartTool(lspManager *lsp.Manager) fantasy.AgentTool {
 	return fantasy.NewAgentTool(
 		LSPRestartToolName,
 		string(lspRestartDescription),
 		func(ctx context.Context, params LSPRestartParams, call fantasy.ToolCall) (fantasy.ToolResponse, error) {
 			if lspManager.Clients().Len() == 0 {
-				return fantasy.NewTextErrorResponse("no LSP clients available to restart"), nil
+				return fantasy.NewTextErrorResponse("没有可用的LSP客户端可重启"), nil
 			}
 
 			clientsToRestart := make(map[string]*lsp.Client)
@@ -39,7 +41,7 @@ func NewLSPRestartTool(lspManager *lsp.Manager) fantasy.AgentTool {
 			} else {
 				client, exists := lspManager.Clients().Get(params.Name)
 				if !exists {
-					return fantasy.NewTextErrorResponse(fmt.Sprintf("LSP client '%s' not found", params.Name)), nil
+					return fantasy.NewTextErrorResponse(fmt.Sprintf("未找到LSP客户端 '%s'", params.Name)), nil
 				}
 				clientsToRestart[params.Name] = client
 			}
@@ -51,7 +53,7 @@ func NewLSPRestartTool(lspManager *lsp.Manager) fantasy.AgentTool {
 			for name, client := range clientsToRestart {
 				wg.Go(func() {
 					if err := client.Restart(); err != nil {
-						slog.Error("Failed to restart LSP client", "name", name, "error", err)
+						slog.Error("重启LSP客户端失败", "name", name, "error", err)
 						mu.Lock()
 						failed = append(failed, name)
 						mu.Unlock()
@@ -67,10 +69,10 @@ func NewLSPRestartTool(lspManager *lsp.Manager) fantasy.AgentTool {
 
 			var output string
 			if len(restarted) > 0 {
-				output = fmt.Sprintf("Successfully restarted %d LSP client(s): %s\n", len(restarted), strings.Join(restarted, ", "))
+				output = fmt.Sprintf("成功重启 %d 个LSP客户端: %s\n", len(restarted), strings.Join(restarted, ", "))
 			}
 			if len(failed) > 0 {
-				output += fmt.Sprintf("Failed to restart %d LSP client(s): %s\n", len(failed), strings.Join(failed, ", "))
+				output += fmt.Sprintf("重启 %d 个LSP客户端失败: %s\n", len(failed), strings.Join(failed, ", "))
 				return fantasy.NewTextErrorResponse(output), nil
 			}
 

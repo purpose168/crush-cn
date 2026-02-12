@@ -12,17 +12,17 @@ type (
 )
 
 const (
-	// SessionIDContextKey is the key for the session ID in the context.
+	// SessionIDContextKey 是上下文中会话 ID 的键。
 	SessionIDContextKey sessionIDContextKey = "session_id"
-	// MessageIDContextKey is the key for the message ID in the context.
+	// MessageIDContextKey 是上下文中消息 ID 的键。
 	MessageIDContextKey messageIDContextKey = "message_id"
-	// SupportsImagesContextKey is the key for the model's image support capability.
+	// SupportsImagesContextKey 是上下文中模型图像支持能力的键。
 	SupportsImagesContextKey supportsImagesKey = "supports_images"
-	// ModelNameContextKey is the key for the model name in the context.
+	// ModelNameContextKey 是上下文中模型名称的键。
 	ModelNameContextKey modelNameKey = "model_name"
 )
 
-// GetSessionFromContext retrieves the session ID from the context.
+// GetSessionFromContext 从上下文中检索会话 ID。
 func GetSessionFromContext(ctx context.Context) string {
 	sessionID := ctx.Value(SessionIDContextKey)
 	if sessionID == nil {
@@ -35,7 +35,7 @@ func GetSessionFromContext(ctx context.Context) string {
 	return s
 }
 
-// GetMessageFromContext retrieves the message ID from the context.
+// GetMessageFromContext 从上下文中检索消息 ID。
 func GetMessageFromContext(ctx context.Context) string {
 	messageID := ctx.Value(MessageIDContextKey)
 	if messageID == nil {
@@ -48,7 +48,7 @@ func GetMessageFromContext(ctx context.Context) string {
 	return s
 }
 
-// GetSupportsImagesFromContext retrieves whether the model supports images from the context.
+// GetSupportsImagesFromContext 从上下文中检索模型是否支持图像。
 func GetSupportsImagesFromContext(ctx context.Context) bool {
 	supportsImages := ctx.Value(SupportsImagesContextKey)
 	if supportsImages == nil {
@@ -60,7 +60,7 @@ func GetSupportsImagesFromContext(ctx context.Context) bool {
 	return false
 }
 
-// GetModelNameFromContext retrieves the model name from the context.
+// GetModelNameFromContext 从上下文中检索模型名称。
 func GetModelNameFromContext(ctx context.Context) string {
 	modelName := ctx.Value(ModelNameContextKey)
 	if modelName == nil {

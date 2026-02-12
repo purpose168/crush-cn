@@ -7,12 +7,14 @@ import (
 	"github.com/purpose168/crush-cn/internal/event"
 )
 
+// eventPromptSent 发送提示时的事件
 func (a *sessionAgent) eventPromptSent(sessionID string) {
 	event.PromptSent(
 		a.eventCommon(sessionID, a.largeModel.Get())...,
 	)
 }
 
+// eventPromptResponded 提示响应时的事件
 func (a *sessionAgent) eventPromptResponded(sessionID string, duration time.Duration) {
 	event.PromptResponded(
 		append(
@@ -23,6 +25,7 @@ func (a *sessionAgent) eventPromptResponded(sessionID string, duration time.Dura
 	)
 }
 
+// eventTokensUsed 使用令牌时的事件
 func (a *sessionAgent) eventTokensUsed(sessionID string, model Model, usage fantasy.Usage, cost float64) {
 	event.TokensUsed(
 		append(
@@ -37,6 +40,7 @@ func (a *sessionAgent) eventTokensUsed(sessionID string, model Model, usage fant
 	)
 }
 
+// eventCommon 通用事件参数
 func (a *sessionAgent) eventCommon(sessionID string, model Model) []any {
 	m := model.ModelCfg
 

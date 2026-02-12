@@ -2,8 +2,9 @@ package tools
 
 import "runtime"
 
+// safeCommands 是一个被认为是安全的命令列表，这些命令通常用于信息获取和系统状态查看
 var safeCommands = []string{
-	// Bash builtins and core utils
+	// Bash 内置命令和核心工具
 	"cal",
 	"date",
 	"df",
@@ -35,7 +36,7 @@ var safeCommands = []string{
 	"which",
 	"whoami",
 
-	// Git
+	// Git 命令
 	"git blame",
 	"git branch",
 	"git config --get",
@@ -54,11 +55,12 @@ var safeCommands = []string{
 	"git tag",
 }
 
+// init 函数在包初始化时执行，用于在Windows系统上添加Windows特有的安全命令
 func init() {
 	if runtime.GOOS == "windows" {
 		safeCommands = append(
 			safeCommands,
-			// Windows-specific commands
+			// Windows 特有命令
 			"ipconfig",
 			"nslookup",
 			"ping",

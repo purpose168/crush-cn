@@ -18,9 +18,9 @@ import (
 )
 
 type DownloadParams struct {
-	URL      string `json:"url" description:"The URL to download from"`
-	FilePath string `json:"file_path" description:"The local file path where the downloaded content should be saved"`
-	Timeout  int    `json:"timeout,omitempty" description:"Optional timeout in seconds (max 600)"`
+	URL      string `json:"url" description:"要下载的URL地址"`
+	FilePath string `json:"file_path" description:"下载内容应保存的本地文件路径"`
+	Timeout  int    `json:"timeout,omitempty" description:"可选的超时时间（秒），最大600秒"`
 }
 
 type DownloadPermissionsParams struct {
@@ -34,6 +34,10 @@ const DownloadToolName = "download"
 //go:embed download.md
 var downloadDescription []byte
 
+// NewDownloadTool 创建一个新的下载工具实例
+// permissions: 权限服务
+// workingDir: 工作目录
+// client: HTTP客户端（如果为nil，将创建一个默认客户端）
 func NewDownloadTool(permissions permission.Service, workingDir string, client *http.Client) fantasy.AgentTool {
 	if client == nil {
 		transport := http.DefaultTransport.(*http.Transport).Clone()
@@ -42,7 +46,7 @@ func NewDownloadTool(permissions permission.Service, workingDir string, client *
 		transport.IdleConnTimeout = 90 * time.Second
 
 		client = &http.Client{
-			Timeout:   5 * time.Minute, // Default 5 minute timeout for downloads
+			Timeout:   5 * time.Minute, // 下载默认超时时间为5分钟
 			Transport: transport,
 		}
 	}
@@ -51,15 +55,15 @@ func NewDownloadTool(permissions permission.Service, workingDir string, client *
 		string(downloadDescription),
 		func(ctx context.Context, params DownloadParams, call fantasy.ToolCall) (fantasy.ToolResponse, error) {
 			if params.URL == "" {
-				return fantasy.NewTextErrorResponse("URL parameter is required"), nil
+				return fantasy.NewTextErrorResponse("URL参数是必需的"), nil
 			}
 
 			if params.FilePath == "" {
-				return fantasy.NewTextErrorResponse("file_path parameter is required"), nil
+				return fantasy.NewTextErrorResponse("file_path参数是必需的"), nil
 			}
 
 			if !strings.HasPrefix(params.URL, "http://") && !strings.HasPrefix(params.URL, "https://") {
-				return fantasy.NewTextErrorResponse("URL must start with http:// or https://"), nil
+				return fantasy.NewTextErrorResponse("URL必须以http://或https://开头"), nil
 			}
 
 			filePath := filepathext.SmartJoin(workingDir, params.FilePath)
@@ -68,7 +72,7 @@ func NewDownloadTool(permissions permission.Service, workingDir string, client *
 
 			sessionID := GetSessionFromContext(ctx)
 			if sessionID == "" {
-				return fantasy.ToolResponse{}, fmt.Errorf("session ID is required for downloading files")
+				return fantasy.ToolResponse{}, fmt.Errorf("下载文件需要会话ID")
 			}
 
 			p, err := permissions.Request(ctx,
@@ -77,7 +81,7 @@ func NewDownloadTool(permissions permission.Service, workingDir string, client *
 					Path:        filePath,
 					ToolName:    DownloadToolName,
 					Action:      "download",
-					Description: fmt.Sprintf("Download file from URL: %s to %s", params.URL, filePath),
+					Description: fmt.Sprintf("从URL下载文件: %s 到 %s", params.URL, filePath),
 					Params:      DownloadPermissionsParams(params),
 				},
 			)
@@ -88,10 +92,10 @@ func NewDownloadTool(permissions permission.Service, workingDir string, client *
 				return fantasy.ToolResponse{}, permission.ErrorPermissionDenied
 			}
 
-			// Handle timeout with context
+			// 使用上下文处理超时
 			requestCtx := ctx
 			if params.Timeout > 0 {
-				maxTimeout := 600 // 10 minutes
+				maxTimeout := 600 // 10分钟
 				if params.Timeout > maxTimeout {
 					params.Timeout = maxTimeout
 				}
@@ -102,43 +106,42 @@ func NewDownloadTool(permissions permission.Service, workingDir string, client *
 
 			req, err := http.NewRequestWithContext(requestCtx, "GET", params.URL, nil)
 			if err != nil {
-				return fantasy.ToolResponse{}, fmt.Errorf("failed to create request: %w", err)
+				return fantasy.ToolResponse{}, fmt.Errorf("创建请求失败: %w", err)
 			}
 
 			req.Header.Set("User-Agent", "crush/1.0")
 
 			resp, err := client.Do(req)
 			if err != nil {
-				return fantasy.ToolResponse{}, fmt.Errorf("failed to download from URL: %w", err)
+				return fantasy.ToolResponse{}, fmt.Errorf("从URL下载失败: %w", err)
 			}
 			defer resp.Body.Close()
 
 			if resp.StatusCode != http.StatusOK {
-				return fantasy.NewTextErrorResponse(fmt.Sprintf("Request failed with status code: %d", resp.StatusCode)), nil
+				return fantasy.NewTextErrorResponse(fmt.Sprintf("请求失败，状态码: %d", resp.StatusCode)), nil
 			}
 
-			// Create parent directories if they don't exist
+			// 如果父目录不存在，则创建
 			if err := os.MkdirAll(filepath.Dir(filePath), 0o755); err != nil {
-				return fantasy.ToolResponse{}, fmt.Errorf("failed to create parent directories: %w", err)
+				return fantasy.ToolResponse{}, fmt.Errorf("创建父目录失败: %w", err)
 			}
 
-			// Create the output file
+			// 创建输出文件
 			outFile, err := os.Create(filePath)
 			if err != nil {
-				return fantasy.ToolResponse{}, fmt.Errorf("failed to create output file: %w", err)
+				return fantasy.ToolResponse{}, fmt.Errorf("创建输出文件失败: %w", err)
 			}
 			defer outFile.Close()
 
-			// Copy data without an explicit size limit.
-			// The overall download is still constrained by the HTTP client's timeout
-			// and any upstream server limits.
+			// 复制数据，不设置显式大小限制
+			// 整体下载仍然受到HTTP客户端超时和上游服务器限制的约束
 			bytesWritten, err := io.Copy(outFile, resp.Body)
 			if err != nil {
-				return fantasy.ToolResponse{}, fmt.Errorf("failed to write file: %w", err)
+				return fantasy.ToolResponse{}, fmt.Errorf("写入文件失败: %w", err)
 			}
 
 			contentType := resp.Header.Get("Content-Type")
-			responseMsg := fmt.Sprintf("Successfully downloaded %d bytes to %s", bytesWritten, relPath)
+			responseMsg := fmt.Sprintf("成功下载 %d 字节到 %s", bytesWritten, relPath)
 			if contentType != "" {
 				responseMsg += fmt.Sprintf(" (Content-Type: %s)", contentType)
 			}

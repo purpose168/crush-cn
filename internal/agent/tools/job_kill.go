@@ -17,7 +17,7 @@ const (
 var jobKillDescription []byte
 
 type JobKillParams struct {
-	ShellID string `json:"shell_id" description:"The ID of the background shell to terminate"`
+	ShellID string `json:"shell_id" description:"要终止的后台shell的ID"`
 }
 
 type JobKillResponseMetadata struct {
@@ -26,20 +26,21 @@ type JobKillResponseMetadata struct {
 	Description string `json:"description"`
 }
 
+// NewJobKillTool 创建一个新的作业终止工具实例
 func NewJobKillTool() fantasy.AgentTool {
 	return fantasy.NewAgentTool(
 		JobKillToolName,
 		string(jobKillDescription),
 		func(ctx context.Context, params JobKillParams, call fantasy.ToolCall) (fantasy.ToolResponse, error) {
 			if params.ShellID == "" {
-				return fantasy.NewTextErrorResponse("missing shell_id"), nil
+				return fantasy.NewTextErrorResponse("缺少shell_id"), nil
 			}
 
 			bgManager := shell.GetBackgroundShellManager()
 
 			bgShell, ok := bgManager.Get(params.ShellID)
 			if !ok {
-				return fantasy.NewTextErrorResponse(fmt.Sprintf("background shell not found: %s", params.ShellID)), nil
+				return fantasy.NewTextErrorResponse(fmt.Sprintf("未找到后台shell: %s", params.ShellID)), nil
 			}
 
 			metadata := JobKillResponseMetadata{
@@ -53,7 +54,7 @@ func NewJobKillTool() fantasy.AgentTool {
 				return fantasy.NewTextErrorResponse(err.Error()), nil
 			}
 
-			result := fmt.Sprintf("Background shell %s terminated successfully", params.ShellID)
+			result := fmt.Sprintf("后台shell %s 已成功终止", params.ShellID)
 			return fantasy.WithResponseMetadata(fantasy.NewTextResponse(result), metadata), nil
 		})
 }

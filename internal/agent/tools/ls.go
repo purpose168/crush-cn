@@ -17,9 +17,9 @@ import (
 )
 
 type LSParams struct {
-	Path   string   `json:"path,omitempty" description:"The path to the directory to list (defaults to current working directory)"`
-	Ignore []string `json:"ignore,omitempty" description:"List of glob patterns to ignore"`
-	Depth  int      `json:"depth,omitempty" description:"The maximum depth to traverse"`
+	Path   string   `json:"path,omitempty" description:"要列出的目录路径（默认为当前工作目录）"`
+	Ignore []string `json:"ignore,omitempty" description:"要忽略的 glob 模式列表"`
+	Depth  int      `json:"depth,omitempty" description:"要遍历的最大深度"`
 }
 
 type LSPermissionsParams struct {
@@ -62,28 +62,28 @@ func NewLsTool(permissions permission.Service, workingDir string, lsConfig confi
 		func(ctx context.Context, params LSParams, call fantasy.ToolCall) (fantasy.ToolResponse, error) {
 			searchPath, err := fsext.Expand(cmp.Or(params.Path, workingDir))
 			if err != nil {
-				return fantasy.NewTextErrorResponse(fmt.Sprintf("error expanding path: %v", err)), nil
+				return fantasy.NewTextErrorResponse(fmt.Sprintf("扩展路径错误: %v", err)), nil
 			}
 
 			searchPath = filepathext.SmartJoin(workingDir, searchPath)
 
-			// Check if directory is outside working directory and request permission if needed
+			// 检查目录是否在工作目录外，如需请求权限
 			absWorkingDir, err := filepath.Abs(workingDir)
 			if err != nil {
-				return fantasy.NewTextErrorResponse(fmt.Sprintf("error resolving working directory: %v", err)), nil
+				return fantasy.NewTextErrorResponse(fmt.Sprintf("解析工作目录错误: %v", err)), nil
 			}
 
 			absSearchPath, err := filepath.Abs(searchPath)
 			if err != nil {
-				return fantasy.NewTextErrorResponse(fmt.Sprintf("error resolving search path: %v", err)), nil
+				return fantasy.NewTextErrorResponse(fmt.Sprintf("解析搜索路径错误: %v", err)), nil
 			}
 
 			relPath, err := filepath.Rel(absWorkingDir, absSearchPath)
 			if err != nil || strings.HasPrefix(relPath, "..") {
-				// Directory is outside working directory, request permission
+				// 目录在工作目录外，请求权限
 				sessionID := GetSessionFromContext(ctx)
 				if sessionID == "" {
-					return fantasy.ToolResponse{}, fmt.Errorf("session ID is required for accessing directories outside working directory")
+					return fantasy.ToolResponse{}, fmt.Errorf("访问工作目录外的目录需要会话 ID")
 				}
 
 				granted, err := permissions.Request(ctx,
@@ -93,7 +93,7 @@ func NewLsTool(permissions permission.Service, workingDir string, lsConfig confi
 						ToolCallID:  call.ID,
 						ToolName:    LSToolName,
 						Action:      "list",
-						Description: fmt.Sprintf("List directory outside working directory: %s", absSearchPath),
+						Description: fmt.Sprintf("列出工作目录外的目录: %s", absSearchPath),
 						Params:      LSPermissionsParams(params),
 					},
 				)
@@ -119,7 +119,7 @@ func NewLsTool(permissions permission.Service, workingDir string, lsConfig confi
 
 func ListDirectoryTree(searchPath string, params LSParams, lsConfig config.ToolLs) (string, LSResponseMetadata, error) {
 	if _, err := os.Stat(searchPath); os.IsNotExist(err) {
-		return "", LSResponseMetadata{}, fmt.Errorf("path does not exist: %s", searchPath)
+		return "", LSResponseMetadata{}, fmt.Errorf("路径不存在: %s", searchPath)
 	}
 
 	depth, limit := lsConfig.Limits()
@@ -131,7 +131,7 @@ func ListDirectoryTree(searchPath string, params LSParams, lsConfig config.ToolL
 		maxFiles,
 	)
 	if err != nil {
-		return "", LSResponseMetadata{}, fmt.Errorf("error listing directory: %w", err)
+		return "", LSResponseMetadata{}, fmt.Errorf("列出目录错误: %w", err)
 	}
 
 	metadata := LSResponseMetadata{
@@ -142,10 +142,10 @@ func ListDirectoryTree(searchPath string, params LSParams, lsConfig config.ToolL
 
 	var output string
 	if truncated {
-		output = fmt.Sprintf("There are more than %d files in the directory. Use a more specific path or use the Glob tool to find specific files. The first %[1]d files and directories are included below.\n", maxFiles)
+		output = fmt.Sprintf("目录中有超过 %d 个文件。使用更具体的路径或使用 Glob 工具查找特定文件。以下包含前 %[1]d 个文件和目录。\n", maxFiles)
 	}
 	if depth > 0 {
-		output = fmt.Sprintf("The directory tree is shown up to a depth of %d. Use a higher depth and a specific path to see more levels.\n", cmp.Or(params.Depth, depth))
+		output = fmt.Sprintf("目录树显示深度最多为 %d。使用更高的深度和特定路径查看更多级别。\n", cmp.Or(params.Depth, depth))
 	}
 	return output + "\n" + printTree(tree, searchPath), metadata, nil
 }

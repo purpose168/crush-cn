@@ -25,8 +25,8 @@ import (
 var writeDescription []byte
 
 type WriteParams struct {
-	FilePath string `json:"file_path" description:"The path to the file to write"`
-	Content  string `json:"content" description:"The content to write to the file"`
+	FilePath string `json:"file_path" description:"要写入的文件路径"`
+	Content  string `json:"content" description:"要写入文件的内容"`
 }
 
 type WritePermissionsParams struct {
@@ -55,16 +55,16 @@ func NewWriteTool(
 		string(writeDescription),
 		func(ctx context.Context, params WriteParams, call fantasy.ToolCall) (fantasy.ToolResponse, error) {
 			if params.FilePath == "" {
-				return fantasy.NewTextErrorResponse("file_path is required"), nil
+				return fantasy.NewTextErrorResponse("需要提供 file_path"), nil
 			}
 
 			if params.Content == "" {
-				return fantasy.NewTextErrorResponse("content is required"), nil
+				return fantasy.NewTextErrorResponse("需要提供 content"), nil
 			}
 
 			sessionID := GetSessionFromContext(ctx)
 			if sessionID == "" {
-				return fantasy.ToolResponse{}, fmt.Errorf("session_id is required")
+				return fantasy.ToolResponse{}, fmt.Errorf("需要 session_id")
 			}
 
 			filePath := filepathext.SmartJoin(workingDir, params.FilePath)
@@ -72,27 +72,27 @@ func NewWriteTool(
 			fileInfo, err := os.Stat(filePath)
 			if err == nil {
 				if fileInfo.IsDir() {
-					return fantasy.NewTextErrorResponse(fmt.Sprintf("Path is a directory, not a file: %s", filePath)), nil
+					return fantasy.NewTextErrorResponse(fmt.Sprintf("路径是目录，不是文件: %s", filePath)), nil
 				}
 
 				modTime := fileInfo.ModTime().Truncate(time.Second)
 				lastRead := filetracker.LastReadTime(ctx, sessionID, filePath)
 				if modTime.After(lastRead) {
-					return fantasy.NewTextErrorResponse(fmt.Sprintf("File %s has been modified since it was last read.\nLast modification: %s\nLast read: %s\n\nPlease read the file again before modifying it.",
+					return fantasy.NewTextErrorResponse(fmt.Sprintf("文件 %s 自上次读取后已被修改。\n上次修改: %s\n上次读取: %s\n\n请在修改前再次读取文件。",
 						filePath, modTime.Format(time.RFC3339), lastRead.Format(time.RFC3339))), nil
 				}
 
 				oldContent, readErr := os.ReadFile(filePath)
 				if readErr == nil && string(oldContent) == params.Content {
-					return fantasy.NewTextErrorResponse(fmt.Sprintf("File %s already contains the exact content. No changes made.", filePath)), nil
+					return fantasy.NewTextErrorResponse(fmt.Sprintf("文件 %s 已包含完全相同的内容。未进行任何更改。", filePath)), nil
 				}
 			} else if !os.IsNotExist(err) {
-				return fantasy.ToolResponse{}, fmt.Errorf("error checking file: %w", err)
+				return fantasy.ToolResponse{}, fmt.Errorf("检查文件错误: %w", err)
 			}
 
 			dir := filepath.Dir(filePath)
 			if err = os.MkdirAll(dir, 0o755); err != nil {
-				return fantasy.ToolResponse{}, fmt.Errorf("error creating directory: %w", err)
+				return fantasy.ToolResponse{}, fmt.Errorf("创建目录错误: %w", err)
 			}
 
 			oldContent := ""
@@ -116,7 +116,7 @@ func NewWriteTool(
 					ToolCallID:  call.ID,
 					ToolName:    WriteToolName,
 					Action:      "write",
-					Description: fmt.Sprintf("Create file %s", filePath),
+					Description: fmt.Sprintf("创建文件 %s", filePath),
 					Params: WritePermissionsParams{
 						FilePath:   filePath,
 						OldContent: oldContent,
@@ -133,36 +133,36 @@ func NewWriteTool(
 
 			err = os.WriteFile(filePath, []byte(params.Content), 0o644)
 			if err != nil {
-				return fantasy.ToolResponse{}, fmt.Errorf("error writing file: %w", err)
+				return fantasy.ToolResponse{}, fmt.Errorf("写入文件错误: %w", err)
 			}
 
-			// Check if file exists in history
+			// 检查文件是否存在于历史记录中
 			file, err := files.GetByPathAndSession(ctx, filePath, sessionID)
 			if err != nil {
 				_, err = files.Create(ctx, sessionID, filePath, oldContent)
 				if err != nil {
-					// Log error but don't fail the operation
-					return fantasy.ToolResponse{}, fmt.Errorf("error creating file history: %w", err)
+					// 记录错误但不中断操作
+					return fantasy.ToolResponse{}, fmt.Errorf("创建文件历史错误: %w", err)
 				}
 			}
 			if file.Content != oldContent {
-				// User manually changed the content; store an intermediate version
+				// 用户手动更改了内容；存储中间版本
 				_, err = files.CreateVersion(ctx, sessionID, filePath, oldContent)
 				if err != nil {
-					slog.Error("Error creating file history version", "error", err)
+					slog.Error("创建文件历史版本错误", "error", err)
 				}
 			}
-			// Store the new version
+			// 存储新版本
 			_, err = files.CreateVersion(ctx, sessionID, filePath, params.Content)
 			if err != nil {
-				slog.Error("Error creating file history version", "error", err)
+				slog.Error("创建文件历史版本错误", "error", err)
 			}
 
 			filetracker.RecordRead(ctx, sessionID, filePath)
 
 			notifyLSPs(ctx, lspManager, params.FilePath)
 
-			result := fmt.Sprintf("File successfully written: %s", filePath)
+			result := fmt.Sprintf("文件写入成功: %s", filePath)
 			result = fmt.Sprintf("<result>\n%s\n</result>", result)
 			result += getDiagnostics(filePath, lspManager)
 			return fantasy.WithResponseMetadata(fantasy.NewTextResponse(result),

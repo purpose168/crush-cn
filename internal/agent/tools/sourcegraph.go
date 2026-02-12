@@ -15,10 +15,10 @@ import (
 )
 
 type SourcegraphParams struct {
-	Query         string `json:"query" description:"The Sourcegraph search query"`
-	Count         int    `json:"count,omitempty" description:"Optional number of results to return (default: 10, max: 20)"`
-	ContextWindow int    `json:"context_window,omitempty" description:"The context around the match to return (default: 10 lines)"`
-	Timeout       int    `json:"timeout,omitempty" description:"Optional timeout in seconds (max 120)"`
+	Query         string `json:"query" description:"Sourcegraph搜索查询"`
+	Count         int    `json:"count,omitempty" description:"可选的返回结果数量（默认：10，最大：20）"`
+	ContextWindow int    `json:"context_window,omitempty" description:"返回匹配周围的上下文（默认：10行）"`
+	Timeout       int    `json:"timeout,omitempty" description:"可选的超时时间（秒），最大120"`
 }
 
 type SourcegraphResponseMetadata struct {
@@ -31,6 +31,8 @@ const SourcegraphToolName = "sourcegraph"
 //go:embed sourcegraph.md
 var sourcegraphDescription []byte
 
+// NewSourcegraphTool 创建一个新的Sourcegraph搜索工具实例
+// client: HTTP客户端（如果为nil，将创建一个默认客户端）
 func NewSourcegraphTool(client *http.Client) fantasy.AgentTool {
 	if client == nil {
 		transport := http.DefaultTransport.(*http.Transport).Clone()
@@ -48,23 +50,23 @@ func NewSourcegraphTool(client *http.Client) fantasy.AgentTool {
 		string(sourcegraphDescription),
 		func(ctx context.Context, params SourcegraphParams, call fantasy.ToolCall) (fantasy.ToolResponse, error) {
 			if params.Query == "" {
-				return fantasy.NewTextErrorResponse("Query parameter is required"), nil
+				return fantasy.NewTextErrorResponse("Query参数是必需的"), nil
 			}
 
 			if params.Count <= 0 {
 				params.Count = 10
 			} else if params.Count > 20 {
-				params.Count = 20 // Limit to 20 results
+				params.Count = 20 // 限制为20个结果
 			}
 
 			if params.ContextWindow <= 0 {
-				params.ContextWindow = 10 // Default context window
+				params.ContextWindow = 10 // 默认上下文窗口
 			}
 
-			// Handle timeout with context
+			// 使用上下文处理超时
 			requestCtx := ctx
 			if params.Timeout > 0 {
-				maxTimeout := 120 // 2 minutes
+				maxTimeout := 120 // 2分钟
 				if params.Timeout > maxTimeout {
 					params.Timeout = maxTimeout
 				}
@@ -87,7 +89,7 @@ func NewSourcegraphTool(client *http.Client) fantasy.AgentTool {
 
 			graphqlQueryBytes, err := json.Marshal(request)
 			if err != nil {
-				return fantasy.ToolResponse{}, fmt.Errorf("failed to marshal GraphQL request: %w", err)
+				return fantasy.ToolResponse{}, fmt.Errorf("序列化GraphQL请求失败: %w", err)
 			}
 			graphqlQuery := string(graphqlQueryBytes)
 
@@ -98,7 +100,7 @@ func NewSourcegraphTool(client *http.Client) fantasy.AgentTool {
 				bytes.NewBuffer([]byte(graphqlQuery)),
 			)
 			if err != nil {
-				return fantasy.ToolResponse{}, fmt.Errorf("failed to create request: %w", err)
+				return fantasy.ToolResponse{}, fmt.Errorf("创建请求失败: %w", err)
 			}
 
 			req.Header.Set("Content-Type", "application/json")
@@ -106,42 +108,46 @@ func NewSourcegraphTool(client *http.Client) fantasy.AgentTool {
 
 			resp, err := client.Do(req)
 			if err != nil {
-				return fantasy.ToolResponse{}, fmt.Errorf("failed to fetch URL: %w", err)
+				return fantasy.ToolResponse{}, fmt.Errorf("获取URL失败: %w", err)
 			}
 			defer resp.Body.Close()
 
 			if resp.StatusCode != http.StatusOK {
 				body, _ := io.ReadAll(resp.Body)
 				if len(body) > 0 {
-					return fantasy.NewTextErrorResponse(fmt.Sprintf("Request failed with status code: %d, response: %s", resp.StatusCode, string(body))), nil
+					return fantasy.NewTextErrorResponse(fmt.Sprintf("请求失败，状态码: %d, 响应: %s", resp.StatusCode, string(body))), nil
 				}
 
-				return fantasy.NewTextErrorResponse(fmt.Sprintf("Request failed with status code: %d", resp.StatusCode)), nil
+				return fantasy.NewTextErrorResponse(fmt.Sprintf("请求失败，状态码: %d", resp.StatusCode)), nil
 			}
 			body, err := io.ReadAll(resp.Body)
 			if err != nil {
-				return fantasy.ToolResponse{}, fmt.Errorf("failed to read response body: %w", err)
+				return fantasy.ToolResponse{}, fmt.Errorf("读取响应体失败: %w", err)
 			}
 
 			var result map[string]any
 			if err = json.Unmarshal(body, &result); err != nil {
-				return fantasy.ToolResponse{}, fmt.Errorf("failed to unmarshal response: %w", err)
+				return fantasy.ToolResponse{}, fmt.Errorf("解析响应失败: %w", err)
 			}
 
 			formattedResults, err := formatSourcegraphResults(result, params.ContextWindow)
 			if err != nil {
-				return fantasy.NewTextErrorResponse("Failed to format results: " + err.Error()), nil
+				return fantasy.NewTextErrorResponse("格式化结果失败: " + err.Error()), nil
 			}
 
 			return fantasy.NewTextResponse(formattedResults), nil
 		})
 }
 
+// formatSourcegraphResults 格式化Sourcegraph搜索结果为人类可读的字符串
+// result: 搜索结果数据
+// contextWindow: 匹配周围的上下文行数
+// 返回格式化的搜索结果字符串
 func formatSourcegraphResults(result map[string]any, contextWindow int) (string, error) {
 	var buffer strings.Builder
 
 	if errors, ok := result["errors"].([]any); ok && len(errors) > 0 {
-		buffer.WriteString("## Sourcegraph API Error\n\n")
+		buffer.WriteString("## Sourcegraph API 错误\n\n")
 		for _, err := range errors {
 			if errMap, ok := err.(map[string]any); ok {
 				if message, ok := errMap["message"].(string); ok {
@@ -154,35 +160,35 @@ func formatSourcegraphResults(result map[string]any, contextWindow int) (string,
 
 	data, ok := result["data"].(map[string]any)
 	if !ok {
-		return "", fmt.Errorf("invalid response format: missing data field")
+		return "", fmt.Errorf("无效的响应格式: 缺少data字段")
 	}
 
 	search, ok := data["search"].(map[string]any)
 	if !ok {
-		return "", fmt.Errorf("invalid response format: missing search field")
+		return "", fmt.Errorf("无效的响应格式: 缺少search字段")
 	}
 
 	searchResults, ok := search["results"].(map[string]any)
 	if !ok {
-		return "", fmt.Errorf("invalid response format: missing results field")
+		return "", fmt.Errorf("无效的响应格式: 缺少results字段")
 	}
 
 	matchCount, _ := searchResults["matchCount"].(float64)
 	resultCount, _ := searchResults["resultCount"].(float64)
 	limitHit, _ := searchResults["limitHit"].(bool)
 
-	buffer.WriteString("# Sourcegraph Search Results\n\n")
-	buffer.WriteString(fmt.Sprintf("Found %d matches across %d results\n", int(matchCount), int(resultCount)))
+	buffer.WriteString("# Sourcegraph 搜索结果\n\n")
+	buffer.WriteString(fmt.Sprintf("在 %d 个结果中找到 %d 个匹配\n", int(resultCount), int(matchCount)))
 
 	if limitHit {
-		buffer.WriteString("(Result limit reached, try a more specific query)\n")
+		buffer.WriteString("(已达到结果限制，请尝试更具体的查询)\n")
 	}
 
 	buffer.WriteString("\n")
 
 	results, ok := searchResults["results"].([]any)
 	if !ok || len(results) == 0 {
-		buffer.WriteString("No results found. Try a different query.\n")
+		buffer.WriteString("未找到结果。请尝试不同的查询。\n")
 		return buffer.String(), nil
 	}
 
@@ -215,7 +221,7 @@ func formatSourcegraphResults(result map[string]any, contextWindow int) (string,
 		fileURL, _ := file["url"].(string)
 		fileContent, _ := file["content"].(string)
 
-		buffer.WriteString(fmt.Sprintf("## Result %d: %s/%s\n\n", i+1, repoName, filePath))
+		buffer.WriteString(fmt.Sprintf("## 结果 %d: %s/%s\n\n", i+1, repoName, filePath))
 
 		if fileURL != "" {
 			buffer.WriteString(fmt.Sprintf("URL: %s\n\n", fileURL))

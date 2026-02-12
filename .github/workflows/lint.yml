@@ -10,7 +10,7 @@ on:
 jobs:
   lint:  # lint 任务
     # 复用 charmbracelet/meta 仓库的 lint 工作流配置
-    uses: charmbracelet/meta/.github/workflows/lint.yml@main
+    uses: purpose168/meta-cn/.github/workflows/lint.yml@main
     with:
       # golangci-lint 配置文件路径
       golangci_path: .golangci.yml

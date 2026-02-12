@@ -19,6 +19,7 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 )
 
+// 测试模型配置对
 var modelPairs = []modelPair{
 	{"anthropic-sonnet", anthropicBuilder("claude-sonnet-4-5-20250929"), anthropicBuilder("claude-3-5-haiku-20241022")},
 	{"openai-gpt-5", openaiBuilder("gpt-5"), openaiBuilder("gpt-4o")},
@@ -26,6 +27,7 @@ var modelPairs = []modelPair{
 	{"zai-glm4.6", zAIBuilder("glm-4.6"), zAIBuilder("glm-4.5-air")},
 }
 
+// getModels 获取测试使用的大模型和小模型
 func getModels(t *testing.T, r *vcr.Recorder, pair modelPair) (fantasy.LanguageModel, fantasy.LanguageModel) {
 	large, err := pair.largeModel(t, r)
 	require.NoError(t, err)
@@ -34,6 +36,7 @@ func getModels(t *testing.T, r *vcr.Recorder, pair modelPair) (fantasy.LanguageM
 	return large, small
 }
 
+// setupAgent 设置测试环境和代理
 func setupAgent(t *testing.T, pair modelPair) (SessionAgent, fakeEnv) {
 	r := vcr.NewRecorder(t)
 	large, small := getModels(t, r, pair)
@@ -45,9 +48,10 @@ func setupAgent(t *testing.T, pair modelPair) (SessionAgent, fakeEnv) {
 	return agent, env
 }
 
+// TestCoderAgent 测试编码代理的各种功能
 func TestCoderAgent(t *testing.T) {
 	if runtime.GOOS == "windows" {
-		t.Skip("skipping on windows for now")
+		t.Skip("暂时跳过 Windows 平台测试")
 	}
 
 	for _, pair := range modelPairs {
@@ -618,6 +622,7 @@ func TestCoderAgent(t *testing.T) {
 	}
 }
 
+// makeTestTodos 创建测试用的待办事项列表
 func makeTestTodos(n int) []session.Todo {
 	todos := make([]session.Todo, n)
 	for i := range n {
@@ -629,6 +634,7 @@ func makeTestTodos(n int) []session.Todo {
 	return todos
 }
 
+// BenchmarkBuildSummaryPrompt 基准测试构建摘要提示的性能
 func BenchmarkBuildSummaryPrompt(b *testing.B) {
 	cases := []struct {
 		name     string

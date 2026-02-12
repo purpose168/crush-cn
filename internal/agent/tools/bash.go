@@ -20,10 +20,10 @@ import (
 )
 
 type BashParams struct {
-	Description     string `json:"description" description:"A brief description of what the command does, try to keep it under 30 characters or so"`
-	Command         string `json:"command" description:"The command to execute"`
-	WorkingDir      string `json:"working_dir,omitempty" description:"The working directory to execute the command in (defaults to current directory)"`
-	RunInBackground bool   `json:"run_in_background,omitempty" description:"Set to true (boolean) to run this command in the background. Use job_output to read the output later."`
+	Description     string `json:"description" description:"命令的简要描述，尽量保持在30个字符以内"`
+	Command         string `json:"command" description:"要执行的命令"`
+	WorkingDir      string `json:"working_dir,omitempty" description:"执行命令的工作目录（默认为当前目录）"`
+	RunInBackground bool   `json:"run_in_background,omitempty" description:"设置为 true（布尔值）以在后台运行此命令。稍后使用 job_output 读取输出。"`
 }
 
 type BashPermissionsParams struct {
@@ -46,7 +46,7 @@ type BashResponseMetadata struct {
 const (
 	BashToolName = "bash"
 
-	AutoBackgroundThreshold = 1 * time.Minute // Commands taking longer automatically become background jobs
+	AutoBackgroundThreshold = 1 * time.Minute // 执行时间超过此阈值的命令会自动成为后台作业
 	MaxOutputLength         = 30000
 	BashNoOutput            = "no output"
 )
@@ -67,7 +67,7 @@ type bashDescriptionData struct {
 }
 
 var bannedCommands = []string{
-	// Network/Download tools
+	// 网络/下载工具
 	"alias",
 	"aria2c",
 	"axel",
@@ -88,12 +88,12 @@ var bannedCommands = []string{
 	"wget",
 	"xh",
 
-	// System administration
+	// 系统管理
 	"doas",
 	"su",
 	"sudo",
 
-	// Package managers
+	// 包管理器
 	"apk",
 	"apt",
 	"apt-cache",
@@ -115,7 +115,7 @@ var bannedCommands = []string{
 	"yum",
 	"zypper",
 
-	// System modification
+	// 系统修改
 	"at",
 	"batch",
 	"chkconfig",
@@ -128,7 +128,7 @@ var bannedCommands = []string{
 	"systemctl",
 	"umount",
 
-	// Network configuration
+	// 网络配置
 	"firewall-cmd",
 	"ifconfig",
 	"ip",
@@ -148,8 +148,8 @@ func bashDescription(attribution *config.Attribution, modelName string) string {
 		Attribution:     *attribution,
 		ModelName:       modelName,
 	}); err != nil {
-		// this should never happen.
-		panic("failed to execute bash description template: " + err.Error())
+		// 这应该永远不会发生
+		panic("执行 bash 描述模板失败: " + err.Error())
 	}
 	return out.String()
 }
@@ -158,7 +158,7 @@ func blockFuncs() []shell.BlockFunc {
 	return []shell.BlockFunc{
 		shell.CommandsBlocker(bannedCommands),
 
-		// System package managers
+		// 系统包管理器
 		shell.ArgumentsBlocker("apk", []string{"add"}, nil),
 		shell.ArgumentsBlocker("apt", []string{"install"}, nil),
 		shell.ArgumentsBlocker("apt-get", []string{"install"}, nil),
@@ -168,7 +168,7 @@ func blockFuncs() []shell.BlockFunc {
 		shell.ArgumentsBlocker("yum", []string{"install"}, nil),
 		shell.ArgumentsBlocker("zypper", []string{"install"}, nil),
 
-		// Language-specific package managers
+		// 语言特定的包管理器
 		shell.ArgumentsBlocker("brew", []string{"install"}, nil),
 		shell.ArgumentsBlocker("cargo", []string{"install"}, nil),
 		shell.ArgumentsBlocker("gem", []string{"install"}, nil),
@@ -181,7 +181,7 @@ func blockFuncs() []shell.BlockFunc {
 		shell.ArgumentsBlocker("pnpm", []string{"add"}, []string{"-g"}),
 		shell.ArgumentsBlocker("yarn", []string{"global", "add"}, nil),
 
-		// `go test -exec` can run arbitrary commands
+		// `go test -exec` 可以运行任意命令
 		shell.ArgumentsBlocker("go", []string{"test"}, []string{"-exec"}),
 	}
 }
@@ -192,10 +192,10 @@ func NewBashTool(permissions permission.Service, workingDir string, attribution 
 		string(bashDescription(attribution, modelName)),
 		func(ctx context.Context, params BashParams, call fantasy.ToolCall) (fantasy.ToolResponse, error) {
 			if params.Command == "" {
-				return fantasy.NewTextErrorResponse("missing command"), nil
+				return fantasy.NewTextErrorResponse("缺少命令"), nil
 			}
 
-			// Determine working directory
+			// 确定工作目录
 			execWorkingDir := cmp.Or(params.WorkingDir, workingDir)
 
 			isSafeReadOnly := false
@@ -212,7 +212,7 @@ func NewBashTool(permissions permission.Service, workingDir string, attribution 
 
 			sessionID := GetSessionFromContext(ctx)
 			if sessionID == "" {
-				return fantasy.ToolResponse{}, fmt.Errorf("session ID is required for executing shell command")
+				return fantasy.ToolResponse{}, fmt.Errorf("执行 shell 命令需要会话 ID")
 			}
 			if !isSafeReadOnly {
 				p, err := permissions.Request(ctx,
@@ -222,7 +222,7 @@ func NewBashTool(permissions permission.Service, workingDir string, attribution 
 						ToolCallID:  call.ID,
 						ToolName:    BashToolName,
 						Action:      "execute",
-						Description: fmt.Sprintf("Execute command: %s", params.Command),
+						Description: fmt.Sprintf("执行命令: %s", params.Command),
 						Params:      BashPermissionsParams(params),
 					},
 				)
@@ -234,29 +234,29 @@ func NewBashTool(permissions permission.Service, workingDir string, attribution 
 				}
 			}
 
-			// If explicitly requested as background, start immediately with detached context
+			// 如果明确要求在后台运行，立即使用分离的上下文启动
 			if params.RunInBackground {
 				startTime := time.Now()
 				bgManager := shell.GetBackgroundShellManager()
 				bgManager.Cleanup()
-				// Use background context so it continues after tool returns
+				// 使用后台上下文，以便在工具返回后继续运行
 				bgShell, err := bgManager.Start(context.Background(), execWorkingDir, blockFuncs(), params.Command, params.Description)
 				if err != nil {
-					return fantasy.ToolResponse{}, fmt.Errorf("error starting background shell: %w", err)
+					return fantasy.ToolResponse{}, fmt.Errorf("启动后台 shell 错误: %w", err)
 				}
 
-				// Wait a short time to detect fast failures (blocked commands, syntax errors, etc.)
+				// 等待一小段时间以检测快速失败（被阻止的命令、语法错误等）
 				time.Sleep(1 * time.Second)
 				stdout, stderr, done, execErr := bgShell.GetOutput()
 
 				if done {
-					// Command failed or completed very quickly
+					// 命令失败或很快完成
 					bgManager.Remove(bgShell.ID)
 
 					interrupted := shell.IsInterrupt(execErr)
 					exitCode := shell.ExitCode(execErr)
 					if exitCode == 0 && !interrupted && execErr != nil {
-						return fantasy.ToolResponse{}, fmt.Errorf("[Job %s] error executing command: %w", bgShell.ID, execErr)
+						return fantasy.ToolResponse{}, fmt.Errorf("[作业 %s] 执行命令错误: %w", bgShell.ID, execErr)
 					}
 
 					stdout = formatOutput(stdout, stderr, execErr)
@@ -276,7 +276,7 @@ func NewBashTool(permissions permission.Service, workingDir string, attribution 
 					return fantasy.WithResponseMetadata(fantasy.NewTextResponse(stdout), metadata), nil
 				}
 
-				// Still running after fast-failure check - return as background job
+				// 快速失败检查后仍在运行 - 作为后台作业返回
 				metadata := BashResponseMetadata{
 					StartTime:        startTime.UnixMilli(),
 					EndTime:          time.Now().UnixMilli(),
@@ -285,22 +285,22 @@ func NewBashTool(permissions permission.Service, workingDir string, attribution 
 					Background:       true,
 					ShellID:          bgShell.ID,
 				}
-				response := fmt.Sprintf("Background shell started with ID: %s\n\nUse job_output tool to view output or job_kill to terminate.", bgShell.ID)
+				response := fmt.Sprintf("后台 shell 已启动，ID: %s\n\n使用 job_output 工具查看输出或使用 job_kill 终止。", bgShell.ID)
 				return fantasy.WithResponseMetadata(fantasy.NewTextResponse(response), metadata), nil
 			}
 
-			// Start synchronous execution with auto-background support
+			// 启动具有自动后台支持的同步执行
 			startTime := time.Now()
 
-			// Start with detached context so it can survive if moved to background
+			// 使用分离的上下文启动，以便在移至后台时能够继续运行
 			bgManager := shell.GetBackgroundShellManager()
 			bgManager.Cleanup()
 			bgShell, err := bgManager.Start(context.Background(), execWorkingDir, blockFuncs(), params.Command, params.Description)
 			if err != nil {
-				return fantasy.ToolResponse{}, fmt.Errorf("error starting shell: %w", err)
+				return fantasy.ToolResponse{}, fmt.Errorf("启动 shell 错误: %w", err)
 			}
 
-			// Wait for either completion, auto-background threshold, or context cancellation
+			// 等待完成、自动后台阈值或上下文取消
 			ticker := time.NewTicker(100 * time.Millisecond)
 			defer ticker.Stop()
 			timeout := time.After(AutoBackgroundThreshold)
@@ -321,23 +321,23 @@ func NewBashTool(permissions permission.Service, workingDir string, attribution 
 					stdout, stderr, done, execErr = bgShell.GetOutput()
 					break waitLoop
 				case <-ctx.Done():
-					// Incoming context was cancelled before we moved to background
-					// Kill the shell and return error
+					// 传入的上下文在我们移至后台之前被取消
+					// 终止 shell 并返回错误
 					bgManager.Kill(bgShell.ID)
 					return fantasy.ToolResponse{}, ctx.Err()
 				}
 			}
 
 			if done {
-				// Command completed within threshold - return synchronously
-				// Remove from background manager since we're returning directly
-				// Don't call Kill() as it cancels the context and corrupts the exit code
+				// 命令在阈值内完成 - 同步返回
+				// 从后台管理器中移除，因为我们直接返回
+				// 不要调用 Kill()，因为它会取消上下文并损坏退出代码
 				bgManager.Remove(bgShell.ID)
 
 				interrupted := shell.IsInterrupt(execErr)
 				exitCode := shell.ExitCode(execErr)
 				if exitCode == 0 && !interrupted && execErr != nil {
-					return fantasy.ToolResponse{}, fmt.Errorf("[Job %s] error executing command: %w", bgShell.ID, execErr)
+					return fantasy.ToolResponse{}, fmt.Errorf("[作业 %s] 执行命令错误: %w", bgShell.ID, execErr)
 				}
 
 				stdout = formatOutput(stdout, stderr, execErr)
@@ -357,7 +357,7 @@ func NewBashTool(permissions permission.Service, workingDir string, attribution 
 				return fantasy.WithResponseMetadata(fantasy.NewTextResponse(stdout), metadata), nil
 			}
 
-			// Still running - keep as background job
+			// 仍在运行 - 保持为后台作业
 			metadata := BashResponseMetadata{
 				StartTime:        startTime.UnixMilli(),
 				EndTime:          time.Now().UnixMilli(),
@@ -366,12 +366,12 @@ func NewBashTool(permissions permission.Service, workingDir string, attribution 
 				Background:       true,
 				ShellID:          bgShell.ID,
 			}
-			response := fmt.Sprintf("Command is taking longer than expected and has been moved to background.\n\nBackground shell ID: %s\n\nUse job_output tool to view output or job_kill to terminate.", bgShell.ID)
+			response := fmt.Sprintf("命令执行时间超出预期，已移至后台。\n\n后台 shell ID: %s\n\n使用 job_output 工具查看输出或使用 job_kill 终止。", bgShell.ID)
 			return fantasy.WithResponseMetadata(fantasy.NewTextResponse(response), metadata), nil
 		})
 }
 
-// formatOutput formats the output of a completed command with error handling
+// formatOutput 格式化已完成命令的输出，包含错误处理
 func formatOutput(stdout, stderr string, execErr error) string {
 	interrupted := shell.IsInterrupt(execErr)
 	exitCode := shell.ExitCode(execErr)
@@ -388,12 +388,12 @@ func formatOutput(stdout, stderr string, execErr error) string {
 		if errorMessage != "" {
 			errorMessage += "\n"
 		}
-		errorMessage += "Command was aborted before completion"
+		errorMessage += "命令在完成前被中止"
 	} else if exitCode != 0 {
 		if errorMessage != "" {
 			errorMessage += "\n"
 		}
-		errorMessage += fmt.Sprintf("Exit code %d", exitCode)
+		errorMessage += fmt.Sprintf("退出码 %d", exitCode)
 	}
 
 	hasBothOutputs := stdout != "" && stderr != ""
@@ -419,7 +419,7 @@ func truncateOutput(content string) string {
 	end := content[len(content)-halfLength:]
 
 	truncatedLinesCount := countLines(content[halfLength : len(content)-halfLength])
-	return fmt.Sprintf("%s\n\n... [%d lines truncated] ...\n\n%s", start, truncatedLinesCount, end)
+	return fmt.Sprintf("%s\n\n... [%d 行被截断] ...\n\n%s", start, truncatedLinesCount, end)
 }
 
 func countLines(s string) int {

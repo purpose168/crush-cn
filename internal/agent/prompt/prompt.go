@@ -17,7 +17,7 @@ import (
 	"github.com/purpose168/crush-cn/internal/skills"
 )
 
-// Prompt represents a template-based prompt generator.
+// Prompt 表示一个基于模板的提示生成器。
 type Prompt struct {
 	name       string
 	template   string
@@ -26,6 +26,7 @@ type Prompt struct {
 	workingDir string
 }
 
+// PromptDat 包含提示模板所需的数据。
 type PromptDat struct {
 	Provider      string
 	Model         string
@@ -39,6 +40,7 @@ type PromptDat struct {
 	AvailSkillXML string
 }
 
+// ContextFile 表示一个上下文文件。
 type ContextFile struct {
 	Path    string
 	Content string

@@ -16,8 +16,8 @@ import (
 )
 
 type ReadMCPResourceParams struct {
-	MCPName string `json:"mcp_name" description:"The MCP server name"`
-	URI     string `json:"uri" description:"The resource URI to read"`
+	MCPName string `json:"mcp_name" description:"MCP服务器名称"`
+	URI     string `json:"uri" description:"要读取的资源URI"`
 }
 
 type ReadMCPResourcePermissionsParams struct {
@@ -30,6 +30,9 @@ const ReadMCPResourceToolName = "read_mcp_resource"
 //go:embed read_mcp_resource.md
 var readMCPResourceDescription []byte
 
+// NewReadMCPResourceTool 创建一个新的读取MCP资源工具实例
+// cfg: 配置对象
+// permissions: 权限服务
 func NewReadMCPResourceTool(cfg *config.Config, permissions permission.Service) fantasy.AgentTool {
 	return fantasy.NewParallelAgentTool(
 		ReadMCPResourceToolName,
@@ -38,15 +41,15 @@ func NewReadMCPResourceTool(cfg *config.Config, permissions permission.Service) 
 			params.MCPName = strings.TrimSpace(params.MCPName)
 			params.URI = strings.TrimSpace(params.URI)
 			if params.MCPName == "" {
-				return fantasy.NewTextErrorResponse("mcp_name parameter is required"), nil
+				return fantasy.NewTextErrorResponse("mcp_name参数是必需的"), nil
 			}
 			if params.URI == "" {
-				return fantasy.NewTextErrorResponse("uri parameter is required"), nil
+				return fantasy.NewTextErrorResponse("uri参数是必需的"), nil
 			}
 
 			sessionID := GetSessionFromContext(ctx)
 			if sessionID == "" {
-				return fantasy.ToolResponse{}, fmt.Errorf("session ID is required for reading MCP resources")
+				return fantasy.ToolResponse{}, fmt.Errorf("读取MCP资源需要会话ID")
 			}
 
 			relPath := filepathext.SmartJoin(cfg.WorkingDir(), cmp.Or(params.URI, "mcp-resource"))
@@ -57,7 +60,7 @@ func NewReadMCPResourceTool(cfg *config.Config, permissions permission.Service) 
 					ToolCallID:  call.ID,
 					ToolName:    ReadMCPResourceToolName,
 					Action:      "read",
-					Description: fmt.Sprintf("Read MCP resource from %s", params.MCPName),
+					Description: fmt.Sprintf("从 %s 读取MCP资源", params.MCPName),
 					Params:      ReadMCPResourcePermissionsParams(params),
 				},
 			)
@@ -89,7 +92,7 @@ func NewReadMCPResourceTool(cfg *config.Config, permissions permission.Service) 
 					textParts = append(textParts, string(content.Blob))
 					continue
 				}
-				slog.Debug("MCP resource content missing text/blob", "uri", content.URI)
+				slog.Debug("MCP资源内容缺少text/blob", "uri", content.URI)
 			}
 
 			if len(textParts) == 0 {

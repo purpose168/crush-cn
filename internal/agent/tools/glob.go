@@ -21,8 +21,8 @@ const GlobToolName = "glob"
 var globDescription []byte
 
 type GlobParams struct {
-	Pattern string `json:"pattern" description:"The glob pattern to match files against"`
-	Path    string `json:"path,omitempty" description:"The directory to search in. Defaults to the current working directory."`
+	Pattern string `json:"pattern" description:"用于匹配文件的 glob 模式"`
+	Path    string `json:"path,omitempty" description:"要搜索的目录。默认为当前工作目录。"`
 }
 
 type GlobResponseMetadata struct {
@@ -36,7 +36,7 @@ func NewGlobTool(workingDir string) fantasy.AgentTool {
 		string(globDescription),
 		func(ctx context.Context, params GlobParams, call fantasy.ToolCall) (fantasy.ToolResponse, error) {
 			if params.Pattern == "" {
-				return fantasy.NewTextErrorResponse("pattern is required"), nil
+				return fantasy.NewTextErrorResponse("需要提供模式"), nil
 			}
 
 			searchPath := params.Path
@@ -46,17 +46,17 @@ func NewGlobTool(workingDir string) fantasy.AgentTool {
 
 			files, truncated, err := globFiles(ctx, params.Pattern, searchPath, 100)
 			if err != nil {
-				return fantasy.ToolResponse{}, fmt.Errorf("error finding files: %w", err)
+				return fantasy.ToolResponse{}, fmt.Errorf("查找文件错误: %w", err)
 			}
 
 			var output string
 			if len(files) == 0 {
-				output = "No files found"
+				output = "未找到文件"
 			} else {
 				normalizeFilePaths(files)
 				output = strings.Join(files, "\n")
 				if truncated {
-					output += "\n\n(Results are truncated. Consider using a more specific path or pattern.)"
+					output += "\n\n(结果已截断。考虑使用更具体的路径或模式。)"
 				}
 			}
 
@@ -78,7 +78,7 @@ func globFiles(ctx context.Context, pattern, searchPath string, limit int) ([]st
 		if err == nil {
 			return matches, len(matches) >= limit && limit > 0, nil
 		}
-		slog.Warn("Ripgrep execution failed, falling back to doublestar", "error", err)
+		slog.Warn("Ripgrep 执行失败，回退到 doublestar", "error", err)
 	}
 
 	return fsext.GlobWithDoubleStar(pattern, searchPath, limit)

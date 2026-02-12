@@ -13,7 +13,7 @@ import (
 //go:embed web_search.md
 var webSearchToolDescription []byte
 
-// NewWebSearchTool creates a web search tool for sub-agents (no permissions needed).
+// NewWebSearchTool 为子代理创建网络搜索工具（无需权限）。
 func NewWebSearchTool(client *http.Client) fantasy.AgentTool {
 	if client == nil {
 		transport := http.DefaultTransport.(*http.Transport).Clone()
@@ -32,7 +32,7 @@ func NewWebSearchTool(client *http.Client) fantasy.AgentTool {
 		string(webSearchToolDescription),
 		func(ctx context.Context, params WebSearchParams, call fantasy.ToolCall) (fantasy.ToolResponse, error) {
 			if params.Query == "" {
-				return fantasy.NewTextErrorResponse("query is required"), nil
+				return fantasy.NewTextErrorResponse("查询是必需的"), nil
 			}
 
 			maxResults := params.MaxResults
@@ -45,9 +45,9 @@ func NewWebSearchTool(client *http.Client) fantasy.AgentTool {
 
 			maybeDelaySearch()
 			results, err := searchDuckDuckGo(ctx, client, params.Query, maxResults)
-			slog.Debug("Web search completed", "query", params.Query, "results", len(results), "err", err)
+			slog.Debug("网络搜索完成", "query", params.Query, "results", len(results), "err", err)
 			if err != nil {
-				return fantasy.NewTextErrorResponse("Failed to search: " + err.Error()), nil
+				return fantasy.NewTextErrorResponse("搜索失败: " + err.Error()), nil
 			}
 
 			return fantasy.NewTextResponse(formatSearchResults(results)), nil

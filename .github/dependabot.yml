@@ -8,7 +8,7 @@ updates:  # 更新配置
       interval: "weekly"  # 更新频率：每周
       day: "monday"  # 更新日期：周一
       time: "05:00"  # 更新时间：05:00
-      timezone: "America/New_York"  # 时区：美国纽约
+      timezone: "Asia/Shanghai"  # 时区：美国纽约
     labels:  # PR 标签
       - "area: dependencies"  # 依赖相关标签
     commit-message:  # 提交信息配置
@@ -19,7 +19,7 @@ updates:  # 更新配置
         patterns:  # 模式
           - "*"  # 匹配所有依赖
     ignore:  # 忽略的依赖
-      - dependency-name: github.com/charmbracelet/bubbletea/v2  # 忽略的依赖名称
+      - dependency-name: github.com/purpose168/bubbletea-cn/v2  # 忽略的依赖名称
         versions:  # 忽略的版本
           - v2.0.0-beta1  # 忽略 beta 版本
       - dependency-name: github.com/charmbracelet/lipgloss/v2  # 忽略的依赖名称
@@ -32,7 +32,7 @@ updates:  # 更新配置
       interval: "weekly"  # 更新频率：每周
       day: "monday"  # 更新日期：周一
       time: "05:00"  # 更新时间：05:00
-      timezone: "America/New_York"  # 时区：美国纽约
+      timezone: "Asia/Shanghai"  # 时区：美国纽约
     labels:  # PR 标签
       - "area: dependencies"  # 依赖相关标签
     commit-message:  # 提交信息配置

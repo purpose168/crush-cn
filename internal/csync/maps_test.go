@@ -623,7 +623,7 @@ func TestMap_ConcurrentTake(t *testing.T) {
 
 	require.Equal(t, numItems, len(allTaken))
 	for i := range numItems {
-		require.True(t, allTaken[i*2], "Expected value %d to be taken", i*2)
+		require.True(t, allTaken[i*2], "期望值 %d 被取出", i*2)
 	}
 }
 

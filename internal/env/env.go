@@ -11,7 +11,7 @@ type Env interface {
 
 type osEnv struct{}
 
-// Get implements Env.
+// Get 实现 Env。
 func (o *osEnv) Get(key string) string {
 	return os.Getenv(key)
 }
@@ -36,7 +36,7 @@ func (m *mapEnv) Get(key string) string {
 	return ""
 }
 
-// Env implements Env.
+// Env 实现 Env。
 func (m *mapEnv) Env() []string {
 	env := make([]string, 0, len(m.m))
 	for k, v := range m.m {

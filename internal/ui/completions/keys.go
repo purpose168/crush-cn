@@ -4,17 +4,19 @@ import (
 	"charm.land/bubbles/v2/key"
 )
 
-// KeyMap 定义补全组件的按键绑定。
+// KeyMap 定义补全组件的按键绑定
+// 包含所有用于导航和选择补全项目的按键绑定
 type KeyMap struct {
-	Down,
-	Up,
-	Select,
-	Cancel key.Binding
-	DownInsert,
-	UpInsert key.Binding
+	Down,       // 向下移动
+	Up,         // 向上移动
+	Select,     // 选择当前项目
+	Cancel key.Binding // 取消补全
+	DownInsert, // 向下移动并插入
+	UpInsert key.Binding // 向上移动并插入
 }
 
-// DefaultKeyMap 返回补全的默认按键绑定。
+// DefaultKeyMap 返回补全的默认按键绑定
+// 定义了标准的导航和选择按键
 func DefaultKeyMap() KeyMap {
 	return KeyMap{
 		Down: key.NewBinding(
@@ -44,7 +46,8 @@ func DefaultKeyMap() KeyMap {
 	}
 }
 
-// KeyBindings 以切片形式返回所有按键绑定。
+// KeyBindings 以切片形式返回所有按键绑定
+// 用于显示按键帮助信息
 func (k KeyMap) KeyBindings() []key.Binding {
 	return []key.Binding{
 		k.Down,
@@ -54,7 +57,8 @@ func (k KeyMap) KeyBindings() []key.Binding {
 	}
 }
 
-// FullHelp 返回按键绑定的完整帮助。
+// FullHelp 返回按键绑定的完整帮助
+// 将按键绑定分组显示,每组最多 4 个
 func (k KeyMap) FullHelp() [][]key.Binding {
 	m := [][]key.Binding{}
 	slice := k.KeyBindings()
@@ -65,7 +69,8 @@ func (k KeyMap) FullHelp() [][]key.Binding {
 	return m
 }
 
-// ShortHelp 返回按键绑定的简短帮助。
+// ShortHelp 返回按键绑定的简短帮助
+// 只返回上下导航按键,用于简洁显示
 func (k KeyMap) ShortHelp() []key.Binding {
 	return []key.Binding{
 		k.Up,

@@ -9,7 +9,7 @@ import (
 	"github.com/purpose168/crush-cn/internal/pubsub"
 )
 
-// LSPEventType represents the type of LSP event
+// LSPEventType 表示 LSP 事件的类型
 type LSPEventType string
 
 const (
@@ -17,7 +17,7 @@ const (
 	LSPEventDiagnosticsChanged LSPEventType = "diagnostics_changed"
 )
 
-// LSPEvent represents an event in the LSP system
+// LSPEvent 表示 LSP 系统中的一个事件
 type LSPEvent struct {
 	Type            LSPEventType
 	Name            string
@@ -26,7 +26,7 @@ type LSPEvent struct {
 	DiagnosticCount int
 }
 
-// LSPClientInfo holds information about an LSP client's state
+// LSPClientInfo 保存有关 LSP 客户端状态的信息
 type LSPClientInfo struct {
 	Name            string
 	State           lsp.ServerState
@@ -41,22 +41,22 @@ var (
 	lspBroker = pubsub.NewBroker[LSPEvent]()
 )
 
-// SubscribeLSPEvents returns a channel for LSP events
+// SubscribeLSPEvents 返回一个用于接收 LSP 事件的通道
 func SubscribeLSPEvents(ctx context.Context) <-chan pubsub.Event[LSPEvent] {
 	return lspBroker.Subscribe(ctx)
 }
 
-// GetLSPStates returns the current state of all LSP clients
+// GetLSPStates 返回所有 LSP 客户端的当前状态
 func GetLSPStates() map[string]LSPClientInfo {
 	return lspStates.Copy()
 }
 
-// GetLSPState returns the state of a specific LSP client
+// GetLSPState 返回特定 LSP 客户端的状态
 func GetLSPState(name string) (LSPClientInfo, bool) {
 	return lspStates.Get(name)
 }
 
-// updateLSPState updates the state of an LSP client and publishes an event
+// updateLSPState 更新 LSP 客户端的状态并发布事件
 func updateLSPState(name string, state lsp.ServerState, err error, client *lsp.Client, diagnosticCount int) {
 	info := LSPClientInfo{
 		Name:            name,
@@ -70,7 +70,7 @@ func updateLSPState(name string, state lsp.ServerState, err error, client *lsp.C
 	}
 	lspStates.Set(name, info)
 
-	// Publish state change event
+	// 发布状态变更事件
 	lspBroker.Publish(pubsub.UpdatedEvent, LSPEvent{
 		Type:            LSPEventStateChanged,
 		Name:            name,
@@ -80,13 +80,13 @@ func updateLSPState(name string, state lsp.ServerState, err error, client *lsp.C
 	})
 }
 
-// updateLSPDiagnostics updates the diagnostic count for an LSP client and publishes an event
+// updateLSPDiagnostics 更新 LSP 客户端的诊断计数并发布事件
 func updateLSPDiagnostics(name string, diagnosticCount int) {
 	if info, exists := lspStates.Get(name); exists {
 		info.DiagnosticCount = diagnosticCount
 		lspStates.Set(name, info)
 
-		// Publish diagnostics change event
+		// 发布诊断变更事件
 		lspBroker.Publish(pubsub.UpdatedEvent, LSPEvent{
 			Type:            LSPEventDiagnosticsChanged,
 			Name:            name,

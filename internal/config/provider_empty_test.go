@@ -15,8 +15,8 @@ func (m *emptyProviderClient) GetProviders(context.Context, string) ([]catwalk.P
 	return []catwalk.Provider{}, nil
 }
 
-// TestCatwalkSync_GetEmptyResultFromClient tests that when the client returns
-// an empty list, we fall back to cached providers and return an error.
+// TestCatwalkSync_GetEmptyResultFromClient 测试当客户端返回空列表时，
+// 我们会回退到缓存的服务提供商并返回错误。
 func TestCatwalkSync_GetEmptyResultFromClient(t *testing.T) {
 	t.Parallel()
 
@@ -31,9 +31,9 @@ func TestCatwalkSync_GetEmptyResultFromClient(t *testing.T) {
 	providers, err := syncer.Get(t.Context())
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "empty providers list from catwalk")
-	require.NotEmpty(t, providers) // Should have embedded providers as fallback.
+	require.NotEmpty(t, providers) // 应该有嵌入的服务提供商作为回退方案。
 
-	// Check that no cache file was created for empty results.
+	// 检查没有为空结果创建缓存文件。
 	_, statErr := os.Stat(path)
 	require.True(t, os.IsNotExist(statErr), "Cache file should not exist for empty results")
 }

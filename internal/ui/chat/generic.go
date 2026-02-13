@@ -9,14 +9,14 @@ import (
 	"github.com/purpose168/crush-cn/internal/ui/styles"
 )
 
-// GenericToolMessageItem is a message item that represents an unknown tool call.
+// GenericToolMessageItem 是表示未知工具调用的消息项。
 type GenericToolMessageItem struct {
 	*baseToolMessageItem
 }
 
 var _ ToolMessageItem = (*GenericToolMessageItem)(nil)
 
-// NewGenericToolMessageItem creates a new [GenericToolMessageItem].
+// NewGenericToolMessageItem 创建一个新的 [GenericToolMessageItem]。
 func NewGenericToolMessageItem(
 	sty *styles.Styles,
 	toolCall message.ToolCall,
@@ -26,10 +26,10 @@ func NewGenericToolMessageItem(
 	return newBaseToolMessageItem(sty, toolCall, result, &GenericToolRenderContext{}, canceled)
 }
 
-// GenericToolRenderContext renders unknown/generic tool messages.
+// GenericToolRenderContext 渲染未知/通用工具消息。
 type GenericToolRenderContext struct{}
 
-// RenderTool implements the [ToolRenderer] interface.
+// RenderTool 实现 [ToolRenderer] 接口。
 func (g *GenericToolRenderContext) RenderTool(sty *styles.Styles, width int, opts *ToolRenderOpts) string {
 	cappedWidth := cappedMessageWidth(width)
 	name := genericPrettyName(opts.ToolCall.Name)
@@ -40,7 +40,7 @@ func (g *GenericToolRenderContext) RenderTool(sty *styles.Styles, width int, opt
 
 	var params map[string]any
 	if err := json.Unmarshal([]byte(opts.ToolCall.Input), &params); err != nil {
-		return toolErrorContent(sty, &message.ToolResult{Content: "Invalid parameters"}, cappedWidth)
+		return toolErrorContent(sty, &message.ToolResult{Content: "无效参数"}, cappedWidth)
 	}
 
 	var toolParams []string
@@ -64,13 +64,13 @@ func (g *GenericToolRenderContext) RenderTool(sty *styles.Styles, width int, opt
 
 	bodyWidth := cappedWidth - toolBodyLeftPaddingTotal
 
-	// Handle image data.
+	// 处理图像数据。
 	if opts.Result.Data != "" && strings.HasPrefix(opts.Result.MIMEType, "image/") {
 		body := sty.Tool.Body.Render(toolOutputImageContent(sty, opts.Result.Data, opts.Result.MIMEType))
 		return joinToolParts(header, body)
 	}
 
-	// Try to parse result as JSON for pretty display.
+	// 尝试将结果解析为 JSON 以便美观显示。
 	var result json.RawMessage
 	var body string
 	if err := json.Unmarshal([]byte(opts.Result.Content), &result); err == nil {
@@ -89,8 +89,8 @@ func (g *GenericToolRenderContext) RenderTool(sty *styles.Styles, width int, opt
 	return joinToolParts(header, body)
 }
 
-// genericPrettyName converts a snake_case or kebab-case tool name to a
-// human-readable title case name.
+// genericPrettyName 将 snake_case 或 kebab-case 格式的工具名称转换为
+// 人类可读的标题格式。
 func genericPrettyName(name string) string {
 	name = strings.ReplaceAll(name, "_", " ")
 	name = strings.ReplaceAll(name, "-", " ")

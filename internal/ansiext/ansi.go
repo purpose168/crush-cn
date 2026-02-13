@@ -6,8 +6,7 @@ import (
 	"github.com/charmbracelet/x/ansi"
 )
 
-// Escape replaces control characters with their Unicode Control Picture
-// representations to ensure they are displayed correctly in the UI.
+// Escape 将控制字符替换为其 Unicode 控制图片表示形式，以确保它们在 UI 中正确显示。
 func Escape(content string) string {
 	var sb strings.Builder
 	sb.Grow(len(content))

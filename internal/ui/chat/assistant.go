@@ -13,16 +13,15 @@ import (
 	"github.com/purpose168/crush-cn/internal/ui/styles"
 )
 
-// assistantMessageTruncateFormat is the text shown when an assistant message is
-// truncated.
-const assistantMessageTruncateFormat = "… (%d lines hidden) [click or space to expand]"
+// assistantMessageTruncateFormat 是助手消息被截断时显示的文本。
+const assistantMessageTruncateFormat = "… (已隐藏 %d 行) [点击或按空格键展开]"
 
-// maxCollapsedThinkingHeight defines the maximum height of the thinking
+// maxCollapsedThinkingHeight 定义思考内容折叠时的最大高度。
 const maxCollapsedThinkingHeight = 10
 
-// AssistantMessageItem represents an assistant message in the chat UI.
+// AssistantMessageItem 表示聊天界面中的助手消息项。
 //
-// This item includes thinking, and the content but does not include the tool calls.
+// 该消息项包含思考内容和主要消息内容，但不包括工具调用。
 type AssistantMessageItem struct {
 	*highlightableMessageItem
 	*cachedMessageItem
@@ -32,10 +31,10 @@ type AssistantMessageItem struct {
 	sty               *styles.Styles
 	anim              *anim.Anim
 	thinkingExpanded  bool
-	thinkingBoxHeight int // Tracks the rendered thinking box height for click detection.
+	thinkingBoxHeight int // 跟踪已渲染的思考框高度，用于点击检测。
 }
 
-// NewAssistantMessageItem creates a new AssistantMessageItem.
+// NewAssistantMessageItem 创建一个新的助手消息项。
 func NewAssistantMessageItem(sty *styles.Styles, message *message.Message) MessageItem {
 	a := &AssistantMessageItem{
 		highlightableMessageItem: defaultHighlighter(sty),
@@ -56,7 +55,7 @@ func NewAssistantMessageItem(sty *styles.Styles, message *message.Message) Messa
 	return a
 }
 
-// StartAnimation starts the assistant message animation if it should be spinning.
+// StartAnimation 如果助手消息应该显示旋转动画，则启动动画。
 func (a *AssistantMessageItem) StartAnimation() tea.Cmd {
 	if !a.isSpinning() {
 		return nil
@@ -64,7 +63,7 @@ func (a *AssistantMessageItem) StartAnimation() tea.Cmd {
 	return a.anim.Start()
 }
 
-// Animate progresses the assistant message animation if it should be spinning.
+// Animate 如果助手消息应该显示旋转动画，则推进动画进度。
 func (a *AssistantMessageItem) Animate(msg anim.StepMsg) tea.Cmd {
 	if !a.isSpinning() {
 		return nil
@@ -72,12 +71,12 @@ func (a *AssistantMessageItem) Animate(msg anim.StepMsg) tea.Cmd {
 	return a.anim.Animate(msg)
 }
 
-// ID implements MessageItem.
+// ID 实现 MessageItem 接口。
 func (a *AssistantMessageItem) ID() string {
 	return a.message.ID
 }
 
-// RawRender implements [MessageItem].
+// RawRender 实现 [MessageItem] 接口。
 func (a *AssistantMessageItem) RawRender(width int) string {
 	cappedWidth := cappedMessageWidth(width)
 
@@ -90,7 +89,7 @@ func (a *AssistantMessageItem) RawRender(width int) string {
 	if !ok {
 		content = a.renderMessageContent(cappedWidth)
 		height = lipgloss.Height(content)
-		// cache the rendered content
+		// 缓存已渲染的内容
 		a.setCachedRender(content, cappedWidth, height)
 	}
 
@@ -105,7 +104,7 @@ func (a *AssistantMessageItem) RawRender(width int) string {
 	return highlightedContent
 }
 
-// Render implements MessageItem.
+// Render 实现 MessageItem 接口。
 func (a *AssistantMessageItem) Render(width int) string {
 	style := a.sty.Chat.Message.AssistantBlurred
 	if a.focused {
@@ -114,30 +113,30 @@ func (a *AssistantMessageItem) Render(width int) string {
 	return style.Render(a.RawRender(width))
 }
 
-// renderMessageContent renders the message content including thinking, main content, and finish reason.
+// renderMessageContent 渲染消息内容，包括思考内容、主要内容和结束原因。
 func (a *AssistantMessageItem) renderMessageContent(width int) string {
 	var messageParts []string
 	thinking := strings.TrimSpace(a.message.ReasoningContent().Thinking)
 	content := strings.TrimSpace(a.message.Content().Text)
-	// if the massage has reasoning content add that first
+	// 如果消息包含推理内容，则首先添加
 	if thinking != "" {
 		messageParts = append(messageParts, a.renderThinking(a.message.ReasoningContent().Thinking, width))
 	}
 
-	// then add the main content
+	// 然后添加主要内容
 	if content != "" {
-		// add a spacer between thinking and content
+		// 在思考内容和主要内容之间添加间隔
 		if thinking != "" {
 			messageParts = append(messageParts, "")
 		}
 		messageParts = append(messageParts, a.renderMarkdown(content, width))
 	}
 
-	// finally add any finish reason info
+	// 最后添加任何结束原因信息
 	if a.message.IsFinished() {
 		switch a.message.FinishReason() {
 		case message.FinishReasonCanceled:
-			messageParts = append(messageParts, a.sty.Base.Italic(true).Render("Canceled"))
+			messageParts = append(messageParts, a.sty.Base.Italic(true).Render("已取消"))
 		case message.FinishReasonError:
 			messageParts = append(messageParts, a.renderError(width))
 		}
@@ -146,7 +145,7 @@ func (a *AssistantMessageItem) renderMessageContent(width int) string {
 	return strings.Join(messageParts, "\n")
 }
 
-// renderThinking renders the thinking/reasoning content with footer.
+// renderThinking 渲染思考/推理内容及其页脚。
 func (a *AssistantMessageItem) renderThinking(thinking string, width int) string {
 	renderer := common.PlainMarkdownRenderer(a.sty, width)
 	rendered, err := renderer.Render(thinking)
@@ -172,11 +171,11 @@ func (a *AssistantMessageItem) renderThinking(thinking string, width int) string
 	a.thinkingBoxHeight = lipgloss.Height(result)
 
 	var footer string
-	// if thinking is done add the thought for footer
+	// 如果思考已完成，添加思考用时作为页脚
 	if !a.message.IsThinking() || len(a.message.ToolCalls()) > 0 {
 		duration := a.message.ThinkingDuration()
 		if duration.String() != "0s" {
-			footer = a.sty.Chat.Message.ThinkingFooterTitle.Render("Thought for ") +
+			footer = a.sty.Chat.Message.ThinkingFooterTitle.Render("思考用时 ") +
 				a.sty.Chat.Message.ThinkingFooterDuration.Render(duration.String())
 		}
 	}
@@ -188,7 +187,7 @@ func (a *AssistantMessageItem) renderThinking(thinking string, width int) string
 	return result
 }
 
-// renderMarkdown renders content as markdown.
+// renderMarkdown 将内容渲染为 Markdown 格式。
 func (a *AssistantMessageItem) renderMarkdown(content string, width int) string {
 	renderer := common.MarkdownRenderer(a.sty, width)
 	result, err := renderer.Render(content)
@@ -200,24 +199,24 @@ func (a *AssistantMessageItem) renderMarkdown(content string, width int) string 
 
 func (a *AssistantMessageItem) renderSpinning() string {
 	if a.message.IsThinking() {
-		a.anim.SetLabel("Thinking")
+		a.anim.SetLabel("思考中")
 	} else if a.message.IsSummaryMessage {
-		a.anim.SetLabel("Summarizing")
+		a.anim.SetLabel("总结中")
 	}
 	return a.anim.Render()
 }
 
-// renderError renders an error message.
+// renderError 渲染错误消息。
 func (a *AssistantMessageItem) renderError(width int) string {
 	finishPart := a.message.FinishPart()
-	errTag := a.sty.Chat.Message.ErrorTag.Render("ERROR")
+	errTag := a.sty.Chat.Message.ErrorTag.Render("错误")
 	truncated := ansi.Truncate(finishPart.Message, width-2-lipgloss.Width(errTag), "...")
 	title := fmt.Sprintf("%s %s", errTag, a.sty.Chat.Message.ErrorTitle.Render(truncated))
 	details := a.sty.Chat.Message.ErrorDetails.Width(width - 2).Render(finishPart.Details)
 	return fmt.Sprintf("%s\n\n%s", title, details)
 }
 
-// isSpinning returns true if the assistant message is still generating.
+// isSpinning 返回助手消息是否仍在生成中。
 func (a *AssistantMessageItem) isSpinning() bool {
 	isThinking := a.message.IsThinking()
 	isFinished := a.message.IsFinished()
@@ -226,7 +225,7 @@ func (a *AssistantMessageItem) isSpinning() bool {
 	return (isThinking || !isFinished) && !hasContent && !hasToolCalls
 }
 
-// SetMessage is used to update the underlying message.
+// SetMessage 用于更新底层的消息对象。
 func (a *AssistantMessageItem) SetMessage(message *message.Message) tea.Cmd {
 	wasSpinning := a.isSpinning()
 	a.message = message
@@ -237,18 +236,18 @@ func (a *AssistantMessageItem) SetMessage(message *message.Message) tea.Cmd {
 	return nil
 }
 
-// ToggleExpanded toggles the expanded state of the thinking box.
+// ToggleExpanded 切换思考框的展开状态。
 func (a *AssistantMessageItem) ToggleExpanded() {
 	a.thinkingExpanded = !a.thinkingExpanded
 	a.clearCache()
 }
 
-// HandleMouseClick implements MouseClickable.
+// HandleMouseClick 实现 MouseClickable 接口。
 func (a *AssistantMessageItem) HandleMouseClick(btn ansi.MouseButton, x, y int) bool {
 	if btn != ansi.MouseLeft {
 		return false
 	}
-	// check if the click is within the thinking box
+	// 检查点击是否在思考框内
 	if a.thinkingBoxHeight > 0 && y < a.thinkingBoxHeight {
 		a.ToggleExpanded()
 		return true
@@ -256,11 +255,11 @@ func (a *AssistantMessageItem) HandleMouseClick(btn ansi.MouseButton, x, y int) 
 	return false
 }
 
-// HandleKeyEvent implements KeyEventHandler.
+// HandleKeyEvent 实现 KeyEventHandler 接口。
 func (a *AssistantMessageItem) HandleKeyEvent(key tea.KeyMsg) (bool, tea.Cmd) {
 	if k := key.String(); k == "c" || k == "y" {
 		text := a.message.Content().Text
-		return true, common.CopyToClipboard(text, "Message copied to clipboard")
+		return true, common.CopyToClipboard(text, "消息已复制到剪贴板")
 	}
 	return false, nil
 }

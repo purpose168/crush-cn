@@ -40,15 +40,15 @@ var footerSVG string
 
 var statsCmd = &cobra.Command{
 	Use:   "stats",
-	Short: "Show usage statistics",
-	Long:  "Generate and display usage statistics including token usage, costs, and activity patterns",
+	Short: "显示使用统计信息",
+	Long:  "生成并显示使用统计信息，包括令牌使用情况、成本和活动模式",
 	RunE:  runStats,
 }
 
-// Day names for day of week statistics.
-var dayNames = []string{"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"}
+// 星期几的名称，用于星期统计。
+var dayNames = []string{"星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"}
 
-// Stats holds all the statistics data.
+// Stats 包含所有统计数据。
 type Stats struct {
 	GeneratedAt       time.Time          `json:"generated_at"`
 	Total             TotalStats         `json:"total"`
@@ -62,6 +62,7 @@ type Stats struct {
 	HourDayHeatmap    []HourDayHeatmapPt `json:"hour_day_heatmap"`
 }
 
+// TotalStats 包含总统计信息。
 type TotalStats struct {
 	TotalSessions         int64   `json:"total_sessions"`
 	TotalPromptTokens     int64   `json:"total_prompt_tokens"`
@@ -73,6 +74,7 @@ type TotalStats struct {
 	AvgMessagesPerSession float64 `json:"avg_messages_per_session"`
 }
 
+// DailyUsage 包含每日使用统计信息。
 type DailyUsage struct {
 	Day              string  `json:"day"`
 	PromptTokens     int64   `json:"prompt_tokens"`
@@ -82,17 +84,20 @@ type DailyUsage struct {
 	SessionCount     int64   `json:"session_count"`
 }
 
+// ModelUsage 包含按模型统计的使用信息。
 type ModelUsage struct {
 	Model        string `json:"model"`
 	Provider     string `json:"provider"`
 	MessageCount int64  `json:"message_count"`
 }
 
+// HourlyUsage 包含按小时统计的使用信息。
 type HourlyUsage struct {
 	Hour         int   `json:"hour"`
 	SessionCount int64 `json:"session_count"`
 }
 
+// DayOfWeekUsage 包含按星期几统计的使用信息。
 type DayOfWeekUsage struct {
 	DayOfWeek        int    `json:"day_of_week"`
 	DayName          string `json:"day_name"`
@@ -101,6 +106,7 @@ type DayOfWeekUsage struct {
 	CompletionTokens int64  `json:"completion_tokens"`
 }
 
+// DailyActivity 包含每日活动统计信息。
 type DailyActivity struct {
 	Day          string  `json:"day"`
 	SessionCount int64   `json:"session_count"`
@@ -108,17 +114,20 @@ type DailyActivity struct {
 	Cost         float64 `json:"cost"`
 }
 
+// ToolUsage 包含工具使用统计信息。
 type ToolUsage struct {
 	ToolName  string `json:"tool_name"`
 	CallCount int64  `json:"call_count"`
 }
 
+// HourDayHeatmapPt 包含小时/天热力图数据点。
 type HourDayHeatmapPt struct {
 	DayOfWeek    int   `json:"day_of_week"`
 	Hour         int   `json:"hour"`
 	SessionCount int64 `json:"session_count"`
 }
 
+// runStats 执行 stats 命令，生成并显示统计信息。
 func runStats(cmd *cobra.Command, _ []string) error {
 	dataDir, _ := cmd.Flags().GetString("data-dir")
 	ctx := cmd.Context()
@@ -126,52 +135,53 @@ func runStats(cmd *cobra.Command, _ []string) error {
 	if dataDir == "" {
 		cfg, err := config.Init("", "", false)
 		if err != nil {
-			return fmt.Errorf("failed to initialize config: %w", err)
+			return fmt.Errorf("初始化配置失败: %w", err)
 		}
 		dataDir = cfg.Options.DataDirectory
 	}
 
 	conn, err := db.Connect(ctx, dataDir)
 	if err != nil {
-		return fmt.Errorf("failed to connect to database: %w", err)
+		return fmt.Errorf("连接数据库失败: %w", err)
 	}
 	defer conn.Close()
 
 	stats, err := gatherStats(ctx, conn)
 	if err != nil {
-		return fmt.Errorf("failed to gather stats: %w", err)
+		return fmt.Errorf("收集统计信息失败: %w", err)
 	}
 
 	if stats.Total.TotalSessions == 0 {
-		return fmt.Errorf("no data available: no sessions found in database")
+		return fmt.Errorf("无可用数据: 数据库中未找到会话")
 	}
 
 	currentUser, err := user.Current()
 	if err != nil {
-		return fmt.Errorf("failed to get current user: %w", err)
+		return fmt.Errorf("获取当前用户失败: %w", err)
 	}
 	username := currentUser.Username
 	project, err := os.Getwd()
 	if err != nil {
-		return fmt.Errorf("failed to get current directory: %w", err)
+		return fmt.Errorf("获取当前目录失败: %w", err)
 	}
 	project = strings.Replace(project, currentUser.HomeDir, "~", 1)
 
 	htmlPath := filepath.Join(dataDir, "stats/index.html")
 	if err := generateHTML(stats, project, username, htmlPath); err != nil {
-		return fmt.Errorf("failed to generate HTML: %w", err)
+		return fmt.Errorf("生成 HTML 失败: %w", err)
 	}
 
-	fmt.Printf("Stats generated: %s\n", htmlPath)
+	fmt.Printf("统计信息已生成: %s\n", htmlPath)
 
 	if err := browser.OpenFile(htmlPath); err != nil {
-		fmt.Printf("Could not open browser: %v\n", err)
-		fmt.Println("Please open the file manually.")
+		fmt.Printf("无法打开浏览器: %v\n", err)
+		fmt.Println("请手动打开文件。")
 	}
 
 	return nil
 }
 
+// gatherStats 从数据库收集所有统计信息。
 func gatherStats(ctx context.Context, conn *sql.DB) (*Stats, error) {
 	queries := db.New(conn)
 
@@ -179,10 +189,10 @@ func gatherStats(ctx context.Context, conn *sql.DB) (*Stats, error) {
 		GeneratedAt: time.Now(),
 	}
 
-	// Total stats.
+	// 总统计信息。
 	total, err := queries.GetTotalStats(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("get total stats: %w", err)
+		return nil, fmt.Errorf("获取总统计信息: %w", err)
 	}
 	stats.Total = TotalStats{
 		TotalSessions:         total.TotalSessions,
@@ -195,10 +205,10 @@ func gatherStats(ctx context.Context, conn *sql.DB) (*Stats, error) {
 		AvgMessagesPerSession: toFloat64(total.AvgMessagesPerSession),
 	}
 
-	// Usage by day.
+	// 按天使用情况。
 	dailyUsage, err := queries.GetUsageByDay(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("get usage by day: %w", err)
+		return nil, fmt.Errorf("获取按天使用情况: %w", err)
 	}
 	for _, d := range dailyUsage {
 		prompt := nullFloat64ToInt64(d.PromptTokens)
@@ -213,10 +223,10 @@ func gatherStats(ctx context.Context, conn *sql.DB) (*Stats, error) {
 		})
 	}
 
-	// Usage by model.
+	// 按模型使用情况。
 	modelUsage, err := queries.GetUsageByModel(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("get usage by model: %w", err)
+		return nil, fmt.Errorf("获取按模型使用情况: %w", err)
 	}
 	for _, m := range modelUsage {
 		stats.UsageByModel = append(stats.UsageByModel, ModelUsage{
@@ -226,10 +236,10 @@ func gatherStats(ctx context.Context, conn *sql.DB) (*Stats, error) {
 		})
 	}
 
-	// Usage by hour.
+	// 按小时使用情况。
 	hourlyUsage, err := queries.GetUsageByHour(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("get usage by hour: %w", err)
+		return nil, fmt.Errorf("获取按小时使用情况: %w", err)
 	}
 	for _, h := range hourlyUsage {
 		stats.UsageByHour = append(stats.UsageByHour, HourlyUsage{
@@ -238,10 +248,10 @@ func gatherStats(ctx context.Context, conn *sql.DB) (*Stats, error) {
 		})
 	}
 
-	// Usage by day of week.
+	// 按星期几使用情况。
 	dowUsage, err := queries.GetUsageByDayOfWeek(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("get usage by day of week: %w", err)
+		return nil, fmt.Errorf("获取按星期几使用情况: %w", err)
 	}
 	for _, d := range dowUsage {
 		stats.UsageByDayOfWeek = append(stats.UsageByDayOfWeek, DayOfWeekUsage{
@@ -253,10 +263,10 @@ func gatherStats(ctx context.Context, conn *sql.DB) (*Stats, error) {
 		})
 	}
 
-	// Recent activity (last 30 days).
+	// 最近活动（最近30天）。
 	recent, err := queries.GetRecentActivity(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("get recent activity: %w", err)
+		return nil, fmt.Errorf("获取最近活动: %w", err)
 	}
 	for _, r := range recent {
 		stats.RecentActivity = append(stats.RecentActivity, DailyActivity{
@@ -267,17 +277,17 @@ func gatherStats(ctx context.Context, conn *sql.DB) (*Stats, error) {
 		})
 	}
 
-	// Average response time.
+	// 平均响应时间。
 	avgResp, err := queries.GetAverageResponseTime(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("get average response time: %w", err)
+		return nil, fmt.Errorf("获取平均响应时间: %w", err)
 	}
 	stats.AvgResponseTimeMs = toFloat64(avgResp) * 1000
 
-	// Tool usage.
+	// 工具使用情况。
 	toolUsage, err := queries.GetToolUsage(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("get tool usage: %w", err)
+		return nil, fmt.Errorf("获取工具使用情况: %w", err)
 	}
 	for _, t := range toolUsage {
 		if name, ok := t.ToolName.(string); ok && name != "" {
@@ -288,10 +298,10 @@ func gatherStats(ctx context.Context, conn *sql.DB) (*Stats, error) {
 		}
 	}
 
-	// Hour/day heatmap.
+	// 小时/天热力图。
 	heatmap, err := queries.GetHourDayHeatmap(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("get hour day heatmap: %w", err)
+		return nil, fmt.Errorf("获取小时/天热力图: %w", err)
 	}
 	for _, h := range heatmap {
 		stats.HourDayHeatmap = append(stats.HourDayHeatmap, HourDayHeatmapPt{
@@ -304,6 +314,7 @@ func gatherStats(ctx context.Context, conn *sql.DB) (*Stats, error) {
 	return stats, nil
 }
 
+// toInt64 将任意类型转换为 int64。
 func toInt64(v any) int64 {
 	switch val := v.(type) {
 	case int64:
@@ -317,6 +328,7 @@ func toInt64(v any) int64 {
 	}
 }
 
+// toFloat64 将任意类型转换为 float64。
 func toFloat64(v any) float64 {
 	switch val := v.(type) {
 	case float64:
@@ -330,6 +342,7 @@ func toFloat64(v any) float64 {
 	}
 }
 
+// nullFloat64ToInt64 将 sql.NullFloat64 转换为 int64。
 func nullFloat64ToInt64(n sql.NullFloat64) int64 {
 	if n.Valid {
 		return int64(n.Float64)
@@ -337,6 +350,7 @@ func nullFloat64ToInt64(n sql.NullFloat64) int64 {
 	return 0
 }
 
+// generateHTML 生成包含统计信息的 HTML 文件。
 func generateHTML(stats *Stats, projName, username, path string) error {
 	statsJSON, err := json.Marshal(stats)
 	if err != nil {
@@ -345,7 +359,7 @@ func generateHTML(stats *Stats, projName, username, path string) error {
 
 	tmpl, err := template.New("stats").Parse(statsTemplate)
 	if err != nil {
-		return fmt.Errorf("parse template: %w", err)
+		return fmt.Errorf("解析模板: %w", err)
 	}
 
 	data := struct {
@@ -372,12 +386,12 @@ func generateHTML(stats *Stats, projName, username, path string) error {
 
 	var buf bytes.Buffer
 	if err := tmpl.Execute(&buf, data); err != nil {
-		return fmt.Errorf("execute template: %w", err)
+		return fmt.Errorf("执行模板: %w", err)
 	}
 
-	// Ensure parent directory exists.
+	// 确保父目录存在。
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
-		return fmt.Errorf("create directory: %w", err)
+		return fmt.Errorf("创建目录: %w", err)
 	}
 
 	return os.WriteFile(path, buf.Bytes(), 0o644)

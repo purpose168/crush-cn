@@ -173,10 +173,10 @@ func (e Encoding) Transmit(id string, img image.Image, cs CellSize, cols, rows i
 				return chunk
 			},
 		}); err != nil {
-			slog.Error("Failed to encode image for kitty graphics", "err", err)
+			slog.Error("无法为 Kitty 图形协议编码图像", "err", err)
 			return util.InfoMsg{
 				Type: util.InfoTypeError,
-				Msg:  "failed to encode image",
+				Msg:  "无法编码图像",
 			}
 		}
 

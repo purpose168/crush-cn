@@ -64,7 +64,7 @@ func BottomLeftRect(area uv.Rectangle, width, height int) uv.Rectangle {
 func IsFileTooBig(filePath string, sizeLimit int64) (bool, error) {
 	fileInfo, err := os.Stat(filePath)
 	if err != nil {
-		return false, fmt.Errorf("error getting file info: %w", err)
+		return false, fmt.Errorf("获取文件信息失败: %w", err)
 	}
 
 	if fileInfo.Size() > sizeLimit {

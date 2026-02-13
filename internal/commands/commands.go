@@ -20,7 +20,7 @@ const (
 	projectCommandPrefix = "project:"
 )
 
-// Argument represents a command argument with its metadata.
+// Argument 表示命令参数及其元数据。
 type Argument struct {
 	ID          string
 	Title       string
@@ -28,7 +28,7 @@ type Argument struct {
 	Required    bool
 }
 
-// MCPPrompt represents a custom command loaded from an MCP server.
+// MCPPrompt 表示从 MCP 服务器加载的自定义命令。
 type MCPPrompt struct {
 	ID          string
 	Title       string
@@ -38,7 +38,7 @@ type MCPPrompt struct {
 	Arguments   []Argument
 }
 
-// CustomCommand represents a user-defined custom command loaded from markdown files.
+// CustomCommand 表示从 markdown 文件加载的用户自定义命令。
 type CustomCommand struct {
 	ID        string
 	Name      string
@@ -51,13 +51,13 @@ type commandSource struct {
 	prefix string
 }
 
-// LoadCustomCommands loads custom commands from multiple sources including
-// XDG config directory, home directory, and project directory.
+// LoadCustomCommands 从多个源加载自定义命令，包括
+// XDG 配置目录、主目录和项目目录。
 func LoadCustomCommands(cfg *config.Config) ([]CustomCommand, error) {
 	return loadAll(buildCommandSources(cfg))
 }
 
-// LoadMCPPrompts loads custom commands from available MCP servers.
+// LoadMCPPrompts 从可用的 MCP 服务器加载自定义命令。
 func LoadMCPPrompts() ([]MCPPrompt, error) {
 	var commands []MCPPrompt
 	for mcpName, prompts := range mcp.Prompts() {
@@ -92,7 +92,7 @@ func LoadMCPPrompts() ([]MCPPrompt, error) {
 func buildCommandSources(cfg *config.Config) []commandSource {
 	var sources []commandSource
 
-	// XDG config directory
+	// XDG 配置目录
 	if dir := getXDGCommandsDir(); dir != "" {
 		sources = append(sources, commandSource{
 			path:   dir,
@@ -100,7 +100,7 @@ func buildCommandSources(cfg *config.Config) []commandSource {
 		})
 	}
 
-	// Home directory
+	// 主目录
 	if home := home.Dir(); home != "" {
 		sources = append(sources, commandSource{
 			path:   filepath.Join(home, ".crush", "commands"),
@@ -108,7 +108,7 @@ func buildCommandSources(cfg *config.Config) []commandSource {
 		})
 	}
 
-	// Project directory
+	// 项目目录
 	sources = append(sources, commandSource{
 		path:   filepath.Join(cfg.Options.DataDirectory, "commands"),
 		prefix: projectCommandPrefix,
@@ -143,7 +143,7 @@ func loadFromSource(source commandSource) ([]CustomCommand, error) {
 
 		cmd, err := loadCommand(path, source.path, source.prefix)
 		if err != nil {
-			return nil // Skip invalid files
+			return nil // 跳过无效文件
 		}
 
 		commands = append(commands, cmd)
@@ -182,7 +182,7 @@ func extractArgNames(content string) []Argument {
 		arg := match[1]
 		if !seen[arg] {
 			seen[arg] = true
-			// for normal custom commands, all args are required
+			// 对于普通自定义命令，所有参数都是必需的
 			args = append(args, Argument{ID: arg, Title: arg, Required: true})
 		}
 	}
@@ -194,7 +194,7 @@ func buildCommandID(path, baseDir, prefix string) string {
 	relPath, _ := filepath.Rel(baseDir, path)
 	parts := strings.Split(relPath, string(filepath.Separator))
 
-	// Remove .md extension from last part
+	// 从最后一部分移除 .md 扩展名
 	if len(parts) > 0 {
 		lastIdx := len(parts) - 1
 		parts[lastIdx] = strings.TrimSuffix(parts[lastIdx], filepath.Ext(parts[lastIdx]))
@@ -228,7 +228,7 @@ func isMarkdownFile(name string) bool {
 }
 
 func GetMCPPrompt(cfg *config.Config, clientID, promptID string, args map[string]string) (string, error) {
-	// TODO: we should pass the context down
+	// TODO: 我们应该向下传递上下文
 	result, err := mcp.GetPromptMessages(context.Background(), cfg, clientID, promptID, args)
 	if err != nil {
 		return "", err

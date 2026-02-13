@@ -22,24 +22,24 @@ import (
 	"github.com/purpose168/crush-cn/internal/ui/styles"
 )
 
-// responseContextHeight limits the number of lines displayed in tool output.
+// responseContextHeight 限制工具输出中显示的行数
 const responseContextHeight = 10
 
-// toolBodyLeftPaddingTotal represents the padding that should be applied to each tool body
+// toolBodyLeftPaddingTotal 表示应用于每个工具主体的左侧填充值
 const toolBodyLeftPaddingTotal = 2
 
-// ToolStatus represents the current state of a tool call.
+// ToolStatus 表示工具调用的当前状态
 type ToolStatus int
 
 const (
-	ToolStatusAwaitingPermission ToolStatus = iota
-	ToolStatusRunning
-	ToolStatusSuccess
-	ToolStatusError
-	ToolStatusCanceled
+	ToolStatusAwaitingPermission ToolStatus = iota // 等待权限许可
+	ToolStatusRunning                              // 正在运行
+	ToolStatusSuccess                              // 执行成功
+	ToolStatusError                                // 执行错误
+	ToolStatusCanceled                             // 已取消
 )
 
-// ToolMessageItem represents a tool call message in the chat UI.
+// ToolMessageItem 表示聊天界面中的工具调用消息
 type ToolMessageItem interface {
 	MessageItem
 
@@ -52,42 +52,42 @@ type ToolMessageItem interface {
 	Status() ToolStatus
 }
 
-// Compactable is an interface for tool items that can render in a compacted mode.
-// When compact mode is enabled, tools render as a compact single-line header.
+// Compactable 是可以在紧凑模式下渲染的工具项接口
+// 当启用紧凑模式时，工具渲染为紧凑的单行标题
 type Compactable interface {
 	SetCompact(compact bool)
 }
 
-// SpinningState contains the state passed to SpinningFunc for custom spinning logic.
+// SpinningState 包含传递给 SpinningFunc 用于自定义旋转逻辑的状态
 type SpinningState struct {
 	ToolCall message.ToolCall
 	Result   *message.ToolResult
 	Status   ToolStatus
 }
 
-// IsCanceled returns true if the tool status is canceled.
+// IsCanceled 返回工具状态是否为已取消
 func (s *SpinningState) IsCanceled() bool {
 	return s.Status == ToolStatusCanceled
 }
 
-// HasResult returns true if the result is not nil.
+// HasResult 返回结果是否不为 nil
 func (s *SpinningState) HasResult() bool {
 	return s.Result != nil
 }
 
-// SpinningFunc is a function type for custom spinning logic.
-// Returns true if the tool should show the spinning animation.
+// SpinningFunc 是自定义旋转逻辑的函数类型
+// 如果工具应该显示旋转动画，则返回 true
 type SpinningFunc func(state SpinningState) bool
 
-// DefaultToolRenderContext implements the default [ToolRenderer] interface.
+// DefaultToolRenderContext 实现默认的 [ToolRenderer] 接口
 type DefaultToolRenderContext struct{}
 
-// RenderTool implements the [ToolRenderer] interface.
+// RenderTool 实现 [ToolRenderer] 接口
 func (d *DefaultToolRenderContext) RenderTool(sty *styles.Styles, width int, opts *ToolRenderOpts) string {
-	return "TODO: Implement Tool Renderer For: " + opts.ToolCall.Name
+	return "待实现：为以下工具渲染器实现渲染功能: " + opts.ToolCall.Name
 }
 
-// ToolRenderOpts contains the data needed to render a tool call.
+// ToolRenderOpts 包含渲染工具调用所需的数据
 type ToolRenderOpts struct {
 	ToolCall        message.ToolCall
 	Result          *message.ToolResult
@@ -98,41 +98,40 @@ type ToolRenderOpts struct {
 	Status          ToolStatus
 }
 
-// IsPending returns true if the tool call is still pending (not finished and
-// not canceled).
+// IsPending 返回工具调用是否仍在等待中（未完成且未取消）
 func (o *ToolRenderOpts) IsPending() bool {
 	return !o.ToolCall.Finished && !o.IsCanceled()
 }
 
-// IsCanceled returns true if the tool status is canceled.
+// IsCanceled 返回工具状态是否为已取消
 func (o *ToolRenderOpts) IsCanceled() bool {
 	return o.Status == ToolStatusCanceled
 }
 
-// HasResult returns true if the result is not nil.
+// HasResult 返回结果是否不为 nil
 func (o *ToolRenderOpts) HasResult() bool {
 	return o.Result != nil
 }
 
-// HasEmptyResult returns true if the result is nil or has empty content.
+// HasEmptyResult 返回结果是否为 nil 或内容为空
 func (o *ToolRenderOpts) HasEmptyResult() bool {
 	return o.Result == nil || o.Result.Content == ""
 }
 
-// ToolRenderer represents an interface for rendering tool calls.
+// ToolRenderer 表示渲染工具调用的接口
 type ToolRenderer interface {
 	RenderTool(sty *styles.Styles, width int, opts *ToolRenderOpts) string
 }
 
-// ToolRendererFunc is a function type that implements the [ToolRenderer] interface.
+// ToolRendererFunc 是实现 [ToolRenderer] 接口的函数类型
 type ToolRendererFunc func(sty *styles.Styles, width int, opts *ToolRenderOpts) string
 
-// RenderTool implements the ToolRenderer interface.
+// RenderTool 实现 ToolRenderer 接口
 func (f ToolRendererFunc) RenderTool(sty *styles.Styles, width int, opts *ToolRenderOpts) string {
 	return f(sty, width, opts)
 }
 
-// baseToolMessageItem represents a tool call message that can be displayed in the UI.
+// baseToolMessageItem 表示可以在界面中显示的工具调用消息
 type baseToolMessageItem struct {
 	*highlightableMessageItem
 	*cachedMessageItem
@@ -143,13 +142,12 @@ type baseToolMessageItem struct {
 	result       *message.ToolResult
 	messageID    string
 	status       ToolStatus
-	// we use this so we can efficiently cache
-	// tools that have a capped width (e.x bash.. and others)
+	// 用于高效缓存具有宽度限制的工具（例如 bash 和其他工具）
 	hasCappedWidth bool
-	// isCompact indicates this tool should render in compact mode.
+	// isCompact 表示此工具应以紧凑模式渲染
 	isCompact bool
-	// spinningFunc allows tools to override the default spinning logic.
-	// If nil, uses the default: !toolCall.Finished && !canceled.
+	// spinningFunc 允许工具覆盖默认的旋转逻辑
+	// 如果为 nil，则使用默认逻辑：!toolCall.Finished && !canceled
 	spinningFunc SpinningFunc
 
 	sty             *styles.Styles
@@ -159,7 +157,7 @@ type baseToolMessageItem struct {
 
 var _ Expandable = (*baseToolMessageItem)(nil)
 
-// newBaseToolMessageItem is the internal constructor for base tool message items.
+// newBaseToolMessageItem 是基础工具消息项的内部构造函数
 func newBaseToolMessageItem(
 	sty *styles.Styles,
 	toolCall message.ToolCall,
@@ -167,7 +165,7 @@ func newBaseToolMessageItem(
 	toolRenderer ToolRenderer,
 	canceled bool,
 ) *baseToolMessageItem {
-	// we only do full width for diffs (as far as I know)
+	// 目前只为 diff 工具使用全宽显示（据我所知）
 	hasCappedWidth := toolCall.Name != tools.EditToolName && toolCall.Name != tools.MultiEditToolName
 
 	status := ToolStatusRunning
@@ -198,11 +196,10 @@ func newBaseToolMessageItem(
 	return t
 }
 
-// NewToolMessageItem creates a new [ToolMessageItem] based on the tool call name.
+// NewToolMessageItem 根据工具调用名称创建新的 [ToolMessageItem]
 //
-// It returns a specific tool message item type if implemented, otherwise it
-// returns a generic tool message item. The messageID is the ID of the assistant
-// message containing this tool call.
+// 如果已实现特定工具消息项类型，则返回该类型，
+// 否则返回通用工具消息项。messageID 是包含此工具调用的助手消息的 ID。
 func NewToolMessageItem(
 	sty *styles.Styles,
 	messageID string,
@@ -265,18 +262,18 @@ func NewToolMessageItem(
 	return item
 }
 
-// SetCompact implements the Compactable interface.
+// SetCompact 实现 Compactable 接口
 func (t *baseToolMessageItem) SetCompact(compact bool) {
 	t.isCompact = compact
 	t.clearCache()
 }
 
-// ID returns the unique identifier for this tool message item.
+// ID 返回此工具消息项的唯一标识符
 func (t *baseToolMessageItem) ID() string {
 	return t.toolCall.ID
 }
 
-// StartAnimation starts the assistant message animation if it should be spinning.
+// StartAnimation 如果应该旋转，则启动助手消息动画
 func (t *baseToolMessageItem) StartAnimation() tea.Cmd {
 	if !t.isSpinning() {
 		return nil
@@ -284,7 +281,7 @@ func (t *baseToolMessageItem) StartAnimation() tea.Cmd {
 	return t.anim.Start()
 }
 
-// Animate progresses the assistant message animation if it should be spinning.
+// Animate 如果应该旋转，则推进助手消息动画
 func (t *baseToolMessageItem) Animate(msg anim.StepMsg) tea.Cmd {
 	if !t.isSpinning() {
 		return nil
@@ -292,7 +289,7 @@ func (t *baseToolMessageItem) Animate(msg anim.StepMsg) tea.Cmd {
 	return t.anim.Animate(msg)
 }
 
-// RawRender implements [MessageItem].
+// RawRender 实现 [MessageItem]
 func (t *baseToolMessageItem) RawRender(width int) string {
 	toolItemWidth := width - MessageLeftPaddingTotal
 	if t.hasCappedWidth {
@@ -300,7 +297,7 @@ func (t *baseToolMessageItem) RawRender(width int) string {
 	}
 
 	content, height, ok := t.getCachedRender(toolItemWidth)
-	// if we are spinning or there is no cache rerender
+	// 如果正在旋转或没有缓存，则重新渲染
 	if !ok || t.isSpinning() {
 		content = t.toolRenderer.RenderTool(t.sty, toolItemWidth, &ToolRenderOpts{
 			ToolCall:        t.toolCall,
@@ -312,14 +309,14 @@ func (t *baseToolMessageItem) RawRender(width int) string {
 			Status:          t.computeStatus(),
 		})
 		height = lipgloss.Height(content)
-		// cache the rendered content
+		// 缓存渲染的内容
 		t.setCachedRender(content, toolItemWidth, height)
 	}
 
 	return t.renderHighlighted(content, toolItemWidth, height)
 }
 
-// Render renders the tool message item at the given width.
+// Render 以给定宽度渲染工具消息项
 func (t *baseToolMessageItem) Render(width int) string {
 	style := t.sty.Chat.Message.ToolCallBlurred
 	if t.focused {
@@ -333,45 +330,45 @@ func (t *baseToolMessageItem) Render(width int) string {
 	return style.Render(t.RawRender(width))
 }
 
-// ToolCall returns the tool call associated with this message item.
+// ToolCall 返回与此消息项关联的工具调用
 func (t *baseToolMessageItem) ToolCall() message.ToolCall {
 	return t.toolCall
 }
 
-// SetToolCall sets the tool call associated with this message item.
+// SetToolCall 设置与此消息项关联的工具调用
 func (t *baseToolMessageItem) SetToolCall(tc message.ToolCall) {
 	t.toolCall = tc
 	t.clearCache()
 }
 
-// SetResult sets the tool result associated with this message item.
+// SetResult 设置与此消息项关联的工具结果
 func (t *baseToolMessageItem) SetResult(res *message.ToolResult) {
 	t.result = res
 	t.clearCache()
 }
 
-// MessageID returns the ID of the message containing this tool call.
+// MessageID 返回包含此工具调用的消息的 ID
 func (t *baseToolMessageItem) MessageID() string {
 	return t.messageID
 }
 
-// SetMessageID sets the ID of the message containing this tool call.
+// SetMessageID 设置包含此工具调用的消息的 ID
 func (t *baseToolMessageItem) SetMessageID(id string) {
 	t.messageID = id
 }
 
-// SetStatus sets the tool status.
+// SetStatus 设置工具状态
 func (t *baseToolMessageItem) SetStatus(status ToolStatus) {
 	t.status = status
 	t.clearCache()
 }
 
-// Status returns the current tool status.
+// Status 返回当前工具状态
 func (t *baseToolMessageItem) Status() ToolStatus {
 	return t.status
 }
 
-// computeStatus computes the effective status considering the result.
+// computeStatus 计算考虑结果后的有效状态
 func (t *baseToolMessageItem) computeStatus() ToolStatus {
 	if t.result != nil {
 		if t.result.IsError {
@@ -382,7 +379,7 @@ func (t *baseToolMessageItem) computeStatus() ToolStatus {
 	return t.status
 }
 
-// isSpinning returns true if the tool should show animation.
+// isSpinning 返回工具是否应该显示动画
 func (t *baseToolMessageItem) isSpinning() bool {
 	if t.spinningFunc != nil {
 		return t.spinningFunc(SpinningState{
@@ -394,33 +391,33 @@ func (t *baseToolMessageItem) isSpinning() bool {
 	return !t.toolCall.Finished && t.status != ToolStatusCanceled
 }
 
-// SetSpinningFunc sets a custom function to determine if the tool should spin.
+// SetSpinningFunc 设置自定义函数以确定工具是否应该旋转
 func (t *baseToolMessageItem) SetSpinningFunc(fn SpinningFunc) {
 	t.spinningFunc = fn
 }
 
-// ToggleExpanded toggles the expanded state of the thinking box.
+// ToggleExpanded 切换思考框的展开状态
 func (t *baseToolMessageItem) ToggleExpanded() bool {
 	t.expandedContent = !t.expandedContent
 	t.clearCache()
 	return t.expandedContent
 }
 
-// HandleMouseClick implements MouseClickable.
+// HandleMouseClick 实现 MouseClickable
 func (t *baseToolMessageItem) HandleMouseClick(btn ansi.MouseButton, x, y int) bool {
 	return btn == ansi.MouseLeft
 }
 
-// HandleKeyEvent implements KeyEventHandler.
+// HandleKeyEvent 实现 KeyEventHandler
 func (t *baseToolMessageItem) HandleKeyEvent(key tea.KeyMsg) (bool, tea.Cmd) {
 	if k := key.String(); k == "c" || k == "y" {
 		text := t.formatToolForCopy()
-		return true, common.CopyToClipboard(text, "Tool content copied to clipboard")
+		return true, common.CopyToClipboard(text, "工具内容已复制到剪贴板")
 	}
 	return false, nil
 }
 
-// pendingTool renders a tool that is still in progress with an animation.
+// pendingTool 渲染仍在进行中并带有动画的工具
 func pendingTool(sty *styles.Styles, name string, anim *anim.Anim) string {
 	icon := sty.Tool.IconPending.Render()
 	toolName := sty.Tool.NameNormal.Render(name)
@@ -433,39 +430,39 @@ func pendingTool(sty *styles.Styles, name string, anim *anim.Anim) string {
 	return fmt.Sprintf("%s %s %s", icon, toolName, animView)
 }
 
-// toolEarlyStateContent handles error/cancelled/pending states before content rendering.
-// Returns the rendered output and true if early state was handled.
+// toolEarlyStateContent 在内容渲染之前处理错误/取消/等待状态
+// 返回渲染的输出和是否处理了早期状态
 func toolEarlyStateContent(sty *styles.Styles, opts *ToolRenderOpts, width int) (string, bool) {
 	var msg string
 	switch opts.Status {
 	case ToolStatusError:
 		msg = toolErrorContent(sty, opts.Result, width)
 	case ToolStatusCanceled:
-		msg = sty.Tool.StateCancelled.Render("Canceled.")
+		msg = sty.Tool.StateCancelled.Render("已取消。")
 	case ToolStatusAwaitingPermission:
-		msg = sty.Tool.StateWaiting.Render("Requesting permission...")
+		msg = sty.Tool.StateWaiting.Render("正在请求权限...")
 	case ToolStatusRunning:
-		msg = sty.Tool.StateWaiting.Render("Waiting for tool response...")
+		msg = sty.Tool.StateWaiting.Render("等待工具响应...")
 	default:
 		return "", false
 	}
 	return msg, true
 }
 
-// toolErrorContent formats an error message with ERROR tag.
+// toolErrorContent 使用 ERROR 标签格式化错误消息
 func toolErrorContent(sty *styles.Styles, result *message.ToolResult, width int) string {
 	if result == nil {
 		return ""
 	}
 	errContent := strings.ReplaceAll(result.Content, "\n", " ")
-	errTag := sty.Tool.ErrorTag.Render("ERROR")
+	errTag := sty.Tool.ErrorTag.Render("错误")
 	tagWidth := lipgloss.Width(errTag)
 	errContent = ansi.Truncate(errContent, width-tagWidth-3, "…")
 	return fmt.Sprintf("%s %s", errTag, sty.Tool.ErrorMessage.Render(errContent))
 }
 
-// toolIcon returns the status icon for a tool call.
-// toolIcon returns the status icon for a tool call based on its status.
+// toolIcon 返回工具调用的状态图标
+// toolIcon 根据工具调用的状态返回状态图标
 func toolIcon(sty *styles.Styles, status ToolStatus) string {
 	switch status {
 	case ToolStatusSuccess:
@@ -479,11 +476,11 @@ func toolIcon(sty *styles.Styles, status ToolStatus) string {
 	}
 }
 
-// toolParamList formats parameters as "main (key=value, ...)" with truncation.
-// toolParamList formats tool parameters as "main (key=value, ...)" with truncation.
+// toolParamList 将参数格式化为 "main (key=value, ...)" 并进行截断
+// toolParamList 将工具参数格式化为 "main (key=value, ...)" 并进行截断
 func toolParamList(sty *styles.Styles, params []string, width int) string {
-	// minSpaceForMainParam is the min space required for the main param
-	// if this is less that the value set we will only show the main param nothing else
+	// minSpaceForMainParam 是主参数所需的最小空间
+	// 如果小于此值，则只显示主参数，不显示其他内容
 	const minSpaceForMainParam = 30
 	if len(params) == 0 {
 		return ""
@@ -491,7 +488,7 @@ func toolParamList(sty *styles.Styles, params []string, width int) string {
 
 	mainParam := params[0]
 
-	// Build key=value pairs from remaining params (consecutive key, value pairs).
+	// 从剩余参数构建 key=value 对（连续的键值对）
 	var kvPairs []string
 	for i := 1; i+1 < len(params); i += 2 {
 		if params[i+1] != "" {
@@ -499,7 +496,7 @@ func toolParamList(sty *styles.Styles, params []string, width int) string {
 		}
 	}
 
-	// Try to include key=value pairs if there's enough space.
+	// 如果有足够空间，尝试包含 key=value 对
 	output := mainParam
 	if len(kvPairs) > 0 {
 		partsStr := strings.Join(kvPairs, ", ")
@@ -514,7 +511,7 @@ func toolParamList(sty *styles.Styles, params []string, width int) string {
 	return sty.Tool.ParamMain.Render(output)
 }
 
-// toolHeader builds the tool header line: "● ToolName params..."
+// toolHeader 构建工具标题行："● ToolName params..."
 func toolHeader(sty *styles.Styles, status ToolStatus, name string, width int, nested bool, params ...string) string {
 	icon := toolIcon(sty, status)
 	nameStyle := sty.Tool.NameNormal
@@ -529,14 +526,14 @@ func toolHeader(sty *styles.Styles, status ToolStatus, name string, width int, n
 	return prefix + paramsStr
 }
 
-// toolOutputPlainContent renders plain text with optional expansion support.
+// toolOutputPlainContent 渲染纯文本，支持可选的展开功能
 func toolOutputPlainContent(sty *styles.Styles, content string, width int, expanded bool) string {
 	content = stringext.NormalizeSpace(content)
 	lines := strings.Split(content, "\n")
 
 	maxLines := responseContextHeight
 	if expanded {
-		maxLines = len(lines) // Show all
+		maxLines = len(lines) // 显示所有行
 	}
 
 	var out []string
@@ -562,7 +559,7 @@ func toolOutputPlainContent(sty *styles.Styles, content string, width int, expan
 	return strings.Join(out, "\n")
 }
 
-// toolOutputCodeContent renders code with syntax highlighting and line numbers.
+// toolOutputCodeContent 渲染代码，支持语法高亮和行号
 func toolOutputCodeContent(sty *styles.Styles, path, content string, offset, width int, expanded bool) string {
 	content = stringext.NormalizeSpace(content)
 
@@ -572,7 +569,7 @@ func toolOutputCodeContent(sty *styles.Styles, path, content string, offset, wid
 		maxLines = len(lines)
 	}
 
-	// Truncate if needed.
+	// 如有需要则截断
 	displayLines := lines
 	if len(lines) > maxLines {
 		displayLines = lines[:maxLines]
@@ -582,7 +579,7 @@ func toolOutputCodeContent(sty *styles.Styles, path, content string, offset, wid
 	highlighted, _ := common.SyntaxHighlight(sty, strings.Join(displayLines, "\n"), path, bg)
 	highlightedLines := strings.Split(highlighted, "\n")
 
-	// Calculate line number width.
+	// 计算行号宽度
 	maxLineNumber := len(displayLines) + offset
 	maxDigits := getDigits(maxLineNumber)
 	numFmt := fmt.Sprintf("%%%dd", maxDigits)
@@ -594,7 +591,7 @@ func toolOutputCodeContent(sty *styles.Styles, path, content string, offset, wid
 	for i, ln := range highlightedLines {
 		lineNum := sty.Tool.ContentLineNumber.Render(fmt.Sprintf(numFmt, i+1+offset))
 
-		// Truncate accounting for padding that will be added.
+		// 截断时考虑将要添加的填充
 		ln = ansi.Truncate(ln, codeWidth-sty.Tool.ContentCodeLine.GetHorizontalPadding(), "…")
 
 		codeLine := sty.Tool.ContentCodeLine.
@@ -604,7 +601,7 @@ func toolOutputCodeContent(sty *styles.Styles, path, content string, offset, wid
 		out = append(out, lipgloss.JoinHorizontal(lipgloss.Left, lineNum, codeLine))
 	}
 
-	// Add truncation message if needed.
+	// 如有需要添加截断消息
 	if len(lines) > maxLines && !expanded {
 		out = append(out, sty.Tool.ContentCodeTruncation.
 			Width(width).
@@ -615,12 +612,12 @@ func toolOutputCodeContent(sty *styles.Styles, path, content string, offset, wid
 	return sty.Tool.Body.Render(strings.Join(out, "\n"))
 }
 
-// toolOutputImageContent renders image data with size info.
+// toolOutputImageContent 渲染图像数据及大小信息
 func toolOutputImageContent(sty *styles.Styles, data, mediaType string) string {
 	dataSize := len(data) * 3 / 4
 	sizeStr := formatSize(dataSize)
 
-	loaded := sty.Base.Foreground(sty.Green).Render("Loaded")
+	loaded := sty.Base.Foreground(sty.Green).Render("已加载")
 	arrow := sty.Base.Foreground(sty.GreenDark).Render("→")
 	typeStyled := sty.Base.Render(mediaType)
 	sizeStyled := sty.Subtle.Render(sizeStr)
@@ -628,7 +625,7 @@ func toolOutputImageContent(sty *styles.Styles, data, mediaType string) string {
 	return sty.Tool.Body.Render(fmt.Sprintf("%s %s %s %s", loaded, arrow, typeStyled, sizeStyled))
 }
 
-// getDigits returns the number of digits in a number.
+// getDigits 返回数字的位数
 func getDigits(n int) int {
 	if n == 0 {
 		return 1
@@ -644,7 +641,7 @@ func getDigits(n int) int {
 	return digits
 }
 
-// formatSize formats byte size into human readable format.
+// formatSize 将字节大小格式化为人类可读的格式
 func formatSize(bytes int) string {
 	const (
 		kb = 1024
@@ -660,7 +657,7 @@ func formatSize(bytes int) string {
 	}
 }
 
-// toolOutputDiffContent renders a diff between old and new content.
+// toolOutputDiffContent 渲染旧内容和新内容之间的差异
 func toolOutputDiffContent(sty *styles.Styles, file, oldContent, newContent string, width int, expanded bool) string {
 	bodyWidth := width - toolBodyLeftPaddingTotal
 
@@ -669,7 +666,7 @@ func toolOutputDiffContent(sty *styles.Styles, file, oldContent, newContent stri
 		After(file, newContent).
 		Width(bodyWidth)
 
-	// Use split view for wide terminals.
+	// 对宽终端使用分屏视图
 	if width > maxTextWidth {
 		formatter = formatter.Split()
 	}
@@ -677,7 +674,7 @@ func toolOutputDiffContent(sty *styles.Styles, file, oldContent, newContent stri
 	formatted := formatter.String()
 	lines := strings.Split(formatted, "\n")
 
-	// Truncate if needed.
+	// 如有需要则截断
 	maxLines := responseContextHeight
 	if expanded {
 		maxLines = len(lines)
@@ -693,8 +690,8 @@ func toolOutputDiffContent(sty *styles.Styles, file, oldContent, newContent stri
 	return sty.Tool.Body.Render(formatted)
 }
 
-// formatTimeout converts timeout seconds to a duration string (e.g., "30s").
-// Returns empty string if timeout is 0.
+// formatTimeout 将超时秒数转换为持续时间字符串（例如 "30s"）
+// 如果超时为 0，则返回空字符串
 func formatTimeout(timeout int) string {
 	if timeout == 0 {
 		return ""
@@ -702,7 +699,7 @@ func formatTimeout(timeout int) string {
 	return fmt.Sprintf("%ds", timeout)
 }
 
-// formatNonZero returns string representation of non-zero integers, empty string for zero.
+// formatNonZero 返回非零整数的字符串表示，零则返回空字符串
 func formatNonZero(value int) string {
 	if value == 0 {
 		return ""
@@ -710,7 +707,7 @@ func formatNonZero(value int) string {
 	return fmt.Sprintf("%d", value)
 }
 
-// toolOutputMultiEditDiffContent renders a diff with optional failed edits note.
+// toolOutputMultiEditDiffContent 渲染差异，可选地包含失败编辑说明
 func toolOutputMultiEditDiffContent(sty *styles.Styles, file string, meta tools.MultiEditResponseMetadata, totalEdits, width int, expanded bool) string {
 	bodyWidth := width - toolBodyLeftPaddingTotal
 
@@ -719,7 +716,7 @@ func toolOutputMultiEditDiffContent(sty *styles.Styles, file string, meta tools.
 		After(file, meta.NewContent).
 		Width(bodyWidth)
 
-	// Use split view for wide terminals.
+	// 对宽终端使用分屏视图
 	if width > maxTextWidth {
 		formatter = formatter.Split()
 	}
@@ -727,7 +724,7 @@ func toolOutputMultiEditDiffContent(sty *styles.Styles, file string, meta tools.
 	formatted := formatter.String()
 	lines := strings.Split(formatted, "\n")
 
-	// Truncate if needed.
+	// 如有需要则截断
 	maxLines := responseContextHeight
 	if expanded {
 		maxLines = len(lines)
@@ -740,10 +737,10 @@ func toolOutputMultiEditDiffContent(sty *styles.Styles, file string, meta tools.
 		formatted = truncMsg + "\n" + strings.Join(lines[:maxLines], "\n")
 	}
 
-	// Add failed edits note if any exist.
+	// 如果存在失败的编辑，添加说明
 	if len(meta.EditsFailed) > 0 {
-		noteTag := sty.Tool.NoteTag.Render("Note")
-		noteMsg := fmt.Sprintf("%d of %d edits succeeded", meta.EditsApplied, totalEdits)
+		noteTag := sty.Tool.NoteTag.Render("注意")
+		noteMsg := fmt.Sprintf("%d 个编辑中成功 %d 个", totalEdits, meta.EditsApplied)
 		note := fmt.Sprintf("%s %s", noteTag, sty.Tool.NoteMessage.Render(noteMsg))
 		formatted = formatted + "\n\n" + note
 	}
@@ -751,7 +748,7 @@ func toolOutputMultiEditDiffContent(sty *styles.Styles, file string, meta tools.
 	return sty.Tool.Body.Render(formatted)
 }
 
-// roundedEnumerator creates a tree enumerator with rounded corners.
+// roundedEnumerator 创建带有圆角的树枚举器
 func roundedEnumerator(lPadding, width int) tree.Enumerator {
 	if width == 0 {
 		width = 2
@@ -769,11 +766,11 @@ func roundedEnumerator(lPadding, width int) tree.Enumerator {
 	}
 }
 
-// toolOutputMarkdownContent renders markdown content with optional truncation.
+// toolOutputMarkdownContent 渲染 Markdown 内容，支持可选的截断
 func toolOutputMarkdownContent(sty *styles.Styles, content string, width int, expanded bool) string {
 	content = stringext.NormalizeSpace(content)
 
-	// Cap width for readability.
+	// 为可读性限制宽度
 	if width > maxTextWidth {
 		width = maxTextWidth
 	}
@@ -808,44 +805,44 @@ func toolOutputMarkdownContent(sty *styles.Styles, content string, width int, ex
 	return sty.Tool.Body.Render(strings.Join(out, "\n"))
 }
 
-// formatToolForCopy formats the tool call for clipboard copying.
+// formatToolForCopy 格式化工具调用以便复制到剪贴板
 func (t *baseToolMessageItem) formatToolForCopy() string {
 	var parts []string
 
 	toolName := prettifyToolName(t.toolCall.Name)
-	parts = append(parts, fmt.Sprintf("## %s Tool Call", toolName))
+	parts = append(parts, fmt.Sprintf("## %s 工具调用", toolName))
 
 	if t.toolCall.Input != "" {
 		params := t.formatParametersForCopy()
 		if params != "" {
-			parts = append(parts, "### Parameters:")
+			parts = append(parts, "### 参数：")
 			parts = append(parts, params)
 		}
 	}
 
 	if t.result != nil && t.result.ToolCallID != "" {
 		if t.result.IsError {
-			parts = append(parts, "### Error:")
+			parts = append(parts, "### 错误：")
 			parts = append(parts, t.result.Content)
 		} else {
-			parts = append(parts, "### Result:")
+			parts = append(parts, "### 结果：")
 			content := t.formatResultForCopy()
 			if content != "" {
 				parts = append(parts, content)
 			}
 		}
 	} else if t.status == ToolStatusCanceled {
-		parts = append(parts, "### Status:")
-		parts = append(parts, "Cancelled")
+		parts = append(parts, "### 状态：")
+		parts = append(parts, "已取消")
 	} else {
-		parts = append(parts, "### Status:")
-		parts = append(parts, "Pending...")
+		parts = append(parts, "### 状态：")
+		parts = append(parts, "等待中...")
 	}
 
 	return strings.Join(parts, "\n\n")
 }
 
-// formatParametersForCopy formats tool parameters for clipboard copying.
+// formatParametersForCopy 格式化工具参数以便复制到剪贴板
 func (t *baseToolMessageItem) formatParametersForCopy() string {
 	switch t.toolCall.Name {
 	case tools.BashToolName:
@@ -853,49 +850,49 @@ func (t *baseToolMessageItem) formatParametersForCopy() string {
 		if json.Unmarshal([]byte(t.toolCall.Input), &params) == nil {
 			cmd := strings.ReplaceAll(params.Command, "\n", " ")
 			cmd = strings.ReplaceAll(cmd, "\t", "    ")
-			return fmt.Sprintf("**Command:** %s", cmd)
+			return fmt.Sprintf("**命令：** %s", cmd)
 		}
 	case tools.ViewToolName:
 		var params tools.ViewParams
 		if json.Unmarshal([]byte(t.toolCall.Input), &params) == nil {
 			var parts []string
-			parts = append(parts, fmt.Sprintf("**File:** %s", fsext.PrettyPath(params.FilePath)))
+			parts = append(parts, fmt.Sprintf("**文件：** %s", fsext.PrettyPath(params.FilePath)))
 			if params.Limit > 0 {
-				parts = append(parts, fmt.Sprintf("**Limit:** %d", params.Limit))
+				parts = append(parts, fmt.Sprintf("**限制：** %d", params.Limit))
 			}
 			if params.Offset > 0 {
-				parts = append(parts, fmt.Sprintf("**Offset:** %d", params.Offset))
+				parts = append(parts, fmt.Sprintf("**偏移：** %d", params.Offset))
 			}
 			return strings.Join(parts, "\n")
 		}
 	case tools.EditToolName:
 		var params tools.EditParams
 		if json.Unmarshal([]byte(t.toolCall.Input), &params) == nil {
-			return fmt.Sprintf("**File:** %s", fsext.PrettyPath(params.FilePath))
+			return fmt.Sprintf("**文件：** %s", fsext.PrettyPath(params.FilePath))
 		}
 	case tools.MultiEditToolName:
 		var params tools.MultiEditParams
 		if json.Unmarshal([]byte(t.toolCall.Input), &params) == nil {
 			var parts []string
-			parts = append(parts, fmt.Sprintf("**File:** %s", fsext.PrettyPath(params.FilePath)))
-			parts = append(parts, fmt.Sprintf("**Edits:** %d", len(params.Edits)))
+			parts = append(parts, fmt.Sprintf("**文件：** %s", fsext.PrettyPath(params.FilePath)))
+			parts = append(parts, fmt.Sprintf("**编辑数：** %d", len(params.Edits)))
 			return strings.Join(parts, "\n")
 		}
 	case tools.WriteToolName:
 		var params tools.WriteParams
 		if json.Unmarshal([]byte(t.toolCall.Input), &params) == nil {
-			return fmt.Sprintf("**File:** %s", fsext.PrettyPath(params.FilePath))
+			return fmt.Sprintf("**文件：** %s", fsext.PrettyPath(params.FilePath))
 		}
 	case tools.FetchToolName:
 		var params tools.FetchParams
 		if json.Unmarshal([]byte(t.toolCall.Input), &params) == nil {
 			var parts []string
-			parts = append(parts, fmt.Sprintf("**URL:** %s", params.URL))
+			parts = append(parts, fmt.Sprintf("**URL：** %s", params.URL))
 			if params.Format != "" {
-				parts = append(parts, fmt.Sprintf("**Format:** %s", params.Format))
+				parts = append(parts, fmt.Sprintf("**格式：** %s", params.Format))
 			}
 			if params.Timeout > 0 {
-				parts = append(parts, fmt.Sprintf("**Timeout:** %ds", params.Timeout))
+				parts = append(parts, fmt.Sprintf("**超时：** %ds", params.Timeout))
 			}
 			return strings.Join(parts, "\n")
 		}
@@ -904,31 +901,31 @@ func (t *baseToolMessageItem) formatParametersForCopy() string {
 		if json.Unmarshal([]byte(t.toolCall.Input), &params) == nil {
 			var parts []string
 			if params.URL != "" {
-				parts = append(parts, fmt.Sprintf("**URL:** %s", params.URL))
+				parts = append(parts, fmt.Sprintf("**URL：** %s", params.URL))
 			}
 			if params.Prompt != "" {
-				parts = append(parts, fmt.Sprintf("**Prompt:** %s", params.Prompt))
+				parts = append(parts, fmt.Sprintf("**提示：** %s", params.Prompt))
 			}
 			return strings.Join(parts, "\n")
 		}
 	case tools.WebFetchToolName:
 		var params tools.WebFetchParams
 		if json.Unmarshal([]byte(t.toolCall.Input), &params) == nil {
-			return fmt.Sprintf("**URL:** %s", params.URL)
+			return fmt.Sprintf("**URL：** %s", params.URL)
 		}
 	case tools.GrepToolName:
 		var params tools.GrepParams
 		if json.Unmarshal([]byte(t.toolCall.Input), &params) == nil {
 			var parts []string
-			parts = append(parts, fmt.Sprintf("**Pattern:** %s", params.Pattern))
+			parts = append(parts, fmt.Sprintf("**模式：** %s", params.Pattern))
 			if params.Path != "" {
-				parts = append(parts, fmt.Sprintf("**Path:** %s", params.Path))
+				parts = append(parts, fmt.Sprintf("**路径：** %s", params.Path))
 			}
 			if params.Include != "" {
-				parts = append(parts, fmt.Sprintf("**Include:** %s", params.Include))
+				parts = append(parts, fmt.Sprintf("**包含：** %s", params.Include))
 			}
 			if params.LiteralText {
-				parts = append(parts, "**Literal:** true")
+				parts = append(parts, "**字面量：** true")
 			}
 			return strings.Join(parts, "\n")
 		}
@@ -936,9 +933,9 @@ func (t *baseToolMessageItem) formatParametersForCopy() string {
 		var params tools.GlobParams
 		if json.Unmarshal([]byte(t.toolCall.Input), &params) == nil {
 			var parts []string
-			parts = append(parts, fmt.Sprintf("**Pattern:** %s", params.Pattern))
+			parts = append(parts, fmt.Sprintf("**模式：** %s", params.Pattern))
 			if params.Path != "" {
-				parts = append(parts, fmt.Sprintf("**Path:** %s", params.Path))
+				parts = append(parts, fmt.Sprintf("**路径：** %s", params.Path))
 			}
 			return strings.Join(parts, "\n")
 		}
@@ -949,16 +946,16 @@ func (t *baseToolMessageItem) formatParametersForCopy() string {
 			if path == "" {
 				path = "."
 			}
-			return fmt.Sprintf("**Path:** %s", fsext.PrettyPath(path))
+			return fmt.Sprintf("**路径：** %s", fsext.PrettyPath(path))
 		}
 	case tools.DownloadToolName:
 		var params tools.DownloadParams
 		if json.Unmarshal([]byte(t.toolCall.Input), &params) == nil {
 			var parts []string
-			parts = append(parts, fmt.Sprintf("**URL:** %s", params.URL))
-			parts = append(parts, fmt.Sprintf("**File Path:** %s", fsext.PrettyPath(params.FilePath)))
+			parts = append(parts, fmt.Sprintf("**URL：** %s", params.URL))
+			parts = append(parts, fmt.Sprintf("**文件路径：** %s", fsext.PrettyPath(params.FilePath)))
 			if params.Timeout > 0 {
-				parts = append(parts, fmt.Sprintf("**Timeout:** %s", (time.Duration(params.Timeout)*time.Second).String()))
+				parts = append(parts, fmt.Sprintf("**超时：** %s", (time.Duration(params.Timeout)*time.Second).String()))
 			}
 			return strings.Join(parts, "\n")
 		}
@@ -966,21 +963,21 @@ func (t *baseToolMessageItem) formatParametersForCopy() string {
 		var params tools.SourcegraphParams
 		if json.Unmarshal([]byte(t.toolCall.Input), &params) == nil {
 			var parts []string
-			parts = append(parts, fmt.Sprintf("**Query:** %s", params.Query))
+			parts = append(parts, fmt.Sprintf("**查询：** %s", params.Query))
 			if params.Count > 0 {
-				parts = append(parts, fmt.Sprintf("**Count:** %d", params.Count))
+				parts = append(parts, fmt.Sprintf("**数量：** %d", params.Count))
 			}
 			if params.ContextWindow > 0 {
-				parts = append(parts, fmt.Sprintf("**Context:** %d", params.ContextWindow))
+				parts = append(parts, fmt.Sprintf("**上下文：** %d", params.ContextWindow))
 			}
 			return strings.Join(parts, "\n")
 		}
 	case tools.DiagnosticsToolName:
-		return "**Project:** diagnostics"
+		return "**项目：** 诊断"
 	case agent.AgentToolName:
 		var params agent.AgentParams
 		if json.Unmarshal([]byte(t.toolCall.Input), &params) == nil {
-			return fmt.Sprintf("**Task:**\n%s", params.Prompt)
+			return fmt.Sprintf("**任务：**\n%s", params.Prompt)
 		}
 	}
 
@@ -992,7 +989,7 @@ func (t *baseToolMessageItem) formatParametersForCopy() string {
 			if len(displayKey) > 0 {
 				displayKey = strings.ToUpper(displayKey[:1]) + displayKey[1:]
 			}
-			parts = append(parts, fmt.Sprintf("**%s:** %v", displayKey, value))
+			parts = append(parts, fmt.Sprintf("**%s：** %v", displayKey, value))
 		}
 		return strings.Join(parts, "\n")
 	}
@@ -1000,7 +997,7 @@ func (t *baseToolMessageItem) formatParametersForCopy() string {
 	return ""
 }
 
-// formatResultForCopy formats tool results for clipboard copying.
+// formatResultForCopy 格式化工具结果以便复制到剪贴板
 func (t *baseToolMessageItem) formatResultForCopy() string {
 	if t.result == nil {
 		return ""
@@ -1008,9 +1005,9 @@ func (t *baseToolMessageItem) formatResultForCopy() string {
 
 	if t.result.Data != "" {
 		if strings.HasPrefix(t.result.MIMEType, "image/") {
-			return fmt.Sprintf("[Image: %s]", t.result.MIMEType)
+			return fmt.Sprintf("[图像：%s]", t.result.MIMEType)
 		}
-		return fmt.Sprintf("[Media: %s]", t.result.MIMEType)
+		return fmt.Sprintf("[媒体：%s]", t.result.MIMEType)
 	}
 
 	switch t.toolCall.Name {
@@ -1039,7 +1036,7 @@ func (t *baseToolMessageItem) formatResultForCopy() string {
 	}
 }
 
-// formatBashResultForCopy formats bash tool results for clipboard.
+// formatBashResultForCopy 格式化 bash 工具结果以便复制到剪贴板
 func (t *baseToolMessageItem) formatBashResultForCopy() string {
 	if t.result == nil {
 		return ""
@@ -1062,7 +1059,7 @@ func (t *baseToolMessageItem) formatBashResultForCopy() string {
 	return fmt.Sprintf("```bash\n%s\n```", output)
 }
 
-// formatViewResultForCopy formats view tool results for clipboard.
+// formatViewResultForCopy 格式化 view 工具结果以便复制到剪贴板
 func (t *baseToolMessageItem) formatViewResultForCopy() string {
 	if t.result == nil {
 		return ""
@@ -1126,7 +1123,7 @@ func (t *baseToolMessageItem) formatViewResultForCopy() string {
 	return result.String()
 }
 
-// formatEditResultForCopy formats edit tool results for clipboard.
+// formatEditResultForCopy 格式化 edit 工具结果以便复制到剪贴板
 func (t *baseToolMessageItem) formatEditResultForCopy() string {
 	if t.result == nil || t.result.Metadata == "" {
 		if t.result != nil {
@@ -1152,7 +1149,7 @@ func (t *baseToolMessageItem) formatEditResultForCopy() string {
 		}
 		diffContent, additions, removals := diff.GenerateDiff(meta.OldContent, meta.NewContent, fileName)
 
-		fmt.Fprintf(&result, "Changes: +%d -%d\n", additions, removals)
+		fmt.Fprintf(&result, "变更：+%d -%d\n", additions, removals)
 		result.WriteString("```diff\n")
 		result.WriteString(diffContent)
 		result.WriteString("\n```")
@@ -1161,7 +1158,7 @@ func (t *baseToolMessageItem) formatEditResultForCopy() string {
 	return result.String()
 }
 
-// formatMultiEditResultForCopy formats multi-edit tool results for clipboard.
+// formatMultiEditResultForCopy 格式化 multi-edit 工具结果以便复制到剪贴板
 func (t *baseToolMessageItem) formatMultiEditResultForCopy() string {
 	if t.result == nil || t.result.Metadata == "" {
 		if t.result != nil {
@@ -1186,7 +1183,7 @@ func (t *baseToolMessageItem) formatMultiEditResultForCopy() string {
 		}
 		diffContent, additions, removals := diff.GenerateDiff(meta.OldContent, meta.NewContent, fileName)
 
-		fmt.Fprintf(&result, "Changes: +%d -%d\n", additions, removals)
+		fmt.Fprintf(&result, "变更：+%d -%d\n", additions, removals)
 		result.WriteString("```diff\n")
 		result.WriteString(diffContent)
 		result.WriteString("\n```")
@@ -1195,7 +1192,7 @@ func (t *baseToolMessageItem) formatMultiEditResultForCopy() string {
 	return result.String()
 }
 
-// formatWriteResultForCopy formats write tool results for clipboard.
+// formatWriteResultForCopy 格式化 write 工具结果以便复制到剪贴板
 func (t *baseToolMessageItem) formatWriteResultForCopy() string {
 	if t.result == nil {
 		return ""
@@ -1244,7 +1241,7 @@ func (t *baseToolMessageItem) formatWriteResultForCopy() string {
 	}
 
 	var result strings.Builder
-	fmt.Fprintf(&result, "File: %s\n", fsext.PrettyPath(params.FilePath))
+	fmt.Fprintf(&result, "文件：%s\n", fsext.PrettyPath(params.FilePath))
 	if lang != "" {
 		fmt.Fprintf(&result, "```%s\n", lang)
 	} else {
@@ -1256,7 +1253,7 @@ func (t *baseToolMessageItem) formatWriteResultForCopy() string {
 	return result.String()
 }
 
-// formatFetchResultForCopy formats fetch tool results for clipboard.
+// formatFetchResultForCopy 格式化 fetch 工具结果以便复制到剪贴板
 func (t *baseToolMessageItem) formatFetchResultForCopy() string {
 	if t.result == nil {
 		return ""
@@ -1269,13 +1266,13 @@ func (t *baseToolMessageItem) formatFetchResultForCopy() string {
 
 	var result strings.Builder
 	if params.URL != "" {
-		fmt.Fprintf(&result, "URL: %s\n", params.URL)
+		fmt.Fprintf(&result, "URL：%s\n", params.URL)
 	}
 	if params.Format != "" {
-		fmt.Fprintf(&result, "Format: %s\n", params.Format)
+		fmt.Fprintf(&result, "格式：%s\n", params.Format)
 	}
 	if params.Timeout > 0 {
-		fmt.Fprintf(&result, "Timeout: %ds\n", params.Timeout)
+		fmt.Fprintf(&result, "超时：%ds\n", params.Timeout)
 	}
 	result.WriteString("\n")
 
@@ -1284,7 +1281,7 @@ func (t *baseToolMessageItem) formatFetchResultForCopy() string {
 	return result.String()
 }
 
-// formatAgenticFetchResultForCopy formats agentic fetch tool results for clipboard.
+// formatAgenticFetchResultForCopy 格式化 agentic fetch 工具结果以便复制到剪贴板
 func (t *baseToolMessageItem) formatAgenticFetchResultForCopy() string {
 	if t.result == nil {
 		return ""
@@ -1297,10 +1294,10 @@ func (t *baseToolMessageItem) formatAgenticFetchResultForCopy() string {
 
 	var result strings.Builder
 	if params.URL != "" {
-		fmt.Fprintf(&result, "URL: %s\n", params.URL)
+		fmt.Fprintf(&result, "URL：%s\n", params.URL)
 	}
 	if params.Prompt != "" {
-		fmt.Fprintf(&result, "Prompt: %s\n\n", params.Prompt)
+		fmt.Fprintf(&result, "提示：%s\n\n", params.Prompt)
 	}
 
 	result.WriteString("```markdown\n")
@@ -1310,7 +1307,7 @@ func (t *baseToolMessageItem) formatAgenticFetchResultForCopy() string {
 	return result.String()
 }
 
-// formatWebFetchResultForCopy formats web fetch tool results for clipboard.
+// formatWebFetchResultForCopy 格式化 web fetch 工具结果以便复制到剪贴板
 func (t *baseToolMessageItem) formatWebFetchResultForCopy() string {
 	if t.result == nil {
 		return ""
@@ -1322,7 +1319,7 @@ func (t *baseToolMessageItem) formatWebFetchResultForCopy() string {
 	}
 
 	var result strings.Builder
-	result.WriteString(fmt.Sprintf("URL: %s\n\n", params.URL))
+	result.WriteString(fmt.Sprintf("URL：%s\n\n", params.URL))
 	result.WriteString("```markdown\n")
 	result.WriteString(t.result.Content)
 	result.WriteString("\n```")
@@ -1330,7 +1327,7 @@ func (t *baseToolMessageItem) formatWebFetchResultForCopy() string {
 	return result.String()
 }
 
-// formatAgentResultForCopy formats agent tool results for clipboard.
+// formatAgentResultForCopy 格式化 agent 工具结果以便复制到剪贴板
 func (t *baseToolMessageItem) formatAgentResultForCopy() string {
 	if t.result == nil {
 		return ""
@@ -1345,45 +1342,45 @@ func (t *baseToolMessageItem) formatAgentResultForCopy() string {
 	return result.String()
 }
 
-// prettifyToolName returns a human-readable name for tool names.
+// prettifyToolName 返回工具名称的可读名称
 func prettifyToolName(name string) string {
 	switch name {
 	case agent.AgentToolName:
-		return "Agent"
+		return "代理"
 	case tools.BashToolName:
 		return "Bash"
 	case tools.JobOutputToolName:
-		return "Job: Output"
+		return "任务：输出"
 	case tools.JobKillToolName:
-		return "Job: Kill"
+		return "任务：终止"
 	case tools.DownloadToolName:
-		return "Download"
+		return "下载"
 	case tools.EditToolName:
-		return "Edit"
+		return "编辑"
 	case tools.MultiEditToolName:
-		return "Multi-Edit"
+		return "多重编辑"
 	case tools.FetchToolName:
-		return "Fetch"
+		return "获取"
 	case tools.AgenticFetchToolName:
-		return "Agentic Fetch"
+		return "智能获取"
 	case tools.WebFetchToolName:
-		return "Fetch"
+		return "获取"
 	case tools.WebSearchToolName:
-		return "Search"
+		return "搜索"
 	case tools.GlobToolName:
 		return "Glob"
 	case tools.GrepToolName:
 		return "Grep"
 	case tools.LSToolName:
-		return "List"
+		return "列表"
 	case tools.SourcegraphToolName:
 		return "Sourcegraph"
 	case tools.TodosToolName:
-		return "To-Do"
+		return "待办事项"
 	case tools.ViewToolName:
-		return "View"
+		return "查看"
 	case tools.WriteToolName:
-		return "Write"
+		return "写入"
 	default:
 		return genericPrettyName(name)
 	}

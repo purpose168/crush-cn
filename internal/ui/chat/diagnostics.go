@@ -10,17 +10,17 @@ import (
 )
 
 // -----------------------------------------------------------------------------
-// Diagnostics Tool
+// 诊断工具
 // -----------------------------------------------------------------------------
 
-// DiagnosticsToolMessageItem is a message item that represents a diagnostics tool call.
+// DiagnosticsToolMessageItem 是表示诊断工具调用的消息项。
 type DiagnosticsToolMessageItem struct {
 	*baseToolMessageItem
 }
 
 var _ ToolMessageItem = (*DiagnosticsToolMessageItem)(nil)
 
-// NewDiagnosticsToolMessageItem creates a new [DiagnosticsToolMessageItem].
+// NewDiagnosticsToolMessageItem 创建一个新的 [DiagnosticsToolMessageItem]。
 func NewDiagnosticsToolMessageItem(
 	sty *styles.Styles,
 	toolCall message.ToolCall,
@@ -30,10 +30,10 @@ func NewDiagnosticsToolMessageItem(
 	return newBaseToolMessageItem(sty, toolCall, result, &DiagnosticsToolRenderContext{}, canceled)
 }
 
-// DiagnosticsToolRenderContext renders diagnostics tool messages.
+// DiagnosticsToolRenderContext 渲染诊断工具消息。
 type DiagnosticsToolRenderContext struct{}
 
-// RenderTool implements the [ToolRenderer] interface.
+// RenderTool 实现 [ToolRenderer] 接口。
 func (d *DiagnosticsToolRenderContext) RenderTool(sty *styles.Styles, width int, opts *ToolRenderOpts) string {
 	cappedWidth := cappedMessageWidth(width)
 	if opts.IsPending() {
@@ -43,7 +43,7 @@ func (d *DiagnosticsToolRenderContext) RenderTool(sty *styles.Styles, width int,
 	var params tools.DiagnosticsParams
 	_ = json.Unmarshal([]byte(opts.ToolCall.Input), &params)
 
-	// Show "project" if no file path, otherwise show the file path.
+	// 如果没有文件路径，则显示"project"（项目），否则显示文件路径
 	mainParam := "project"
 	if params.FilePath != "" {
 		mainParam = fsext.PrettyPath(params.FilePath)

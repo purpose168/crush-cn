@@ -10,17 +10,17 @@ import (
 )
 
 // -----------------------------------------------------------------------------
-// Glob Tool
+// Glob 工具
 // -----------------------------------------------------------------------------
 
-// GlobToolMessageItem is a message item that represents a glob tool call.
+// GlobToolMessageItem 是表示 glob 工具调用的消息项。
 type GlobToolMessageItem struct {
 	*baseToolMessageItem
 }
 
 var _ ToolMessageItem = (*GlobToolMessageItem)(nil)
 
-// NewGlobToolMessageItem creates a new [GlobToolMessageItem].
+// NewGlobToolMessageItem 创建一个新的 [GlobToolMessageItem]。
 func NewGlobToolMessageItem(
 	sty *styles.Styles,
 	toolCall message.ToolCall,
@@ -30,10 +30,10 @@ func NewGlobToolMessageItem(
 	return newBaseToolMessageItem(sty, toolCall, result, &GlobToolRenderContext{}, canceled)
 }
 
-// GlobToolRenderContext renders glob tool messages.
+// GlobToolRenderContext 渲染 glob 工具消息。
 type GlobToolRenderContext struct{}
 
-// RenderTool implements the [ToolRenderer] interface.
+// RenderTool 实现 [ToolRenderer] 接口。
 func (g *GlobToolRenderContext) RenderTool(sty *styles.Styles, width int, opts *ToolRenderOpts) string {
 	cappedWidth := cappedMessageWidth(width)
 	if opts.IsPending() {
@@ -42,7 +42,7 @@ func (g *GlobToolRenderContext) RenderTool(sty *styles.Styles, width int, opts *
 
 	var params tools.GlobParams
 	if err := json.Unmarshal([]byte(opts.ToolCall.Input), &params); err != nil {
-		return toolErrorContent(sty, &message.ToolResult{Content: "Invalid parameters"}, cappedWidth)
+		return toolErrorContent(sty, &message.ToolResult{Content: "无效参数"}, cappedWidth)
 	}
 
 	toolParams := []string{params.Pattern}
@@ -69,17 +69,17 @@ func (g *GlobToolRenderContext) RenderTool(sty *styles.Styles, width int, opts *
 }
 
 // -----------------------------------------------------------------------------
-// Grep Tool
+// Grep 工具
 // -----------------------------------------------------------------------------
 
-// GrepToolMessageItem is a message item that represents a grep tool call.
+// GrepToolMessageItem 是表示 grep 工具调用的消息项。
 type GrepToolMessageItem struct {
 	*baseToolMessageItem
 }
 
 var _ ToolMessageItem = (*GrepToolMessageItem)(nil)
 
-// NewGrepToolMessageItem creates a new [GrepToolMessageItem].
+// NewGrepToolMessageItem 创建一个新的 [GrepToolMessageItem]。
 func NewGrepToolMessageItem(
 	sty *styles.Styles,
 	toolCall message.ToolCall,
@@ -89,10 +89,10 @@ func NewGrepToolMessageItem(
 	return newBaseToolMessageItem(sty, toolCall, result, &GrepToolRenderContext{}, canceled)
 }
 
-// GrepToolRenderContext renders grep tool messages.
+// GrepToolRenderContext 渲染 grep 工具消息。
 type GrepToolRenderContext struct{}
 
-// RenderTool implements the [ToolRenderer] interface.
+// RenderTool 实现 [ToolRenderer] 接口。
 func (g *GrepToolRenderContext) RenderTool(sty *styles.Styles, width int, opts *ToolRenderOpts) string {
 	cappedWidth := cappedMessageWidth(width)
 	if opts.IsPending() {
@@ -101,7 +101,7 @@ func (g *GrepToolRenderContext) RenderTool(sty *styles.Styles, width int, opts *
 
 	var params tools.GrepParams
 	if err := json.Unmarshal([]byte(opts.ToolCall.Input), &params); err != nil {
-		return toolErrorContent(sty, &message.ToolResult{Content: "Invalid parameters"}, cappedWidth)
+		return toolErrorContent(sty, &message.ToolResult{Content: "无效参数"}, cappedWidth)
 	}
 
 	toolParams := []string{params.Pattern}
@@ -134,17 +134,17 @@ func (g *GrepToolRenderContext) RenderTool(sty *styles.Styles, width int, opts *
 }
 
 // -----------------------------------------------------------------------------
-// LS Tool
+// LS 工具
 // -----------------------------------------------------------------------------
 
-// LSToolMessageItem is a message item that represents an ls tool call.
+// LSToolMessageItem 是表示 ls 工具调用的消息项。
 type LSToolMessageItem struct {
 	*baseToolMessageItem
 }
 
 var _ ToolMessageItem = (*LSToolMessageItem)(nil)
 
-// NewLSToolMessageItem creates a new [LSToolMessageItem].
+// NewLSToolMessageItem 创建一个新的 [LSToolMessageItem]。
 func NewLSToolMessageItem(
 	sty *styles.Styles,
 	toolCall message.ToolCall,
@@ -154,10 +154,10 @@ func NewLSToolMessageItem(
 	return newBaseToolMessageItem(sty, toolCall, result, &LSToolRenderContext{}, canceled)
 }
 
-// LSToolRenderContext renders ls tool messages.
+// LSToolRenderContext 渲染 ls 工具消息。
 type LSToolRenderContext struct{}
 
-// RenderTool implements the [ToolRenderer] interface.
+// RenderTool 实现 [ToolRenderer] 接口。
 func (l *LSToolRenderContext) RenderTool(sty *styles.Styles, width int, opts *ToolRenderOpts) string {
 	cappedWidth := cappedMessageWidth(width)
 	if opts.IsPending() {
@@ -166,7 +166,7 @@ func (l *LSToolRenderContext) RenderTool(sty *styles.Styles, width int, opts *To
 
 	var params tools.LSParams
 	if err := json.Unmarshal([]byte(opts.ToolCall.Input), &params); err != nil {
-		return toolErrorContent(sty, &message.ToolResult{Content: "Invalid parameters"}, cappedWidth)
+		return toolErrorContent(sty, &message.ToolResult{Content: "无效参数"}, cappedWidth)
 	}
 
 	path := params.Path
@@ -194,17 +194,17 @@ func (l *LSToolRenderContext) RenderTool(sty *styles.Styles, width int, opts *To
 }
 
 // -----------------------------------------------------------------------------
-// Sourcegraph Tool
+// Sourcegraph 工具
 // -----------------------------------------------------------------------------
 
-// SourcegraphToolMessageItem is a message item that represents a sourcegraph tool call.
+// SourcegraphToolMessageItem 是表示 sourcegraph 工具调用的消息项。
 type SourcegraphToolMessageItem struct {
 	*baseToolMessageItem
 }
 
 var _ ToolMessageItem = (*SourcegraphToolMessageItem)(nil)
 
-// NewSourcegraphToolMessageItem creates a new [SourcegraphToolMessageItem].
+// NewSourcegraphToolMessageItem 创建一个新的 [SourcegraphToolMessageItem]。
 func NewSourcegraphToolMessageItem(
 	sty *styles.Styles,
 	toolCall message.ToolCall,
@@ -214,10 +214,10 @@ func NewSourcegraphToolMessageItem(
 	return newBaseToolMessageItem(sty, toolCall, result, &SourcegraphToolRenderContext{}, canceled)
 }
 
-// SourcegraphToolRenderContext renders sourcegraph tool messages.
+// SourcegraphToolRenderContext 渲染 sourcegraph 工具消息。
 type SourcegraphToolRenderContext struct{}
 
-// RenderTool implements the [ToolRenderer] interface.
+// RenderTool 实现 [ToolRenderer] 接口。
 func (s *SourcegraphToolRenderContext) RenderTool(sty *styles.Styles, width int, opts *ToolRenderOpts) string {
 	cappedWidth := cappedMessageWidth(width)
 	if opts.IsPending() {
@@ -226,7 +226,7 @@ func (s *SourcegraphToolRenderContext) RenderTool(sty *styles.Styles, width int,
 
 	var params tools.SourcegraphParams
 	if err := json.Unmarshal([]byte(opts.ToolCall.Input), &params); err != nil {
-		return toolErrorContent(sty, &message.ToolResult{Content: "Invalid parameters"}, cappedWidth)
+		return toolErrorContent(sty, &message.ToolResult{Content: "无效参数"}, cappedWidth)
 	}
 
 	toolParams := []string{params.Query}

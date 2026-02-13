@@ -7,8 +7,7 @@ import (
 	"syscall"
 )
 
-// Owner retrieves the user ID of the owner of the file or directory at the
-// specified path.
+// Owner 获取指定路径的文件或目录的所有者用户ID。
 func Owner(path string) (int, error) {
 	info, err := os.Stat(path)
 	if err != nil {

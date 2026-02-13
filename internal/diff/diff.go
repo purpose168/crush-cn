@@ -6,7 +6,7 @@ import (
 	"github.com/aymanbagabas/go-udiff"
 )
 
-// GenerateDiff creates a unified diff from two file contents
+// GenerateDiff 从两个文件内容创建统一差异
 func GenerateDiff(beforeContent, afterContent, fileName string) (string, int, int) {
 	fileName = strings.TrimPrefix(fileName, "/")
 

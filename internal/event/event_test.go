@@ -1,19 +1,16 @@
 package event
 
-// These tests verify that the Error function correctly handles various
-// scenarios. These tests will not log anything.
+// 这些测试验证 Error 函数能够正确处理各种场景。这些测试不会记录任何日志。
 
 import (
 	"testing"
 )
 
 func TestError(t *testing.T) {
-	t.Run("returns early when client is nil", func(t *testing.T) {
-		// This test verifies that when the PostHog client is not initialized
-		// the Error function safely returns early without attempting to
-		// enqueue any events. This is important during initialization or when
-		// metrics are disabled, as we don't want the error reporting mechanism
-		// itself to cause panics.
+	t.Run("当客户端为nil时提前返回", func(t *testing.T) {
+		// 此测试验证当 PostHog 客户端未初始化时，Error 函数能够安全地提前返回，
+		// 而不会尝试将任何事件加入队列。这在初始化期间或禁用指标时非常重要，
+		// 因为我们不希望错误报告机制本身导致 panic。
 		originalClient := client
 		defer func() {
 			client = originalClient
@@ -23,9 +20,8 @@ func TestError(t *testing.T) {
 		Error("test error", "key", "value")
 	})
 
-	t.Run("handles nil client without panicking", func(t *testing.T) {
-		// This test covers various edge cases where the error value might be
-		// nil, a string, or an error type.
+	t.Run("处理nil客户端而不发生panic", func(t *testing.T) {
+		// 此测试覆盖各种边界情况，其中错误值可能是 nil、字符串或 error 类型。
 		originalClient := client
 		defer func() {
 			client = originalClient
@@ -37,14 +33,11 @@ func TestError(t *testing.T) {
 		Error(newDefaultTestError("runtime error"), "key", "value")
 	})
 
-	t.Run("handles error with properties", func(t *testing.T) {
-		// This test verifies that the Error function can handle additional
-		// key-value properties that provide context about the error. These
-		// properties are typically passed when recovering from panics (i.e.,
-		// panic name, function name).
+	t.Run("处理带属性的error", func(t *testing.T) {
+		// 此测试验证 Error 函数能够处理提供错误上下文的额外键值属性。
+		// 这些属性通常在从 panic 恢复时传递（例如：panic 名称、函数名称）。
 		//
-		// Even with these additional properties, the function should handle
-		// them gracefully without panicking.
+		// 即使有这些额外属性，函数也应该优雅地处理它们而不会发生 panic。
 		originalClient := client
 		defer func() {
 			client = originalClient
@@ -59,10 +52,9 @@ func TestError(t *testing.T) {
 	})
 }
 
-// newDefaultTestError creates a test error that mimics runtime panic
-// errors. This helps us testing that the Error function can handle various
-// error types, including those that might be passed from a panic recovery
-// scenario.
+// newDefaultTestError 创建一个模拟运行时 panic 错误的测试错误。
+// 这有助于我们测试 Error 函数能够处理各种错误类型，
+// 包括可能从 panic 恢复场景中传递的错误。
 func newDefaultTestError(s string) error {
 	return testError(s)
 }

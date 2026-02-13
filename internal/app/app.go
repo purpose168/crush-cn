@@ -1,5 +1,4 @@
-// Package app wires together services, coordinates agents, and manages
-// application lifecycle.
+// Package app 负责连接服务、协调代理并管理应用程序生命周期。
 package app
 
 import (
@@ -42,7 +41,7 @@ import (
 	"github.com/purpose168/crush-cn/internal/version"
 )
 
-// UpdateAvailableMsg is sent when a new version is available.
+// UpdateAvailableMsg 在有新版本可用时发送。
 type UpdateAvailableMsg struct {
 	CurrentVersion string
 	LatestVersion  string
@@ -72,7 +71,7 @@ type App struct {
 	cleanupFuncs []func(context.Context) error
 }
 
-// New initializes a new application instance.
+// New 初始化一个新的应用程序实例。
 func New(ctx context.Context, conn *sql.DB, cfg *config.Config) (*App, error) {
 	q := db.New(conn)
 	sessions := session.NewService(q, conn)
@@ -117,11 +116,11 @@ func New(ctx context.Context, conn *sql.DB, cfg *config.Config) (*App, error) {
 
 	// TODO: remove the concept of agent config, most likely.
 	if !cfg.IsConfigured() {
-		slog.Warn("No agent configuration found")
+		slog.Warn("未找到代理配置")
 		return app, nil
 	}
 	if err := app.InitCoderAgent(ctx); err != nil {
-		return nil, fmt.Errorf("failed to initialize coder agent: %w", err)
+		return nil, fmt.Errorf("初始化代码代理失败: %w", err)
 	}
 
 	// Set up callback for LSP state updates.
@@ -133,22 +132,21 @@ func New(ctx context.Context, conn *sql.DB, cfg *config.Config) (*App, error) {
 	return app, nil
 }
 
-// Config returns the application configuration.
+// Config 返回应用程序配置。
 func (app *App) Config() *config.Config {
 	return app.config
 }
 
-// RunNonInteractive runs the application in non-interactive mode with the
-// given prompt, printing to stdout.
+// RunNonInteractive 以非交互模式运行应用程序，使用给定的提示词并输出到标准输出。
 func (app *App) RunNonInteractive(ctx context.Context, output io.Writer, prompt, largeModel, smallModel string, hideSpinner bool) error {
-	slog.Info("Running in non-interactive mode")
+	slog.Info("以非交互模式运行")
 
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
 	if largeModel != "" || smallModel != "" {
 		if err := app.overrideModelsForNonInteractive(ctx, largeModel, smallModel); err != nil {
-			return fmt.Errorf("failed to override models: %w", err)
+			return fmt.Errorf("覆盖模型失败: %w", err)
 		}
 	}
 
@@ -181,7 +179,7 @@ func (app *App) RunNonInteractive(ctx context.Context, output io.Writer, prompt,
 
 		spinner = format.NewSpinner(ctx, cancel, anim.Settings{
 			Size:        10,
-			Label:       "Generating",
+			Label:       "生成中",
 			LabelColor:  defaultFG,
 			GradColorA:  t.Primary,
 			GradColorB:  t.Secondary,
@@ -200,7 +198,7 @@ func (app *App) RunNonInteractive(ctx context.Context, output io.Writer, prompt,
 
 	// Wait for MCP initialization to complete before reading MCP tools.
 	if err := mcp.WaitForInit(ctx); err != nil {
-		return fmt.Errorf("failed to wait for MCP initialization: %w", err)
+		return fmt.Errorf("等待MCP初始化失败: %w", err)
 	}
 
 	// force update of agent models before running so mcp tools are loaded
@@ -209,7 +207,7 @@ func (app *App) RunNonInteractive(ctx context.Context, output io.Writer, prompt,
 	defer stopSpinner()
 
 	const maxPromptLengthForTitle = 100
-	const titlePrefix = "Non-interactive: "
+	const titlePrefix = "非交互: "
 	var titleSuffix string
 
 	if len(prompt) > maxPromptLengthForTitle {
@@ -221,9 +219,9 @@ func (app *App) RunNonInteractive(ctx context.Context, output io.Writer, prompt,
 
 	sess, err := app.Sessions.Create(ctx, title)
 	if err != nil {
-		return fmt.Errorf("failed to create session for non-interactive mode: %w", err)
+		return fmt.Errorf("为非交互模式创建会话失败: %w", err)
 	}
-	slog.Info("Created session for non-interactive run", "session_id", sess.ID)
+	slog.Info("为非交互运行创建会话", "session_id", sess.ID)
 
 	// Automatically approve all permission requests for this non-interactive
 	// session.
@@ -239,7 +237,7 @@ func (app *App) RunNonInteractive(ctx context.Context, output io.Writer, prompt,
 		result, err := app.AgentCoordinator.Run(ctx, sess.ID, prompt)
 		if err != nil {
 			done <- response{
-				err: fmt.Errorf("failed to start agent processing stream: %w", err),
+				err: fmt.Errorf("启动代理处理流失败: %w", err),
 			}
 		}
 		done <- response{
@@ -273,10 +271,10 @@ func (app *App) RunNonInteractive(ctx context.Context, output io.Writer, prompt,
 			stopSpinner()
 			if result.err != nil {
 				if errors.Is(result.err, context.Canceled) || errors.Is(result.err, agent.ErrRequestCancelled) {
-					slog.Debug("Non-interactive: agent processing cancelled", "session_id", sess.ID)
+					slog.Debug("非交互: 代理处理已取消", "session_id", sess.ID)
 					return nil
 				}
-				return fmt.Errorf("agent processing failed: %w", result.err)
+				return fmt.Errorf("代理处理失败: %w", result.err)
 			}
 			return nil
 
@@ -289,8 +287,8 @@ func (app *App) RunNonInteractive(ctx context.Context, output io.Writer, prompt,
 				readBytes := messageReadBytes[msg.ID]
 
 				if len(content) < readBytes {
-					slog.Error("Non-interactive: message content is shorter than read bytes", "message_length", len(content), "read_bytes", readBytes)
-					return fmt.Errorf("message content is shorter than read bytes: %d < %d", len(content), readBytes)
+					slog.Error("非交互: 消息内容短于已读字节", "message_length", len(content), "read_bytes", readBytes)
+					return fmt.Errorf("消息内容短于已读字节: %d < %d", len(content), readBytes)
 				}
 
 				part := content[readBytes:]
@@ -316,17 +314,15 @@ func (app *App) RunNonInteractive(ctx context.Context, output io.Writer, prompt,
 
 func (app *App) UpdateAgentModel(ctx context.Context) error {
 	if app.AgentCoordinator == nil {
-		return fmt.Errorf("agent configuration is missing")
+		return fmt.Errorf("代理配置缺失")
 	}
 	return app.AgentCoordinator.UpdateModels(ctx)
 }
 
-// overrideModelsForNonInteractive parses the model strings and temporarily
-// overrides the model configurations, then rebuilds the agent.
-// Format: "model-name" (searches all providers) or "provider/model-name".
-// Model matching is case-insensitive.
-// If largeModel is provided but smallModel is not, the small model defaults to
-// the provider's default small model.
+// overrideModelsForNonInteractive 解析模型字符串并临时覆盖模型配置，然后重建代理。
+// 格式："model-name"（搜索所有提供商）或 "provider/model-name"。
+// 模型匹配不区分大小写。
+// 如果提供了 largeModel 但未提供 smallModel，则小型模型默认为提供商的默认小型模型。
 func (app *App) overrideModelsForNonInteractive(ctx context.Context, largeModel, smallModel string) error {
 	providers := app.config.Providers.Copy()
 
@@ -344,7 +340,7 @@ func (app *App) overrideModelsForNonInteractive(ctx context.Context, largeModel,
 			return err
 		}
 		largeProviderID = found.provider
-		slog.Info("Overriding large model for non-interactive run", "provider", found.provider, "model", found.modelID)
+		slog.Info("为非交互运行覆盖大型模型", "provider", found.provider, "model", found.modelID)
 		app.config.Models[config.SelectedModelTypeLarge] = config.SelectedModel{
 			Provider: found.provider,
 			Model:    found.modelID,
@@ -358,7 +354,7 @@ func (app *App) overrideModelsForNonInteractive(ctx context.Context, largeModel,
 		if err != nil {
 			return err
 		}
-		slog.Info("Overriding small model for non-interactive run", "provider", found.provider, "model", found.modelID)
+		slog.Info("为非交互运行覆盖小型模型", "provider", found.provider, "model", found.modelID)
 		app.config.Models[config.SelectedModelTypeSmall] = config.SelectedModel{
 			Provider: found.provider,
 			Model:    found.modelID,
@@ -373,13 +369,12 @@ func (app *App) overrideModelsForNonInteractive(ctx context.Context, largeModel,
 	return app.AgentCoordinator.UpdateModels(ctx)
 }
 
-// GetDefaultSmallModel returns the default small model for the given
-// provider. Falls back to the large model if no default is found.
+// GetDefaultSmallModel 返回给定提供商的默认小型模型。如果未找到默认值，则回退到大型模型。
 func (app *App) GetDefaultSmallModel(providerID string) config.SelectedModel {
 	cfg := app.config
 	largeModelCfg := cfg.Models[config.SelectedModelTypeLarge]
 
-	// Find the provider in the known providers list to get its default small model.
+	// 在已知提供商列表中查找提供商以获取其默认小型模型。
 	knownProviders, _ := config.Providers(cfg)
 	var knownProvider *catwalk.Provider
 	for _, p := range knownProviders {
@@ -389,20 +384,20 @@ func (app *App) GetDefaultSmallModel(providerID string) config.SelectedModel {
 		}
 	}
 
-	// For unknown/local providers, use the large model as small.
+	// 对于未知/本地提供商，使用大型模型作为小型模型。
 	if knownProvider == nil {
-		slog.Warn("Using large model as small model for unknown provider", "provider", providerID, "model", largeModelCfg.Model)
+		slog.Warn("为未知提供商使用大型模型作为小型模型", "provider", providerID, "model", largeModelCfg.Model)
 		return largeModelCfg
 	}
 
 	defaultSmallModelID := knownProvider.DefaultSmallModelID
 	model := cfg.GetModel(providerID, defaultSmallModelID)
 	if model == nil {
-		slog.Warn("Default small model not found, using large model", "provider", providerID, "model", largeModelCfg.Model)
+		slog.Warn("未找到默认小型模型，使用大型模型", "provider", providerID, "model", largeModelCfg.Model)
 		return largeModelCfg
 	}
 
-	slog.Info("Using provider default small model", "provider", providerID, "model", defaultSmallModelID)
+	slog.Info("使用提供商默认小型模型", "provider", providerID, "model", defaultSmallModelID)
 	return config.SelectedModel{
 		Provider:        providerID,
 		Model:           defaultSmallModelID,
@@ -448,7 +443,7 @@ func setupSubscriber[T any](
 			select {
 			case event, ok := <-subCh:
 				if !ok {
-					slog.Debug("Subscription channel closed", "name", name)
+					slog.Debug("订阅通道已关闭", "name", name)
 					return
 				}
 				var msg tea.Msg = event
@@ -463,13 +458,13 @@ func setupSubscriber[T any](
 				select {
 				case outputCh <- msg:
 				case <-sendTimer.C:
-					slog.Debug("Message dropped due to slow consumer", "name", name)
+					slog.Debug("消息因消费者缓慢而丢弃", "name", name)
 				case <-ctx.Done():
-					slog.Debug("Subscription cancelled", "name", name)
+					slog.Debug("订阅已取消", "name", name)
 					return
 				}
 			case <-ctx.Done():
-				slog.Debug("Subscription cancelled", "name", name)
+				slog.Debug("订阅已取消", "name", name)
 				return
 			}
 		}
@@ -479,7 +474,7 @@ func setupSubscriber[T any](
 func (app *App) InitCoderAgent(ctx context.Context) error {
 	coderAgentCfg := app.config.Agents[config.AgentCoder]
 	if coderAgentCfg.ID == "" {
-		return fmt.Errorf("coder agent configuration is missing")
+		return fmt.Errorf("代码代理配置缺失")
 	}
 	var err error
 	app.AgentCoordinator, err = agent.NewCoordinator(
@@ -493,23 +488,23 @@ func (app *App) InitCoderAgent(ctx context.Context) error {
 		app.LSPManager,
 	)
 	if err != nil {
-		slog.Error("Failed to create coder agent", "err", err)
+		slog.Error("创建代码代理失败", "err", err)
 		return err
 	}
 	return nil
 }
 
-// Subscribe sends events to the TUI as tea.Msgs.
+// Subscribe 将事件作为 tea.Msgs 发送到 TUI。
 func (app *App) Subscribe(program *tea.Program) {
 	defer log.RecoverPanic("app.Subscribe", func() {
-		slog.Info("TUI subscription panic: attempting graceful shutdown")
+		slog.Info("TUI订阅 panic: 尝试优雅关闭")
 		program.Quit()
 	})
 
 	app.tuiWG.Add(1)
 	tuiCtx, tuiCancel := context.WithCancel(app.globalCtx)
 	app.cleanupFuncs = append(app.cleanupFuncs, func(context.Context) error {
-		slog.Debug("Cancelling TUI message handler")
+		slog.Debug("取消TUI消息处理器")
 		tuiCancel()
 		app.tuiWG.Wait()
 		return nil
@@ -519,11 +514,11 @@ func (app *App) Subscribe(program *tea.Program) {
 	for {
 		select {
 		case <-tuiCtx.Done():
-			slog.Debug("TUI message handler shutting down")
+			slog.Debug("TUI消息处理器正在关闭")
 			return
 		case msg, ok := <-app.events:
 			if !ok {
-				slog.Debug("TUI message channel closed")
+				slog.Debug("TUI消息通道已关闭")
 				return
 			}
 			program.Send(msg)
@@ -531,45 +526,44 @@ func (app *App) Subscribe(program *tea.Program) {
 	}
 }
 
-// Shutdown performs a graceful shutdown of the application.
+// Shutdown 执行应用程序的优雅关闭。
 func (app *App) Shutdown() {
 	start := time.Now()
-	defer func() { slog.Debug("Shutdown took " + time.Since(start).String()) }()
+	defer func() { slog.Debug("关闭耗时 " + time.Since(start).String()) }()
 
-	// First, cancel all agents and wait for them to finish. This must complete
-	// before closing the DB so agents can finish writing their state.
+	// 首先，取消所有代理并等待它们完成。这必须在关闭数据库之前完成，以便代理可以完成其状态写入。
 	if app.AgentCoordinator != nil {
 		app.AgentCoordinator.CancelAll()
 	}
 
-	// Now run remaining cleanup tasks in parallel.
+	// 现在并行运行剩余的清理任务。
 	var wg sync.WaitGroup
 
-	// Shared shutdown context for all timeout-bounded cleanup.
+	// 所有有超时限制的清理任务共享的关闭上下文。
 	shutdownCtx, cancel := context.WithTimeout(app.globalCtx, 5*time.Second)
 	defer cancel()
 
-	// Send exit event
+	// 发送退出事件
 	wg.Go(func() {
 		event.AppExited()
 	})
 
-	// Kill all background shells.
+	// 终止所有后台 shell。
 	wg.Go(func() {
 		shell.GetBackgroundShellManager().KillAll(shutdownCtx)
 	})
 
-	// Shutdown all LSP clients.
+	// 关闭所有 LSP 客户端。
 	wg.Go(func() {
 		app.LSPManager.KillAll(shutdownCtx)
 	})
 
-	// Call all cleanup functions.
+	// 调用所有清理函数。
 	for _, cleanup := range app.cleanupFuncs {
 		if cleanup != nil {
 			wg.Go(func() {
 				if err := cleanup(shutdownCtx); err != nil {
-					slog.Error("Failed to cleanup app properly on shutdown", "error", err)
+					slog.Error("应用程序关闭时清理失败", "error", err)
 				}
 			})
 		}
@@ -577,7 +571,7 @@ func (app *App) Shutdown() {
 	wg.Wait()
 }
 
-// checkForUpdates checks for available updates.
+// checkForUpdates 检查可用更新。
 func (app *App) checkForUpdates(ctx context.Context) {
 	checkCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()

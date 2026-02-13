@@ -11,7 +11,7 @@ import (
 )
 
 func TestBackgroundShellManager_Start(t *testing.T) {
-	t.Skip("Skipping this until I figure out why its flaky")
+	t.Skip("在我弄清楚为什么这个测试不稳定之前跳过")
 	t.Parallel()
 
 	ctx := t.Context()
@@ -20,31 +20,31 @@ func TestBackgroundShellManager_Start(t *testing.T) {
 
 	bgShell, err := manager.Start(ctx, workingDir, nil, "echo 'hello world'", "")
 	if err != nil {
-		t.Fatalf("failed to start background shell: %v", err)
+		t.Fatalf("启动后台shell失败: %v", err)
 	}
 
 	if bgShell.ID == "" {
-		t.Error("expected shell ID to be non-empty")
+		t.Error("期望shell ID不为空")
 	}
 
-	// Wait for the command to complete
+	// 等待命令完成
 	bgShell.Wait()
 
 	stdout, stderr, done, err := bgShell.GetOutput()
 	if !done {
-		t.Error("expected shell to be done")
+		t.Error("期望shell已完成")
 	}
 
 	if err != nil {
-		t.Errorf("expected no error, got: %v", err)
+		t.Errorf("期望无错误，但得到: %v", err)
 	}
 
 	if !strings.Contains(stdout, "hello world") {
-		t.Errorf("expected stdout to contain 'hello world', got: %s", stdout)
+		t.Errorf("期望stdout包含'hello world'，但得到: %s", stdout)
 	}
 
 	if stderr != "" {
-		t.Errorf("expected empty stderr, got: %s", stderr)
+		t.Errorf("期望stderr为空，但得到: %s", stderr)
 	}
 }
 
@@ -57,20 +57,20 @@ func TestBackgroundShellManager_Get(t *testing.T) {
 
 	bgShell, err := manager.Start(ctx, workingDir, nil, "echo 'test'", "")
 	if err != nil {
-		t.Fatalf("failed to start background shell: %v", err)
+		t.Fatalf("启动后台shell失败: %v", err)
 	}
 
-	// Retrieve the shell
+	// 获取shell
 	retrieved, ok := manager.Get(bgShell.ID)
 	if !ok {
-		t.Error("expected to find the background shell")
+		t.Error("期望找到后台shell")
 	}
 
 	if retrieved.ID != bgShell.ID {
-		t.Errorf("expected shell ID %s, got %s", bgShell.ID, retrieved.ID)
+		t.Errorf("期望shell ID为%s，但得到%s", bgShell.ID, retrieved.ID)
 	}
 
-	// Clean up
+	// 清理
 	manager.Kill(bgShell.ID)
 }
 
@@ -81,27 +81,27 @@ func TestBackgroundShellManager_Kill(t *testing.T) {
 	workingDir := t.TempDir()
 	manager := newBackgroundShellManager()
 
-	// Start a long-running command
+	// 启动一个长时间运行的命令
 	bgShell, err := manager.Start(ctx, workingDir, nil, "sleep 10", "")
 	if err != nil {
-		t.Fatalf("failed to start background shell: %v", err)
+		t.Fatalf("启动后台shell失败: %v", err)
 	}
 
-	// Kill it
+	// 终止它
 	err = manager.Kill(bgShell.ID)
 	if err != nil {
-		t.Errorf("failed to kill background shell: %v", err)
+		t.Errorf("终止后台shell失败: %v", err)
 	}
 
-	// Verify it's no longer in the manager
+	// 验证它已不在管理器中
 	_, ok := manager.Get(bgShell.ID)
 	if ok {
-		t.Error("expected shell to be removed after kill")
+		t.Error("期望shell在终止后被移除")
 	}
 
-	// Verify the shell is done
+	// 验证shell已完成
 	if !bgShell.IsDone() {
-		t.Error("expected shell to be done after kill")
+		t.Error("期望shell在终止后已完成")
 	}
 }
 
@@ -112,7 +112,7 @@ func TestBackgroundShellManager_KillNonExistent(t *testing.T) {
 
 	err := manager.Kill("non-existent-id")
 	if err == nil {
-		t.Error("expected error when killing non-existent shell")
+		t.Error("期望终止不存在的shell时返回错误")
 	}
 }
 
@@ -125,17 +125,17 @@ func TestBackgroundShell_IsDone(t *testing.T) {
 
 	bgShell, err := manager.Start(ctx, workingDir, nil, "echo 'quick'", "")
 	if err != nil {
-		t.Fatalf("failed to start background shell: %v", err)
+		t.Fatalf("启动后台shell失败: %v", err)
 	}
 
-	// Wait a bit for the command to complete
+	// 稍等一下让命令完成
 	time.Sleep(100 * time.Millisecond)
 
 	if !bgShell.IsDone() {
-		t.Error("expected shell to be done")
+		t.Error("期望shell已完成")
 	}
 
-	// Clean up
+	// 清理
 	manager.Kill(bgShell.ID)
 }
 
@@ -152,30 +152,30 @@ func TestBackgroundShell_WithBlockFuncs(t *testing.T) {
 
 	bgShell, err := manager.Start(ctx, workingDir, blockFuncs, "curl example.com", "")
 	if err != nil {
-		t.Fatalf("failed to start background shell: %v", err)
+		t.Fatalf("启动后台shell失败: %v", err)
 	}
 
-	// Wait for the command to complete
+	// 等待命令完成
 	bgShell.Wait()
 
 	stdout, stderr, done, execErr := bgShell.GetOutput()
 	if !done {
-		t.Error("expected shell to be done")
+		t.Error("期望shell已完成")
 	}
 
-	// The command should have been blocked
+	// 命令应该被阻止
 	output := stdout + stderr
 	if !strings.Contains(output, "not allowed") && execErr == nil {
-		t.Errorf("expected command to be blocked, got stdout: %s, stderr: %s, err: %v", stdout, stderr, execErr)
+		t.Errorf("期望命令被阻止，得到stdout: %s, stderr: %s, err: %v", stdout, stderr, execErr)
 	}
 
-	// Clean up
+	// 清理
 	manager.Kill(bgShell.ID)
 }
 
 func TestBackgroundShellManager_List(t *testing.T) {
 	if runtime.GOOS == "windows" {
-		t.Skip("skipping flacky test on windows")
+		t.Skip("在Windows上跳过不稳定的测试")
 	}
 
 	t.Parallel()
@@ -184,20 +184,20 @@ func TestBackgroundShellManager_List(t *testing.T) {
 	workingDir := t.TempDir()
 	manager := newBackgroundShellManager()
 
-	// Start two shells
+	// 启动两个shell
 	bgShell1, err := manager.Start(ctx, workingDir, nil, "sleep 1", "")
 	if err != nil {
-		t.Fatalf("failed to start first background shell: %v", err)
+		t.Fatalf("启动第一个后台shell失败: %v", err)
 	}
 
 	bgShell2, err := manager.Start(ctx, workingDir, nil, "sleep 1", "")
 	if err != nil {
-		t.Fatalf("failed to start second background shell: %v", err)
+		t.Fatalf("启动第二个后台shell失败: %v", err)
 	}
 
 	ids := manager.List()
 
-	// Check that both shells are in the list
+	// 检查两个shell都在列表中
 	found1 := false
 	found2 := false
 	for _, id := range ids {
@@ -210,13 +210,13 @@ func TestBackgroundShellManager_List(t *testing.T) {
 	}
 
 	if !found1 {
-		t.Errorf("expected to find shell %s in list", bgShell1.ID)
+		t.Errorf("期望在列表中找到shell %s", bgShell1.ID)
 	}
 	if !found2 {
-		t.Errorf("expected to find shell %s in list", bgShell2.ID)
+		t.Errorf("期望在列表中找到shell %s", bgShell2.ID)
 	}
 
-	// Clean up
+	// 清理
 	manager.Kill(bgShell1.ID)
 	manager.Kill(bgShell2.ID)
 }
@@ -228,57 +228,57 @@ func TestBackgroundShellManager_KillAll(t *testing.T) {
 	workingDir := t.TempDir()
 	manager := newBackgroundShellManager()
 
-	// Start multiple long-running shells
+	// 启动多个长时间运行的shell
 	shell1, err := manager.Start(ctx, workingDir, nil, "sleep 10", "")
 	if err != nil {
-		t.Fatalf("failed to start shell 1: %v", err)
+		t.Fatalf("启动shell 1失败: %v", err)
 	}
 
 	shell2, err := manager.Start(ctx, workingDir, nil, "sleep 10", "")
 	if err != nil {
-		t.Fatalf("failed to start shell 2: %v", err)
+		t.Fatalf("启动shell 2失败: %v", err)
 	}
 
 	shell3, err := manager.Start(ctx, workingDir, nil, "sleep 10", "")
 	if err != nil {
-		t.Fatalf("failed to start shell 3: %v", err)
+		t.Fatalf("启动shell 3失败: %v", err)
 	}
 
-	// Verify shells are running
+	// 验证shell正在运行
 	if shell1.IsDone() || shell2.IsDone() || shell3.IsDone() {
-		t.Error("shells should not be done yet")
+		t.Error("shell应该尚未完成")
 	}
 
-	// Kill all shells
+	// 终止所有shell
 	manager.KillAll(t.Context())
 
-	// Verify all shells are done
+	// 验证所有shell已完成
 	if !shell1.IsDone() {
-		t.Error("shell1 should be done after KillAll")
+		t.Error("shell1在KillAll后应该已完成")
 	}
 	if !shell2.IsDone() {
-		t.Error("shell2 should be done after KillAll")
+		t.Error("shell2在KillAll后应该已完成")
 	}
 	if !shell3.IsDone() {
-		t.Error("shell3 should be done after KillAll")
+		t.Error("shell3在KillAll后应该已完成")
 	}
 
-	// Verify they're removed from the manager
+	// 验证它们已从管理器中移除
 	if _, ok := manager.Get(shell1.ID); ok {
-		t.Error("shell1 should be removed from manager")
+		t.Error("shell1应该已从管理器中移除")
 	}
 	if _, ok := manager.Get(shell2.ID); ok {
-		t.Error("shell2 should be removed from manager")
+		t.Error("shell2应该已从管理器中移除")
 	}
 	if _, ok := manager.Get(shell3.ID); ok {
-		t.Error("shell3 should be removed from manager")
+		t.Error("shell3应该已从管理器中移除")
 	}
 
-	// Verify list is empty (or doesn't contain our shells)
+	// 验证列表为空（或不包含我们的shell）
 	ids := manager.List()
 	for _, id := range ids {
 		if id == shell1.ID || id == shell2.ID || id == shell3.ID {
-			t.Errorf("shell %s should not be in list after KillAll", id)
+			t.Errorf("shell %s在KillAll后不应在列表中", id)
 		}
 	}
 }
@@ -286,16 +286,16 @@ func TestBackgroundShellManager_KillAll(t *testing.T) {
 func TestBackgroundShellManager_KillAll_Timeout(t *testing.T) {
 	t.Parallel()
 
-	// XXX: can't use synctest here - causes --race to trip.
+	// XXX: 这里不能使用synctest - 会导致--race触发。
 
 	workingDir := t.TempDir()
 	manager := newBackgroundShellManager()
 
-	// Start a shell that traps signals and ignores cancellation.
+	// 启动一个捕获信号并忽略取消的shell。
 	_, err := manager.Start(t.Context(), workingDir, nil, "trap '' TERM INT; sleep 60", "")
 	require.NoError(t, err)
 
-	// Short timeout to test the timeout path.
+	// 短超时以测试超时路径。
 	ctx, cancel := context.WithTimeout(t.Context(), 100*time.Millisecond)
 	t.Cleanup(cancel)
 
@@ -304,6 +304,6 @@ func TestBackgroundShellManager_KillAll_Timeout(t *testing.T) {
 
 	elapsed := time.Since(start)
 
-	// Must return promptly after timeout, not hang for 60 seconds.
+	// 必须在超时后立即返回，而不是挂起60秒。
 	require.Less(t, elapsed, 2*time.Second)
 }

@@ -11,7 +11,7 @@ import (
 )
 
 func TestGlobWithDoubleStar(t *testing.T) {
-	t.Run("finds files matching pattern", func(t *testing.T) {
+	t.Run("查找匹配模式的文件", func(t *testing.T) {
 		testDir := t.TempDir()
 
 		mainGo := filepath.Join(testDir, "src", "main.go")
@@ -31,7 +31,7 @@ func TestGlobWithDoubleStar(t *testing.T) {
 		require.Equal(t, matches, []string{mainGo})
 	})
 
-	t.Run("finds directories matching pattern", func(t *testing.T) {
+	t.Run("查找匹配模式的目录", func(t *testing.T) {
 		testDir := t.TempDir()
 
 		srcDir := filepath.Join(testDir, "src")
@@ -54,7 +54,7 @@ func TestGlobWithDoubleStar(t *testing.T) {
 		require.Equal(t, matches, []string{pkgDir})
 	})
 
-	t.Run("finds nested directories with wildcard patterns", func(t *testing.T) {
+	t.Run("使用通配符模式查找嵌套目录", func(t *testing.T) {
 		testDir := t.TempDir()
 
 		srcPkgDir := filepath.Join(testDir, "src", "pkg")
@@ -80,7 +80,7 @@ func TestGlobWithDoubleStar(t *testing.T) {
 		require.ElementsMatch(t, relativeMatches, []string{"pkg", "src/pkg", "lib/pkg"})
 	})
 
-	t.Run("finds directory contents with recursive patterns", func(t *testing.T) {
+	t.Run("使用递归模式查找目录内容", func(t *testing.T) {
 		testDir := t.TempDir()
 
 		pkgDir := filepath.Join(testDir, "pkg")
@@ -115,7 +115,7 @@ func TestGlobWithDoubleStar(t *testing.T) {
 		})
 	})
 
-	t.Run("respects limit parameter", func(t *testing.T) {
+	t.Run("遵守限制参数", func(t *testing.T) {
 		testDir := t.TempDir()
 
 		for i := range 10 {
@@ -126,11 +126,11 @@ func TestGlobWithDoubleStar(t *testing.T) {
 
 		matches, truncated, err := GlobWithDoubleStar("**/*.txt", testDir, 5)
 		require.NoError(t, err)
-		require.True(t, truncated, "Expected truncation with limit")
-		require.Len(t, matches, 5, "Expected exactly 5 matches with limit")
+		require.True(t, truncated, "期望在有限制时被截断")
+		require.Len(t, matches, 5, "期望在有限制时正好有5个匹配项")
 	})
 
-	t.Run("handles nested directory patterns", func(t *testing.T) {
+	t.Run("处理嵌套目录模式", func(t *testing.T) {
 		testDir := t.TempDir()
 
 		file1 := filepath.Join(testDir, "a", "b", "c", "file1.txt")
@@ -150,7 +150,7 @@ func TestGlobWithDoubleStar(t *testing.T) {
 		require.Equal(t, []string{file1}, matches)
 	})
 
-	t.Run("returns results sorted by modification time (newest first)", func(t *testing.T) {
+	t.Run("按修改时间排序返回结果（最新的在前）", func(t *testing.T) {
 		testDir := t.TempDir()
 
 		file1 := filepath.Join(testDir, "file1.txt")
@@ -178,26 +178,26 @@ func TestGlobWithDoubleStar(t *testing.T) {
 		require.Equal(t, []string{file3, file2, file1}, matches)
 	})
 
-	t.Run("handles empty directory", func(t *testing.T) {
+	t.Run("处理空目录", func(t *testing.T) {
 		testDir := t.TempDir()
 
 		matches, truncated, err := GlobWithDoubleStar("**", testDir, 0)
 		require.NoError(t, err)
 		require.False(t, truncated)
-		// Even empty directories should return the directory itself
+		// 即使是空目录也应该返回目录本身
 		require.Equal(t, []string{testDir}, matches)
 	})
 
-	t.Run("handles non-existent search path", func(t *testing.T) {
+	t.Run("处理不存在的搜索路径", func(t *testing.T) {
 		nonExistentDir := filepath.Join(t.TempDir(), "does", "not", "exist")
 
 		matches, truncated, err := GlobWithDoubleStar("**", nonExistentDir, 0)
-		require.Error(t, err, "Should return error for non-existent search path")
+		require.Error(t, err, "对于不存在的搜索路径应返回错误")
 		require.False(t, truncated)
 		require.Empty(t, matches)
 	})
 
-	t.Run("respects basic ignore patterns", func(t *testing.T) {
+	t.Run("遵守基本忽略模式", func(t *testing.T) {
 		testDir := t.TempDir()
 
 		rootIgnore := filepath.Join(testDir, ".crushignore")
@@ -222,12 +222,12 @@ func TestGlobWithDoubleStar(t *testing.T) {
 		matches, truncated, err := GlobWithDoubleStar("*.tmp", testDir, 0)
 		require.NoError(t, err)
 		require.False(t, truncated)
-		require.Empty(t, matches, "Expected no matches for '*.tmp' pattern (should be ignored)")
+		require.Empty(t, matches, "期望'*.tmp'模式没有匹配项（应该被忽略）")
 
 		matches, truncated, err = GlobWithDoubleStar("backup", testDir, 0)
 		require.NoError(t, err)
 		require.False(t, truncated)
-		require.Empty(t, matches, "Expected no matches for 'backup' pattern (should be ignored)")
+		require.Empty(t, matches, "期望'backup'模式没有匹配项（应该被忽略）")
 
 		matches, truncated, err = GlobWithDoubleStar("*.txt", testDir, 0)
 		require.NoError(t, err)
@@ -235,7 +235,7 @@ func TestGlobWithDoubleStar(t *testing.T) {
 		require.Equal(t, []string{goodFile}, matches)
 	})
 
-	t.Run("handles mixed file and directory matching with sorting", func(t *testing.T) {
+	t.Run("处理混合文件和目录匹配并进行排序", func(t *testing.T) {
 		testDir := t.TempDir()
 
 		oldestFile := filepath.Join(testDir, "old.rs")
@@ -252,7 +252,7 @@ func TestGlobWithDoubleStar(t *testing.T) {
 		tMiddle := base.Add(10 * time.Hour)
 		tNewest := base.Add(20 * time.Hour)
 
-		// Reverse the expected order
+		// 反转预期顺序
 		require.NoError(t, os.Chtimes(newestFile, tOldest, tOldest))
 		require.NoError(t, os.Chtimes(middleDir, tMiddle, tMiddle))
 		require.NoError(t, os.Chtimes(oldestFile, tNewest, tNewest))
@@ -262,8 +262,7 @@ func TestGlobWithDoubleStar(t *testing.T) {
 		require.False(t, truncated)
 		require.Len(t, matches, 3)
 
-		// Results should be sorted by mod time, but we set the oldestFile
-		// to have the most recent mod time
+		// 结果应按修改时间排序，但我们设置oldestFile具有最近的修改时间
 		require.Equal(t, []string{oldestFile, middleDir, newestFile}, matches)
 	})
 }

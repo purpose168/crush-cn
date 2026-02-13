@@ -21,51 +21,59 @@ import (
 	"github.com/purpose168/crush-cn/internal/home"
 )
 
-// DiagnosticCounts holds the count of diagnostics by severity.
+// DiagnosticCounts 按严重程度统计诊断信息的数量
 type DiagnosticCounts struct {
-	Error       int
-	Warning     int
-	Information int
-	Hint        int
+	Error       int  // 错误数量
+	Warning     int  // 警告数量
+	Information int  // 信息数量
+	Hint        int  // 提示数量
 }
 
+// Client LSP客户端结构体，封装了与语言服务器交互的所有功能
 type Client struct {
-	client *powernap.Client
-	name   string
-	debug  bool
+	client *powernap.Client  // 底层powernap客户端实例
+	name   string            // LSP客户端名称
+	debug  bool              // 是否启用调试模式
 
-	// Working directory this LSP is scoped to.
+	// 此LSP服务器的工作目录范围
 	workDir string
 
-	// File types this LSP server handles (e.g., .go, .rs, .py)
+	// 此LSP服务器处理的文件类型（如 .go, .rs, .py）
 	fileTypes []string
 
-	// Configuration for this LSP client
+	// 此LSP客户端的配置
 	config config.LSPConfig
 
-	// Original context and resolver for recreating the client
+	// 原始上下文和解析器，用于重新创建客户端
 	ctx      context.Context
 	resolver config.VariableResolver
 
-	// Diagnostic change callback
+	// 诊断信息变更回调函数
 	onDiagnosticsChanged func(name string, count int)
 
-	// Diagnostic cache
+	// 诊断信息缓存
 	diagnostics *csync.VersionedMap[protocol.DocumentURI, []protocol.Diagnostic]
 
-	// Cached diagnostic counts to avoid map copy on every UI render.
+	// 缓存的诊断计数，避免每次UI渲染时复制map
 	diagCountsCache   DiagnosticCounts
 	diagCountsVersion uint64
 	diagCountsMu      sync.Mutex
 
-	// Files are currently opened by the LSP
+	// 当前在LSP中打开的文件
 	openFiles *csync.Map[string, *OpenFileInfo]
 
-	// Server state
+	// 服务器状态
 	serverState atomic.Value
 }
 
-// New creates a new LSP client using the powernap implementation.
+// New 使用powernap实现创建一个新的LSP客户端
+// 参数:
+//   - ctx: 上下文
+//   - name: LSP客户端名称
+//   - cfg: LSP配置
+//   - resolver: 变量解析器
+//   - debug: 是否启用调试模式
+// 返回值: 创建的客户端实例和可能的错误
 func New(ctx context.Context, name string, cfg config.LSPConfig, resolver config.VariableResolver, debug bool) (*Client, error) {
 	client := &Client{
 		name:        name,
@@ -86,13 +94,17 @@ func New(ctx context.Context, name string, cfg config.LSPConfig, resolver config
 	return client, nil
 }
 
-// Initialize initializes the LSP client and returns the server capabilities.
+// Initialize 初始化LSP客户端并返回服务器能力
+// 参数:
+//   - ctx: 上下文
+//   - workspaceDir: 工作区目录路径
+// 返回值: 初始化结果和可能的错误
 func (c *Client) Initialize(ctx context.Context, workspaceDir string) (*protocol.InitializeResult, error) {
 	if err := c.client.Initialize(ctx, false); err != nil {
-		return nil, fmt.Errorf("failed to initialize the lsp client: %w", err)
+		return nil, fmt.Errorf("初始化LSP客户端失败: %w", err)
 	}
 
-	// Convert powernap capabilities to protocol capabilities
+	// 将powernap能力转换为协议能力
 	caps := c.client.GetCapabilities()
 	protocolCaps := protocol.ServerCapabilities{
 		TextDocumentSync: caps.TextDocumentSync,
@@ -117,26 +129,26 @@ func (c *Client) Initialize(ctx context.Context, workspaceDir string) (*protocol
 	return result, nil
 }
 
-// Kill kills the client without doing anything else.
+// Kill 直接终止客户端，不执行其他操作
 func (c *Client) Kill() { c.client.Kill() }
 
-// Close closes all open files in the client, then the client.
+// Close 关闭客户端中所有打开的文件，然后关闭客户端
 func (c *Client) Close(ctx context.Context) error {
 	c.CloseAllFiles(ctx)
 
-	// Shutdown and exit the client
+	// 关闭并退出客户端
 	if err := c.client.Shutdown(ctx); err != nil {
-		slog.Warn("Failed to shutdown LSP client", "error", err)
+		slog.Warn("关闭LSP客户端失败", "error", err)
 	}
 
 	return c.client.Exit()
 }
 
-// createPowernapClient creates a new powernap client with the current configuration.
+// createPowernapClient 使用当前配置创建新的powernap客户端
 func (c *Client) createPowernapClient() error {
 	workDir, err := os.Getwd()
 	if err != nil {
-		return fmt.Errorf("failed to get working directory: %w", err)
+		return fmt.Errorf("获取工作目录失败: %w", err)
 	}
 
 	rootURI := string(protocol.URIFromPath(workDir))
@@ -144,9 +156,10 @@ func (c *Client) createPowernapClient() error {
 
 	command, err := c.resolver.ResolveValue(c.config.Command)
 	if err != nil {
-		return fmt.Errorf("invalid lsp command: %w", err)
+		return fmt.Errorf("无效的LSP命令: %w", err)
 	}
 
+	// 构建客户端配置
 	clientConfig := powernap.ClientConfig{
 		Command:     home.Long(command),
 		Args:        c.config.Args,
@@ -164,14 +177,14 @@ func (c *Client) createPowernapClient() error {
 
 	powernapClient, err := powernap.NewClient(clientConfig)
 	if err != nil {
-		return fmt.Errorf("failed to create lsp client: %w", err)
+		return fmt.Errorf("创建LSP客户端失败: %w", err)
 	}
 
 	c.client = powernapClient
 	return nil
 }
 
-// registerHandlers registers the standard LSP notification and request handlers.
+// registerHandlers 注册标准的LSP通知和请求处理器
 func (c *Client) registerHandlers() {
 	c.RegisterServerRequestHandler("workspace/applyEdit", HandleApplyEdit)
 	c.RegisterServerRequestHandler("workspace/configuration", HandleWorkspaceConfiguration)
@@ -186,7 +199,7 @@ func (c *Client) registerHandlers() {
 	})
 }
 
-// Restart closes the current LSP client and creates a new one with the same configuration.
+// Restart 关闭当前LSP客户端并使用相同配置创建新的客户端
 func (c *Client) Restart() error {
 	var openFiles []string
 	for uri := range c.openFiles.Seq2() {
@@ -197,7 +210,7 @@ func (c *Client) Restart() error {
 	defer cancel()
 
 	if err := c.Close(closeCtx); err != nil {
-		slog.Warn("Error closing client during restart", "name", c.name, "error", err)
+		slog.Warn("重启时关闭客户端出错", "name", c.name, "error", err)
 	}
 
 	c.SetServerState(StateStopped)
@@ -216,37 +229,38 @@ func (c *Client) Restart() error {
 
 	if err := c.client.Initialize(initCtx, false); err != nil {
 		c.SetServerState(StateError)
-		return fmt.Errorf("failed to initialize lsp client: %w", err)
+		return fmt.Errorf("初始化LSP客户端失败: %w", err)
 	}
 
 	c.registerHandlers()
 
 	if err := c.WaitForServerReady(initCtx); err != nil {
-		slog.Error("Server failed to become ready after restart", "name", c.name, "error", err)
+		slog.Error("重启后服务器未能就绪", "name", c.name, "error", err)
 		c.SetServerState(StateError)
 		return err
 	}
 
+	// 重新打开之前打开的文件
 	for _, uri := range openFiles {
 		if err := c.OpenFile(initCtx, uri); err != nil {
-			slog.Warn("Failed to reopen file after restart", "file", uri, "error", err)
+			slog.Warn("重启后重新打开文件失败", "file", uri, "error", err)
 		}
 	}
 	return nil
 }
 
-// ServerState represents the state of an LSP server
+// ServerState 表示LSP服务器的状态
 type ServerState int
 
 const (
-	StateStopped ServerState = iota
-	StateStarting
-	StateReady
-	StateError
-	StateDisabled
+	StateStopped  ServerState = iota  // 已停止
+	StateStarting                      // 启动中
+	StateReady                         // 已就绪
+	StateError                         // 错误状态
+	StateDisabled                      // 已禁用
 )
 
-// GetServerState returns the current state of the LSP server
+// GetServerState 返回LSP服务器的当前状态
 func (c *Client) GetServerState() ServerState {
 	if val := c.serverState.Load(); val != nil {
 		return val.(ServerState)
@@ -254,36 +268,36 @@ func (c *Client) GetServerState() ServerState {
 	return StateStarting
 }
 
-// SetServerState sets the current state of the LSP server
+// SetServerState 设置LSP服务器的当前状态
 func (c *Client) SetServerState(state ServerState) {
 	c.serverState.Store(state)
 }
 
-// GetName returns the name of the LSP client
+// GetName 返回LSP客户端的名称
 func (c *Client) GetName() string {
 	return c.name
 }
 
-// SetDiagnosticsCallback sets the callback function for diagnostic changes
+// SetDiagnosticsCallback 设置诊断信息变更的回调函数
 func (c *Client) SetDiagnosticsCallback(callback func(name string, count int)) {
 	c.onDiagnosticsChanged = callback
 }
 
-// WaitForServerReady waits for the server to be ready
+// WaitForServerReady 等待服务器就绪
 func (c *Client) WaitForServerReady(ctx context.Context) error {
-	// Set initial state
+	// 设置初始状态
 	c.SetServerState(StateStarting)
 
-	// Create a context with timeout
+	// 创建带超时的上下文
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
-	// Try to ping the server with a simple request
+	// 尝试用简单请求ping服务器
 	ticker := time.NewTicker(500 * time.Millisecond)
 	defer ticker.Stop()
 
 	if c.debug {
-		slog.Debug("Waiting for LSP server to be ready...")
+		slog.Debug("等待LSP服务器就绪...")
 	}
 
 	c.openKeyConfigFiles(ctx)
@@ -292,50 +306,50 @@ func (c *Client) WaitForServerReady(ctx context.Context) error {
 		select {
 		case <-ctx.Done():
 			c.SetServerState(StateError)
-			return fmt.Errorf("timeout waiting for LSP server to be ready")
+			return fmt.Errorf("等待LSP服务器就绪超时")
 		case <-ticker.C:
-			// Check if client is running
+			// 检查客户端是否正在运行
 			if !c.client.IsRunning() {
 				if c.debug {
-					slog.Debug("LSP server not ready yet", "server", c.name)
+					slog.Debug("LSP服务器尚未就绪", "server", c.name)
 				}
 				continue
 			}
 
-			// Server is ready
+			// 服务器已就绪
 			c.SetServerState(StateReady)
 			if c.debug {
-				slog.Debug("LSP server is ready")
+				slog.Debug("LSP服务器已就绪")
 			}
 			return nil
 		}
 	}
 }
 
-// OpenFileInfo contains information about an open file
+// OpenFileInfo 包含打开文件的信息
 type OpenFileInfo struct {
-	Version int32
-	URI     protocol.DocumentURI
+	Version int32                // 文件版本号
+	URI     protocol.DocumentURI // 文档URI
 }
 
-// HandlesFile checks if this LSP client handles the given file based on its
-// extension and whether it's within the working directory.
+// HandlesFile 检查此LSP客户端是否处理给定文件
+// 基于文件扩展名和是否在工作目录内进行判断
 func (c *Client) HandlesFile(path string) bool {
-	// Check if file is within working directory.
+	// 检查文件是否在工作目录内
 	absPath, err := filepath.Abs(path)
 	if err != nil {
-		slog.Debug("Cannot resolve path", "name", c.name, "file", path, "error", err)
+		slog.Debug("无法解析路径", "name", c.name, "file", path, "error", err)
 		return false
 	}
 	relPath, err := filepath.Rel(c.workDir, absPath)
 	if err != nil || strings.HasPrefix(relPath, "..") {
-		slog.Debug("File outside workspace", "name", c.name, "file", path, "workDir", c.workDir)
+		slog.Debug("文件在工作区外", "name", c.name, "file", path, "workDir", c.workDir)
 		return false
 	}
 	return handlesFiletype(c.name, c.fileTypes, path)
 }
 
-// OpenFile opens a file in the LSP server.
+// OpenFile 在LSP服务器中打开文件
 func (c *Client) OpenFile(ctx context.Context, filepath string) error {
 	if !c.HandlesFile(filepath) {
 		return nil
@@ -344,16 +358,16 @@ func (c *Client) OpenFile(ctx context.Context, filepath string) error {
 	uri := string(protocol.URIFromPath(filepath))
 
 	if _, exists := c.openFiles.Get(uri); exists {
-		return nil // Already open
+		return nil // 已经打开
 	}
 
-	// Skip files that do not exist or cannot be read
+	// 跳过不存在或无法读取的文件
 	content, err := os.ReadFile(filepath)
 	if err != nil {
-		return fmt.Errorf("error reading file: %w", err)
+		return fmt.Errorf("读取文件错误: %w", err)
 	}
 
-	// Notify the server about the opened document
+	// 通知服务器打开的文档
 	if err = c.client.NotifyDidOpenTextDocument(ctx, uri, string(powernap.DetectLanguage(filepath)), 1, string(content)); err != nil {
 		return err
 	}
@@ -366,24 +380,24 @@ func (c *Client) OpenFile(ctx context.Context, filepath string) error {
 	return nil
 }
 
-// NotifyChange notifies the server about a file change.
+// NotifyChange 通知服务器文件变更
 func (c *Client) NotifyChange(ctx context.Context, filepath string) error {
 	uri := string(protocol.URIFromPath(filepath))
 
 	content, err := os.ReadFile(filepath)
 	if err != nil {
-		return fmt.Errorf("error reading file: %w", err)
+		return fmt.Errorf("读取文件错误: %w", err)
 	}
 
 	fileInfo, isOpen := c.openFiles.Get(uri)
 	if !isOpen {
-		return fmt.Errorf("cannot notify change for unopened file: %s", filepath)
+		return fmt.Errorf("无法通知未打开文件的变更: %s", filepath)
 	}
 
-	// Increment version
+	// 递增版本号
 	fileInfo.Version++
 
-	// Create change event
+	// 创建变更事件
 	changes := []protocol.TextDocumentContentChangeEvent{
 		{
 			Value: protocol.TextDocumentContentChangeWholeDocument{
@@ -395,40 +409,40 @@ func (c *Client) NotifyChange(ctx context.Context, filepath string) error {
 	return c.client.NotifyDidChangeTextDocument(ctx, uri, int(fileInfo.Version), changes)
 }
 
-// IsFileOpen checks if a file is currently open.
+// IsFileOpen 检查文件当前是否打开
 func (c *Client) IsFileOpen(filepath string) bool {
 	uri := string(protocol.URIFromPath(filepath))
 	_, exists := c.openFiles.Get(uri)
 	return exists
 }
 
-// CloseAllFiles closes all currently open files.
+// CloseAllFiles 关闭所有当前打开的文件
 func (c *Client) CloseAllFiles(ctx context.Context) {
 	for uri := range c.openFiles.Seq2() {
 		if c.debug {
-			slog.Debug("Closing file", "file", uri)
+			slog.Debug("关闭文件", "file", uri)
 		}
 		if err := c.client.NotifyDidCloseTextDocument(ctx, uri); err != nil {
-			slog.Warn("Error closing file", "uri", uri, "error", err)
+			slog.Warn("关闭文件出错", "uri", uri, "error", err)
 			continue
 		}
 		c.openFiles.Del(uri)
 	}
 }
 
-// GetFileDiagnostics returns diagnostics for a specific file.
+// GetFileDiagnostics 返回特定文件的诊断信息
 func (c *Client) GetFileDiagnostics(uri protocol.DocumentURI) []protocol.Diagnostic {
 	diags, _ := c.diagnostics.Get(uri)
 	return diags
 }
 
-// GetDiagnostics returns all diagnostics for all files.
+// GetDiagnostics 返回所有文件的所有诊断信息
 func (c *Client) GetDiagnostics() map[protocol.DocumentURI][]protocol.Diagnostic {
 	return c.diagnostics.Copy()
 }
 
-// GetDiagnosticCounts returns cached diagnostic counts by severity.
-// Uses the VersionedMap version to avoid recomputing on every call.
+// GetDiagnosticCounts 返回按严重程度缓存的诊断计数
+// 使用VersionedMap版本避免每次调用时重新计算
 func (c *Client) GetDiagnosticCounts() DiagnosticCounts {
 	currentVersion := c.diagnostics.Version()
 
@@ -439,7 +453,7 @@ func (c *Client) GetDiagnosticCounts() DiagnosticCounts {
 		return c.diagCountsCache
 	}
 
-	// Recompute counts.
+	// 重新计算计数
 	counts := DiagnosticCounts{}
 	for _, diags := range c.diagnostics.Seq2() {
 		for _, diag := range diags {
@@ -461,79 +475,79 @@ func (c *Client) GetDiagnosticCounts() DiagnosticCounts {
 	return counts
 }
 
-// OpenFileOnDemand opens a file only if it's not already open.
+// OpenFileOnDemand 仅在文件未打开时打开文件
 func (c *Client) OpenFileOnDemand(ctx context.Context, filepath string) error {
-	// Check if the file is already open
+	// 检查文件是否已打开
 	if c.IsFileOpen(filepath) {
 		return nil
 	}
 
-	// Open the file
+	// 打开文件
 	return c.OpenFile(ctx, filepath)
 }
 
-// GetDiagnosticsForFile ensures a file is open and returns its diagnostics.
+// GetDiagnosticsForFile 确保文件已打开并返回其诊断信息
 func (c *Client) GetDiagnosticsForFile(ctx context.Context, filepath string) ([]protocol.Diagnostic, error) {
 	documentURI := protocol.URIFromPath(filepath)
 
-	// Make sure the file is open
+	// 确保文件已打开
 	if !c.IsFileOpen(filepath) {
 		if err := c.OpenFile(ctx, filepath); err != nil {
-			return nil, fmt.Errorf("failed to open file for diagnostics: %w", err)
+			return nil, fmt.Errorf("打开文件获取诊断信息失败: %w", err)
 		}
 
-		// Give the LSP server a moment to process the file
+		// 给LSP服务器一点时间处理文件
 		time.Sleep(100 * time.Millisecond)
 	}
 
-	// Get diagnostics
+	// 获取诊断信息
 	diagnostics, _ := c.diagnostics.Get(documentURI)
 
 	return diagnostics, nil
 }
 
-// ClearDiagnosticsForURI removes diagnostics for a specific URI from the cache.
+// ClearDiagnosticsForURI 从缓存中删除特定URI的诊断信息
 func (c *Client) ClearDiagnosticsForURI(uri protocol.DocumentURI) {
 	c.diagnostics.Del(uri)
 }
 
-// RegisterNotificationHandler registers a notification handler.
+// RegisterNotificationHandler 注册通知处理器
 func (c *Client) RegisterNotificationHandler(method string, handler transport.NotificationHandler) {
 	c.client.RegisterNotificationHandler(method, handler)
 }
 
-// RegisterServerRequestHandler handles server requests.
+// RegisterServerRequestHandler 处理服务器请求
 func (c *Client) RegisterServerRequestHandler(method string, handler transport.Handler) {
 	c.client.RegisterHandler(method, handler)
 }
 
-// DidChangeWatchedFiles sends a workspace/didChangeWatchedFiles notification to the server.
+// DidChangeWatchedFiles 向服务器发送workspace/didChangeWatchedFiles通知
 func (c *Client) DidChangeWatchedFiles(ctx context.Context, params protocol.DidChangeWatchedFilesParams) error {
 	return c.client.NotifyDidChangeWatchedFiles(ctx, params.Changes)
 }
 
-// openKeyConfigFiles opens important configuration files that help initialize the server.
+// openKeyConfigFiles 打开有助于初始化服务器的重要配置文件
 func (c *Client) openKeyConfigFiles(ctx context.Context) {
 	wd, err := os.Getwd()
 	if err != nil {
 		return
 	}
 
-	// Try to open each file, ignoring errors if they don't exist
+	// 尝试打开每个文件，忽略不存在的错误
 	for _, file := range c.config.RootMarkers {
 		file = filepath.Join(wd, file)
 		if _, err := os.Stat(file); err == nil {
-			// File exists, try to open it
+			// 文件存在，尝试打开
 			if err := c.OpenFile(ctx, file); err != nil {
-				slog.Error("Failed to open key config file", "file", file, "error", err)
+				slog.Error("打开关键配置文件失败", "file", file, "error", err)
 			} else {
-				slog.Debug("Opened key config file for initialization", "file", file)
+				slog.Debug("为初始化打开关键配置文件", "file", file)
 			}
 		}
 	}
 }
 
-// WaitForDiagnostics waits until diagnostics change or the timeout is reached.
+// WaitForDiagnostics 等待诊断信息变更或超时
 func (c *Client) WaitForDiagnostics(ctx context.Context, d time.Duration) {
 	ticker := time.NewTicker(200 * time.Millisecond)
 	defer ticker.Stop()
@@ -553,12 +567,21 @@ func (c *Client) WaitForDiagnostics(ctx context.Context, d time.Duration) {
 	}
 }
 
-// FindReferences finds all references to the symbol at the given position.
+// FindReferences 查找给定位置符号的所有引用
+// 参数:
+//   - ctx: 上下文
+//   - filepath: 文件路径
+//   - line: 行号
+//   - character: 列号
+//   - includeDeclaration: 是否包含声明
+// 返回值: 引用位置列表和可能的错误
+// 注意: line和character应该从0开始计数
+// 参见: https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#position
 func (c *Client) FindReferences(ctx context.Context, filepath string, line, character int, includeDeclaration bool) ([]protocol.Location, error) {
 	if err := c.OpenFileOnDemand(ctx, filepath); err != nil {
 		return nil, err
 	}
-	// NOTE: line and character should be 0-based.
-	// See: https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#position
+	// 注意: line和character应该从0开始计数
+	// 参见: https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#position
 	return c.client.FindReferences(ctx, filepath, line-1, character-1, includeDeclaration)
 }

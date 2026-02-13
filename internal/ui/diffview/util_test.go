@@ -4,6 +4,7 @@ import (
 	"testing"
 )
 
+// TestPad 测试 pad 函数的填充功能
 func TestPad(t *testing.T) {
 	tests := []struct {
 		input    any
@@ -21,7 +22,7 @@ func TestPad(t *testing.T) {
 	for _, tt := range tests {
 		result := pad(tt.input, tt.width)
 		if result != tt.expected {
-			t.Errorf("expected %q, got %q", tt.expected, result)
+			t.Errorf("期望 %q，实际为 %q", tt.expected, result)
 		}
 	}
 }

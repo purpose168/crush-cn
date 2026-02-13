@@ -15,16 +15,16 @@ import (
 	ignore "github.com/sabhiram/go-gitignore"
 )
 
-// commonIgnorePatterns contains commonly ignored files and directories
+// commonIgnorePatterns 包含常见的忽略文件和目录
 var commonIgnorePatterns = sync.OnceValue(func() ignore.IgnoreParser {
 	return ignore.CompileIgnoreLines(
-		// Version control
+		// 版本控制
 		".git",
 		".svn",
 		".hg",
 		".bzr",
 
-		// IDE and editor files
+		// IDE 和编辑器文件
 		".vscode",
 		".idea",
 		"*.swp",
@@ -33,7 +33,7 @@ var commonIgnorePatterns = sync.OnceValue(func() ignore.IgnoreParser {
 		".DS_Store",
 		"Thumbs.db",
 
-		// Build artifacts and dependencies
+		// 构建产物和依赖
 		"node_modules",
 		"target",
 		"build",
@@ -47,14 +47,14 @@ var commonIgnorePatterns = sync.OnceValue(func() ignore.IgnoreParser {
 		"*.dll",
 		"*.exe",
 
-		// Logs and temporary files
+		// 日志和临时文件
 		"*.log",
 		"*.tmp",
 		"*.temp",
 		".cache",
 		".tmp",
 
-		// Language-specific
+		// 特定语言相关
 		"__pycache__",
 		"*.pyc",
 		"*.pyo",
@@ -65,15 +65,15 @@ var commonIgnorePatterns = sync.OnceValue(func() ignore.IgnoreParser {
 		"yarn.lock",
 		"pnpm-lock.yaml",
 
-		// OS generated files
+		// 操作系统生成的文件
 		".Trash",
 		".Spotlight-V100",
 		".fseventsd",
 
-		// Crush
+		// Crush 相关
 		".crush",
 
-		// macOS stuff
+		// macOS 相关内容
 		"OrbStack",
 		".local",
 		".share",
@@ -109,16 +109,16 @@ func NewDirectoryLister(rootPath string) *directoryLister {
 	return dl
 }
 
-// git checks, in order:
-// - ./.gitignore, ../.gitignore, etc, until repo root
+// git 检查顺序如下：
+// - ./.gitignore, ../.gitignore 等，直到仓库根目录
 // ~/.config/git/ignore
 // ~/.gitignore
 //
-// This will do the following:
-// - the given ignorePatterns
+// 此函数将执行以下检查：
+// - 给定的 ignorePatterns
 // - [commonIgnorePatterns]
-// - ./.gitignore, ../.gitignore, etc, until dl.rootPath
-// - ./.crushignore, ../.crushignore, etc, until dl.rootPath
+// - ./.gitignore, ../.gitignore 等，直到 dl.rootPath
+// - ./.crushignore, ../.crushignore 等，直到 dl.rootPath
 // ~/.config/git/ignore
 // ~/.gitignore
 // ~/.config/crush/ignore
@@ -132,8 +132,8 @@ func (dl *directoryLister) shouldIgnore(path string, ignorePatterns []string) bo
 		}
 	}
 
-	// Don't apply gitignore rules to the root directory itself
-	// In gitignore semantics, patterns don't apply to the repo root
+	// 不要对根目录本身应用 gitignore 规则
+	// 在 gitignore 语义中，模式不适用于仓库根目录
 	if path == dl.rootPath {
 		return false
 	}
@@ -155,7 +155,7 @@ func (dl *directoryLister) shouldIgnore(path string, ignorePatterns []string) bo
 		return true
 	}
 
-	// For directories, also check with trailing slash (gitignore convention)
+	// 对于目录，也要检查带尾部斜杠的路径（gitignore 约定）
 	if ignoreParser.MatchesPath(relPath + "/") {
 		slog.Debug("Ignoring dir pattern with slash", "path", relPath+"/", "dir", parentDir)
 		return true
@@ -198,14 +198,14 @@ func (dl *directoryLister) getIgnore(path string) ignore.IgnoreParser {
 			}
 		}
 		if len(lines) == 0 {
-			// Return a no-op parser to avoid nil checks
+			// 返回一个空操作解析器以避免空指针检查
 			return ignore.CompileIgnoreLines()
 		}
 		return ignore.CompileIgnoreLines(lines...)
 	})
 }
 
-// ListDirectory lists files and directories in the specified path,
+// ListDirectory 列出指定路径中的文件和目录
 func ListDirectory(initialPath string, ignorePatterns []string, depth, limit int) ([]string, bool, error) {
 	found := csync.NewSlice[string]()
 	dl := NewDirectoryLister(initialPath)
@@ -221,7 +221,7 @@ func ListDirectory(initialPath string, ignorePatterns []string, depth, limit int
 
 	err := fastwalk.Walk(&conf, initialPath, func(path string, d os.DirEntry, err error) error {
 		if err != nil {
-			return nil // Skip files we don't have permission to access
+			return nil // 跳过无权访问的文件
 		}
 
 		if dl.shouldIgnore(path, ignorePatterns) {

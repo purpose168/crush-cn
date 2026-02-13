@@ -10,13 +10,13 @@ import (
 func TestOsEnv_Get(t *testing.T) {
 	env := &osEnv{}
 
-	// Test getting an existing environment variable
+	// 测试获取已存在的环境变量
 	t.Setenv("TEST_VAR", "test_value")
 
 	value := env.Get("TEST_VAR")
 	require.Equal(t, "test_value", value)
 
-	// Test getting a non-existent environment variable
+	// 测试获取不存在的环境变量
 	value = env.Get("NON_EXISTENT_VAR")
 	require.Equal(t, "", value)
 }
@@ -26,11 +26,11 @@ func TestOsEnv_Env(t *testing.T) {
 
 	envVars := env.Env()
 
-	// Environment should not be empty in normal circumstances
+	// 环境变量在正常情况下不应为空
 	require.NotNil(t, envVars)
 	require.Greater(t, len(envVars), 0)
 
-	// Each environment variable should be in key=value format
+	// 每个环境变量应采用 key=value 格式
 	for _, envVar := range envVars {
 		require.Contains(t, envVar, "=")
 	}
@@ -55,11 +55,11 @@ func TestMapEnv_Get(t *testing.T) {
 
 	env := NewFromMap(testMap)
 
-	// Test getting existing keys
+	// 测试获取已存在的键
 	require.Equal(t, "value1", env.Get("KEY1"))
 	require.Equal(t, "value2", env.Get("KEY2"))
 
-	// Test getting non-existent key
+	// 测试获取不存在的键
 	require.Equal(t, "", env.Get("NON_EXISTENT"))
 }
 
@@ -75,7 +75,7 @@ func TestMapEnv_Env(t *testing.T) {
 
 		require.Len(t, envVars, 2)
 
-		// Convert to map for easier testing (order is not guaranteed)
+		// 转换为 map 以便于测试（顺序不保证）
 		envMap := make(map[string]string)
 		for _, envVar := range envVars {
 			parts := strings.SplitN(envVar, "=", 2)
@@ -110,7 +110,7 @@ func TestMapEnv_GetEmptyValue(t *testing.T) {
 
 	env := NewFromMap(testMap)
 
-	// Test that empty values are returned correctly
+	// 测试空值是否正确返回
 	require.Equal(t, "", env.Get("EMPTY_KEY"))
 	require.Equal(t, "value", env.Get("NORMAL_KEY"))
 }
@@ -126,7 +126,7 @@ func TestMapEnv_EnvFormat(t *testing.T) {
 
 	require.Len(t, envVars, 2)
 
-	// Check that the format is correct even with special characters
+	// 检查格式是否正确，即使包含特殊字符
 	found := make(map[string]bool)
 	for _, envVar := range envVars {
 		if envVar == "KEY_WITH_EQUALS=value=with=equals" {

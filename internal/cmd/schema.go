@@ -11,14 +11,14 @@ import (
 
 var schemaCmd = &cobra.Command{
 	Use:    "schema",
-	Short:  "Generate JSON schema for configuration",
-	Long:   "Generate JSON schema for the crush configuration file",
+	Short:  "生成配置文件的 JSON schema",
+	Long:   "为 crush 配置文件生成 JSON schema",
 	Hidden: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		reflector := new(jsonschema.Reflector)
 		bts, err := json.MarshalIndent(reflector.Reflect(&config.Config{}), "", "  ")
 		if err != nil {
-			return fmt.Errorf("failed to marshal schema: %w", err)
+			return fmt.Errorf("无法序列化 schema: %w", err)
 		}
 		fmt.Println(string(bts))
 		return nil

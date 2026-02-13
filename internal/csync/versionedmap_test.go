@@ -40,15 +40,15 @@ func TestVersionedMap_VersionIncrement(t *testing.T) {
 	vm := NewVersionedMap[string, int]()
 	initialVersion := vm.Version()
 
-	// Setting a value should increment the version
+	// 设置值应该增加版本号
 	vm.Set("key1", 42)
 	require.Equal(t, initialVersion+1, vm.Version())
 
-	// Deleting a value should increment the version
+	// 删除值应该增加版本号
 	vm.Del("key1")
 	require.Equal(t, initialVersion+2, vm.Version())
 
-	// Deleting a non-existent key should still increment the version
+	// 删除不存在的键仍然会增加版本号
 	vm.Del("nonexistent")
 	require.Equal(t, initialVersion+3, vm.Version())
 }
@@ -60,10 +60,10 @@ func TestVersionedMap_ConcurrentAccess(t *testing.T) {
 	const numGoroutines = 100
 	const numOperations = 100
 
-	// Initial version
+	// 初始版本号
 	initialVersion := vm.Version()
 
-	// Perform concurrent Set and Del operations
+	// 执行并发的 Set 和 Del 操作
 	for i := range numGoroutines {
 		go func(id int) {
 			for j := range numOperations {
@@ -74,16 +74,16 @@ func TestVersionedMap_ConcurrentAccess(t *testing.T) {
 		}(i)
 	}
 
-	// Wait for operations to complete by checking the version
-	// This is a simplified check - in a real test you might want to use sync.WaitGroup
+	// 通过检查版本号等待操作完成
+	// 这是一个简化的检查 - 在实际测试中你可能想使用 sync.WaitGroup
 	expectedMinVersion := initialVersion + uint64(numGoroutines*numOperations*2)
 
-	// Allow some time for operations to complete
+	// 留出一些时间让操作完成
 	for vm.Version() < expectedMinVersion {
-		// Busy wait - in a real test you'd use proper synchronization
+		// 忙等待 - 在实际测试中你会使用适当的同步机制
 	}
 
-	// Final version should be at least the expected minimum
+	// 最终版本号应该至少是预期的最小值
 	require.GreaterOrEqual(t, vm.Version(), expectedMinVersion)
 	require.Equal(t, 0, vm.Len())
 }

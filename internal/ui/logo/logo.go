@@ -50,7 +50,7 @@ func Render(s *styles.Styles, version string, compact bool, o Opts) string {
 		letterSStylized,
 		letterH,
 	}
-	stretchIndex := -1 // -1 means no stretching.
+	stretchIndex := -1 // -1 表示不拉伸
 	if !compact {
 		stretchIndex = cachedRandN(len(letterforms))
 	}

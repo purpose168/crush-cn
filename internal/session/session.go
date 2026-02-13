@@ -53,7 +53,7 @@ type Service interface {
 	UpdateTitleAndUsage(ctx context.Context, sessionID, title string, promptTokens, completionTokens int64, cost float64) error
 	Delete(ctx context.Context, id string) error
 
-	// Agent tool session management
+	// 代理工具会话管理
 	CreateAgentToolSessionID(messageID, toolCallID string) string
 	ParseAgentToolSessionID(sessionID string) (messageID string, toolCallID string, ok bool)
 	IsAgentToolSession(sessionID string) bool
@@ -176,8 +176,8 @@ func (s *service) Save(ctx context.Context, session Session) (Session, error) {
 	return session, nil
 }
 
-// UpdateTitleAndUsage updates only the title and usage fields atomically.
-// This is safer than fetching, modifying, and saving the entire session.
+// UpdateTitleAndUsage 原子性地仅更新标题和使用字段。
+// 这比获取、修改和保存整个会话更安全。
 func (s *service) UpdateTitleAndUsage(ctx context.Context, sessionID, title string, promptTokens, completionTokens int64, cost float64) error {
 	return s.q.UpdateSessionTitleAndUsage(ctx, db.UpdateSessionTitleAndUsageParams{
 		ID:               sessionID,
@@ -251,12 +251,12 @@ func NewService(q *db.Queries, conn *sql.DB) Service {
 	}
 }
 
-// CreateAgentToolSessionID creates a session ID for agent tool sessions using the format "messageID$$toolCallID"
+// CreateAgentToolSessionID 使用格式 "messageID$$toolCallID" 为代理工具会话创建会话 ID
 func (s *service) CreateAgentToolSessionID(messageID, toolCallID string) string {
 	return fmt.Sprintf("%s$$%s", messageID, toolCallID)
 }
 
-// ParseAgentToolSessionID parses an agent tool session ID into its components
+// ParseAgentToolSessionID 将代理工具会话 ID 解析为其组成部分
 func (s *service) ParseAgentToolSessionID(sessionID string) (messageID string, toolCallID string, ok bool) {
 	parts := strings.Split(sessionID, "$$")
 	if len(parts) != 2 {
@@ -265,7 +265,7 @@ func (s *service) ParseAgentToolSessionID(sessionID string) (messageID string, t
 	return parts[0], parts[1], true
 }
 
-// IsAgentToolSession checks if a session ID follows the agent tool session format
+// IsAgentToolSession 检查会话 ID 是否遵循代理工具会话格式
 func (s *service) IsAgentToolSession(sessionID string) bool {
 	_, _, ok := s.ParseAgentToolSessionID(sessionID)
 	return ok

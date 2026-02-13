@@ -35,7 +35,7 @@ func TestResetCache(t *testing.T) {
 func TestResetIdempotent(t *testing.T) {
 	t.Parallel()
 
-	// 在空缓存上调用Reset不应导致恐慌。
+	// 在空缓存上调用 ResetCache 不应导致恐慌。
 	ResetCache()
 
 	cachedMutex.RLock()

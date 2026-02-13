@@ -8,50 +8,56 @@ import (
 	"github.com/purpose168/crush-cn/internal/env"
 )
 
+// TestClient 测试LSP客户端的基本功能
+// 该测试验证：
+// 1. 客户端能够正常创建
+// 2. GetName方法返回正确的名称
+// 3. HandlesFile方法正确判断文件类型
+// 4. 服务器状态的设置和获取
 func TestClient(t *testing.T) {
 	ctx := context.Background()
 
-	// Create a simple config for testing
+	// 创建用于测试的简单配置
 	cfg := config.LSPConfig{
-		Command:   "$THE_CMD", // Use echo as a dummy command that won't fail
+		Command:   "$THE_CMD",  // 使用echo作为不会失败的虚拟命令
 		Args:      []string{"hello"},
 		FileTypes: []string{"go"},
 		Env:       map[string]string{},
 	}
 
-	// Test creating a powernap client - this will likely fail with echo
-	// but we can still test the basic structure
+	// 测试创建powernap客户端 - 这可能会因为echo命令失败
+	// 但我们仍然可以测试基本结构
 	client, err := New(ctx, "test", cfg, config.NewEnvironmentVariableResolver(env.NewFromMap(map[string]string{
 		"THE_CMD": "echo",
 	})), false)
 	if err != nil {
-		// Expected to fail with echo command, skip the rest
-		t.Skipf("Powernap client creation failed as expected with dummy command: %v", err)
+		// 预期会因为虚拟命令失败，跳过后续测试
+		t.Skipf("使用虚拟命令创建Powernap客户端失败（符合预期）: %v", err)
 		return
 	}
 
-	// If we get here, test basic interface methods
+	// 如果能执行到这里，测试基本接口方法
 	if client.GetName() != "test" {
-		t.Errorf("Expected name 'test', got '%s'", client.GetName())
+		t.Errorf("期望名称为'test'，实际得到'%s'", client.GetName())
 	}
 
 	if !client.HandlesFile("test.go") {
-		t.Error("Expected client to handle .go files")
+		t.Error("期望客户端能处理.go文件")
 	}
 
 	if client.HandlesFile("test.py") {
-		t.Error("Expected client to not handle .py files")
+		t.Error("期望客户端不能处理.py文件")
 	}
 
-	// Test server state
+	// 测试服务器状态
 	client.SetServerState(StateReady)
 	if client.GetServerState() != StateReady {
-		t.Error("Expected server state to be StateReady")
+		t.Error("期望服务器状态为StateReady")
 	}
 
-	// Clean up - expect this to fail with echo command
+	// 清理 - 预期会因为echo命令失败
 	if err := client.Close(t.Context()); err != nil {
-		// Expected to fail with echo command
-		t.Logf("Close failed as expected with dummy command: %v", err)
+		// 预期会因为虚拟命令失败
+		t.Logf("关闭失败（符合预期，使用虚拟命令）: %v", err)
 	}
 }

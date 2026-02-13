@@ -32,11 +32,11 @@ import (
 )
 
 func init() {
-	rootCmd.PersistentFlags().StringP("cwd", "c", "", "Current working directory")
-	rootCmd.PersistentFlags().StringP("data-dir", "D", "", "Custom crush data directory")
-	rootCmd.PersistentFlags().BoolP("debug", "d", false, "Debug")
-	rootCmd.Flags().BoolP("help", "h", false, "Help")
-	rootCmd.Flags().BoolP("yolo", "y", false, "Automatically accept all permissions (dangerous mode)")
+	rootCmd.PersistentFlags().StringP("cwd", "c", "", "当前工作目录")
+	rootCmd.PersistentFlags().StringP("data-dir", "D", "", "自定义 crush 数据目录")
+	rootCmd.PersistentFlags().BoolP("debug", "d", false, "调试")
+	rootCmd.Flags().BoolP("help", "h", false, "帮助")
+	rootCmd.Flags().BoolP("yolo", "y", false, "自动接受所有权限（危险模式）")
 
 	rootCmd.AddCommand(
 		runCmd,
@@ -52,28 +52,28 @@ func init() {
 
 var rootCmd = &cobra.Command{
 	Use:   "crush",
-	Short: "An AI assistant for software development",
-	Long:  "An AI assistant for software development and similar tasks with direct access to the terminal",
+	Short: "软件开发的 AI 助手",
+	Long:  "软件开发和类似任务的 AI 助手，可直接访问终端",
 	Example: `
-# Run in interactive mode
+# 在交互模式下运行
 crush
 
-# Run with debug logging
+# 启用调试日志运行
 crush -d
 
-# Run with debug logging in a specific directory
+# 在特定目录中启用调试日志运行
 crush -d -c /path/to/project
 
-# Run with custom data directory
+# 使用自定义数据目录运行
 crush -D /path/to/custom/.crush
 
-# Print version
+# 打印版本
 crush -v
 
-# Run a single non-interactive prompt
-crush run "Explain the use of context in Go"
+# 运行单个非交互式提示
+crush run "解释 Go 中 context 的使用"
 
-# Run in dangerous mode (auto-accept all permissions)
+# 在危险模式下运行（自动接受所有权限）
 crush -y
   `,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -101,8 +101,8 @@ crush -y
 
 		if _, err := program.Run(); err != nil {
 			event.Error(err)
-			slog.Error("TUI run error", "error", err)
-			return errors.New("Crush crashed. If metrics are enabled, we were notified about it. If you'd like to report it, please copy the stacktrace above and open an issue at https://github.com/purpose168/crush-cn/issues/new?template=bug.yml") //nolint:staticcheck
+			slog.Error("TUI 运行错误", "error", err)
+			return errors.New("Crush 崩溃了。如果启用了指标，我们已经收到了通知。如果您想报告它，请复制上面的堆栈跟踪并在 https://github.com/purpose168/crush-cn/issues/new?template=bug.yml 打开一个问题") //nolint:staticcheck
 		}
 		return nil
 	},
@@ -127,13 +127,12 @@ const defaultVersionTemplate = `{{with .DisplayName}}{{printf "%s " .}}{{end}}{{
 `
 
 func Execute() {
-	// NOTE: very hacky: we create a colorprofile writer with STDOUT, then make
-	// it forward to a bytes.Buffer, write the colored heartbit to it, and then
-	// finally prepend it in the version template.
-	// Unfortunately cobra doesn't give us a way to set a function to handle
-	// printing the version, and PreRunE runs after the version is already
-	// handled, so that doesn't work either.
-	// This is the only way I could find that works relatively well.
+	// 注意：非常 hacky 的实现：我们创建一个使用 STDOUT 的 colorprofile 写入器，然后让它
+	// 转发到一个 bytes.Buffer，将彩色的 heartbit 写入其中，最后
+	// 在版本模板中前置它。
+	// 不幸的是，cobra 没有给我们提供一种设置函数来处理
+	// 打印版本的方法，而且 PreRunE 在版本已经被处理后运行，所以那也不起作用。
+	// 这是我能找到的唯一相对有效的方法。
 	if term.IsTerminal(os.Stdout.Fd()) {
 		var b bytes.Buffer
 		w := colorprofile.NewWriter(os.Stdout, os.Environ())
@@ -151,8 +150,7 @@ func Execute() {
 	}
 }
 
-// supportsProgressBar tries to determine whether the current terminal supports
-// progress bars by looking into environment variables.
+// supportsProgressBar 尝试通过查看环境变量来确定当前终端是否支持进度条。
 func supportsProgressBar() bool {
 	if !term.IsTerminal(os.Stderr.Fd()) {
 		return false
@@ -169,7 +167,7 @@ func setupAppWithProgressBar(cmd *cobra.Command) (*app.App, error) {
 		return nil, err
 	}
 
-	// Check if progress bar is enabled in config (defaults to true if nil)
+	// 检查配置中是否启用了进度条（如果为 nil 则默认为 true）
 	progressEnabled := app.Config().Options.Progress == nil || *app.Config().Options.Progress
 	if progressEnabled && supportsProgressBar() {
 		_, _ = fmt.Fprintf(os.Stderr, ansi.SetIndeterminateProgressBar)
@@ -179,8 +177,8 @@ func setupAppWithProgressBar(cmd *cobra.Command) (*app.App, error) {
 	return app, nil
 }
 
-// setupApp handles the common setup logic for both interactive and non-interactive modes.
-// It returns the app instance, config, cleanup function, and any error.
+// setupApp 处理交互式和非交互式模式的通用设置逻辑。
+// 返回应用实例、配置、清理函数和任何错误。
 func setupApp(cmd *cobra.Command) (*app.App, error) {
 	debug, _ := cmd.Flags().GetBool("debug")
 	yolo, _ := cmd.Flags().GetBool("yolo")
@@ -206,13 +204,13 @@ func setupApp(cmd *cobra.Command) (*app.App, error) {
 		return nil, err
 	}
 
-	// Register this project in the centralized projects list.
+	// 在集中式项目列表中注册此项目。
 	if err := projects.Register(cwd, cfg.Options.DataDirectory); err != nil {
-		slog.Warn("Failed to register project", "error", err)
-		// Non-fatal: continue even if registration fails
+		slog.Warn("注册项目失败", "error", err)
+		// 非致命错误：即使注册失败也继续执行
 	}
 
-	// Connect to DB; this will also run migrations.
+	// 连接到数据库；这也会运行迁移。
 	conn, err := db.Connect(ctx, cfg.Options.DataDirectory)
 	if err != nil {
 		return nil, err
@@ -220,7 +218,7 @@ func setupApp(cmd *cobra.Command) (*app.App, error) {
 
 	appInstance, err := app.New(ctx, conn, cfg)
 	if err != nil {
-		slog.Error("Failed to create app instance", "error", err)
+		slog.Error("创建应用实例失败", "error", err)
 		return nil, err
 	}
 
@@ -252,7 +250,7 @@ func MaybePrependStdin(prompt string) (string, error) {
 	if err != nil {
 		return prompt, err
 	}
-	// Check if stdin is a named pipe ( | ) or regular file ( < ).
+	// 检查标准输入是否为命名管道（|）或常规文件（<）。
 	if fi.Mode()&os.ModeNamedPipe == 0 && !fi.Mode().IsRegular() {
 		return prompt, nil
 	}

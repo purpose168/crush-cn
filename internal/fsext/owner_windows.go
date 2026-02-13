@@ -4,8 +4,7 @@ package fsext
 
 import "os"
 
-// Owner retrieves the user ID of the owner of the file or directory at the
-// specified path.
+// Owner 获取指定路径的文件或目录所有者的用户ID。
 func Owner(path string) (int, error) {
 	_, err := os.Stat(path)
 	if err != nil {

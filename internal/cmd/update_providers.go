@@ -14,29 +14,29 @@ var updateProvidersSource string
 
 var updateProvidersCmd = &cobra.Command{
 	Use:   "update-providers [path-or-url]",
-	Short: "Update providers",
-	Long:  `Update provider information from a specified local path or remote URL.`,
+	Short: "更新提供者",
+	Long:  `从指定的本地路径或远程URL更新提供者信息。`,
 	Example: `
-# Update Catwalk providers remotely (default)
+# 远程更新Catwalk提供者（默认）
 crush update-providers
 
-# Update Catwalk providers from a custom URL
+# 从自定义URL更新Catwalk提供者
 crush update-providers https://example.com/providers.json
 
-# Update Catwalk providers from a local file
+# 从本地文件更新Catwalk提供者
 crush update-providers /path/to/local-providers.json
 
-# Update Catwalk providers from embedded version
+# 从嵌入式版本更新Catwalk提供者
 crush update-providers embedded
 
-# Update Hyper provider information
+# 更新Hyper提供者信息
 crush update-providers --source=hyper
 
-# Update Hyper from a custom URL
+# 从自定义URL更新Hyper
 crush update-providers --source=hyper https://hyper.example.com
 `,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		// NOTE(@andreynering): We want to skip logging output do stdout here.
+		// 注意(@andreynering)：我们希望在此处跳过向stdout输出日志。
 		slog.SetDefault(slog.New(slog.DiscardHandler))
 
 		var pathOrURL string
@@ -51,15 +51,14 @@ crush update-providers --source=hyper https://hyper.example.com
 		case "hyper":
 			err = config.UpdateHyper(pathOrURL)
 		default:
-			return fmt.Errorf("invalid source %q, must be 'catwalk' or 'hyper'", updateProvidersSource)
+			return fmt.Errorf("无效的源 %q，必须是 'catwalk' 或 'hyper'", updateProvidersSource)
 		}
 
 		if err != nil {
 			return err
 		}
 
-		// NOTE(@andreynering): This style is more-or-less copied from Fang's
-		// error message, adapted for success.
+		// 注意(@andreynering)：这种样式大致是从Fang的错误消息复制而来，适用于成功消息。
 		headerStyle := lipgloss.NewStyle().
 			Foreground(charmtone.Butter).
 			Background(charmtone.Guac).
@@ -70,7 +69,7 @@ crush update-providers --source=hyper https://hyper.example.com
 			SetString("SUCCESS")
 		textStyle := lipgloss.NewStyle().
 			MarginLeft(2).
-			SetString(fmt.Sprintf("%s provider updated successfully.", updateProvidersSource))
+			SetString(fmt.Sprintf("%s 提供者更新成功。", updateProvidersSource))
 
 		fmt.Printf("%s\n%s\n\n", headerStyle.Render(), textStyle.Render())
 		return nil
@@ -78,5 +77,5 @@ crush update-providers --source=hyper https://hyper.example.com
 }
 
 func init() {
-	updateProvidersCmd.Flags().StringVar(&updateProvidersSource, "source", "catwalk", "Provider source to update (catwalk or hyper)")
+	updateProvidersCmd.Flags().StringVar(&updateProvidersSource, "source", "catwalk", "要更新的提供者源（catwalk 或 hyper）")
 }

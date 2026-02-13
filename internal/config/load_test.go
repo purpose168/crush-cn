@@ -14,33 +14,42 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestMain 是测试的主入口函数，用于设置测试环境
 func TestMain(m *testing.M) {
+	// 设置默认日志处理器为丢弃所有日志输出
 	slog.SetDefault(slog.New(slog.NewTextHandler(io.Discard, nil)))
 
 	exitVal := m.Run()
 	os.Exit(exitVal)
 }
 
+// TestConfig_LoadFromBytes 测试从字节数组加载配置的功能
 func TestConfig_LoadFromBytes(t *testing.T) {
+	// 定义三组测试数据，模拟从多个配置源加载配置
 	data1 := []byte(`{"providers": {"openai": {"api_key": "key1", "base_url": "https://api.openai.com/v1"}}}`)
 	data2 := []byte(`{"providers": {"openai": {"api_key": "key2", "base_url": "https://api.openai.com/v2"}}}`)
 	data3 := []byte(`{"providers": {"openai": {}}}`)
 
+	// 从字节数组加载配置，后面的配置会覆盖前面的配置
 	loadedConfig, err := loadFromBytes([][]byte{data1, data2, data3})
 
 	require.NoError(t, err)
 	require.NotNil(t, loadedConfig)
 	require.Equal(t, 1, loadedConfig.Providers.Len())
 	pc, _ := loadedConfig.Providers.Get("openai")
+	// 验证最终使用的是最后一个有效的配置
 	require.Equal(t, "key2", pc.APIKey)
 	require.Equal(t, "https://api.openai.com/v2", pc.BaseURL)
 }
 
+// TestConfig_setDefaults 测试设置默认值的功能
 func TestConfig_setDefaults(t *testing.T) {
 	cfg := &Config{}
 
+	// 设置默认值，工作目录为 /tmp
 	cfg.setDefaults("/tmp", "")
 
+	// 验证所有必要的配置项都被初始化
 	require.NotNil(t, cfg.Options)
 	require.NotNil(t, cfg.Options.TUI)
 	require.NotNil(t, cfg.Options.ContextPaths)
@@ -48,14 +57,17 @@ func TestConfig_setDefaults(t *testing.T) {
 	require.NotNil(t, cfg.Models)
 	require.NotNil(t, cfg.LSP)
 	require.NotNil(t, cfg.MCP)
+	// 验证数据目录设置正确
 	require.Equal(t, filepath.Join("/tmp", ".crush"), cfg.Options.DataDirectory)
 	require.Equal(t, "AGENTS.md", cfg.Options.InitializeAs)
+	// 验证默认上下文路径都被包含
 	for _, path := range defaultContextPaths {
 		require.Contains(t, cfg.Options.ContextPaths, path)
 	}
 	require.Equal(t, "/tmp", cfg.workingDir)
 }
 
+// TestConfig_configureProviders 测试配置提供商的功能
 func TestConfig_configureProviders(t *testing.T) {
 	knownProviders := []catwalk.Provider{
 		{
@@ -78,11 +90,12 @@ func TestConfig_configureProviders(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 1, cfg.Providers.Len())
 
-	// We want to make sure that we keep the configured API key as a placeholder
+	// 我们要确保保留配置的 API 密钥作为占位符
 	pc, _ := cfg.Providers.Get("openai")
 	require.Equal(t, "$OPENAI_API_KEY", pc.APIKey)
 }
 
+// TestConfig_configureProvidersWithOverride 测试配置提供商时的覆盖功能
 func TestConfig_configureProvidersWithOverride(t *testing.T) {
 	knownProviders := []catwalk.Provider{
 		{
@@ -98,6 +111,7 @@ func TestConfig_configureProvidersWithOverride(t *testing.T) {
 	cfg := &Config{
 		Providers: csync.NewMap[string, ProviderConfig](),
 	}
+	// 用户配置了自定义的提供商设置
 	cfg.Providers.Set("openai", ProviderConfig{
 		APIKey:  "xyz",
 		BaseURL: "https://api.openai.com/v2",
@@ -121,7 +135,7 @@ func TestConfig_configureProvidersWithOverride(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 1, cfg.Providers.Len())
 
-	// We want to make sure that we keep the configured API key as a placeholder
+	// 我们要确保保留配置的 API 密钥作为占位符
 	pc, _ := cfg.Providers.Get("openai")
 	require.Equal(t, "xyz", pc.APIKey)
 	require.Equal(t, "https://api.openai.com/v2", pc.BaseURL)
@@ -129,6 +143,7 @@ func TestConfig_configureProvidersWithOverride(t *testing.T) {
 	require.Equal(t, "Updated", pc.Models[0].Name)
 }
 
+// TestConfig_configureProvidersWithNewProvider 测试添加新提供商的功能
 func TestConfig_configureProvidersWithNewProvider(t *testing.T) {
 	knownProviders := []catwalk.Provider{
 		{
@@ -161,21 +176,22 @@ func TestConfig_configureProvidersWithNewProvider(t *testing.T) {
 	resolver := NewEnvironmentVariableResolver(env)
 	err := cfg.configureProviders(env, resolver, knownProviders)
 	require.NoError(t, err)
-	// Should be to because of the env variable
+	// 应该是 2，因为有环境变量
 	require.Equal(t, cfg.Providers.Len(), 2)
 
-	// We want to make sure that we keep the configured API key as a placeholder
+	// 我们要确保保留配置的 API 密钥作为占位符
 	pc, _ := cfg.Providers.Get("custom")
 	require.Equal(t, "xyz", pc.APIKey)
-	// Make sure we set the ID correctly
+	// 确保我们正确设置了 ID
 	require.Equal(t, "custom", pc.ID)
 	require.Equal(t, "https://api.someendpoint.com/v2", pc.BaseURL)
 	require.Len(t, pc.Models, 1)
 
 	_, ok := cfg.Providers.Get("openai")
-	require.True(t, ok, "OpenAI provider should still be present")
+	require.True(t, ok, "OpenAI 提供商应该仍然存在")
 }
 
+// TestConfig_configureProvidersBedrockWithCredentials 测试使用凭证配置 Bedrock 提供商
 func TestConfig_configureProvidersBedrockWithCredentials(t *testing.T) {
 	knownProviders := []catwalk.Provider{
 		{
@@ -200,11 +216,12 @@ func TestConfig_configureProvidersBedrockWithCredentials(t *testing.T) {
 	require.Equal(t, cfg.Providers.Len(), 1)
 
 	bedrockProvider, ok := cfg.Providers.Get("bedrock")
-	require.True(t, ok, "Bedrock provider should be present")
+	require.True(t, ok, "Bedrock 提供商应该存在")
 	require.Len(t, bedrockProvider.Models, 1)
 	require.Equal(t, "anthropic.claude-sonnet-4-20250514-v1:0", bedrockProvider.Models[0].ID)
 }
 
+// TestConfig_configureProvidersBedrockWithoutCredentials 测试在没有凭证时配置 Bedrock 提供商
 func TestConfig_configureProvidersBedrockWithoutCredentials(t *testing.T) {
 	knownProviders := []catwalk.Provider{
 		{
@@ -223,10 +240,11 @@ func TestConfig_configureProvidersBedrockWithoutCredentials(t *testing.T) {
 	resolver := NewEnvironmentVariableResolver(env)
 	err := cfg.configureProviders(env, resolver, knownProviders)
 	require.NoError(t, err)
-	// Provider should not be configured without credentials
+	// 没有凭证时不应该配置提供商
 	require.Equal(t, cfg.Providers.Len(), 0)
 }
 
+// TestConfig_configureProvidersBedrockWithoutUnsupportedModel 测试使用不支持的模型配置 Bedrock 提供商
 func TestConfig_configureProvidersBedrockWithoutUnsupportedModel(t *testing.T) {
 	knownProviders := []catwalk.Provider{
 		{
@@ -250,6 +268,7 @@ func TestConfig_configureProvidersBedrockWithoutUnsupportedModel(t *testing.T) {
 	require.Error(t, err)
 }
 
+// TestConfig_configureProvidersVertexAIWithCredentials 测试使用凭证配置 VertexAI 提供商
 func TestConfig_configureProvidersVertexAIWithCredentials(t *testing.T) {
 	knownProviders := []catwalk.Provider{
 		{
@@ -274,13 +293,14 @@ func TestConfig_configureProvidersVertexAIWithCredentials(t *testing.T) {
 	require.Equal(t, cfg.Providers.Len(), 1)
 
 	vertexProvider, ok := cfg.Providers.Get("vertexai")
-	require.True(t, ok, "VertexAI provider should be present")
+	require.True(t, ok, "VertexAI 提供商应该存在")
 	require.Len(t, vertexProvider.Models, 1)
 	require.Equal(t, "gemini-pro", vertexProvider.Models[0].ID)
 	require.Equal(t, "test-project", vertexProvider.ExtraParams["project"])
 	require.Equal(t, "us-central1", vertexProvider.ExtraParams["location"])
 }
 
+// TestConfig_configureProvidersVertexAIWithoutCredentials 测试在没有凭证时配置 VertexAI 提供商
 func TestConfig_configureProvidersVertexAIWithoutCredentials(t *testing.T) {
 	knownProviders := []catwalk.Provider{
 		{
@@ -303,10 +323,11 @@ func TestConfig_configureProvidersVertexAIWithoutCredentials(t *testing.T) {
 	resolver := NewEnvironmentVariableResolver(env)
 	err := cfg.configureProviders(env, resolver, knownProviders)
 	require.NoError(t, err)
-	// Provider should not be configured without proper credentials
+	// 没有正确的凭证时不应该配置提供商
 	require.Equal(t, cfg.Providers.Len(), 0)
 }
 
+// TestConfig_configureProvidersVertexAIMissingProject 测试缺少项目时配置 VertexAI 提供商
 func TestConfig_configureProvidersVertexAIMissingProject(t *testing.T) {
 	knownProviders := []catwalk.Provider{
 		{
@@ -328,10 +349,11 @@ func TestConfig_configureProvidersVertexAIMissingProject(t *testing.T) {
 	resolver := NewEnvironmentVariableResolver(env)
 	err := cfg.configureProviders(env, resolver, knownProviders)
 	require.NoError(t, err)
-	// Provider should not be configured without project
+	// 没有项目时不应该配置提供商
 	require.Equal(t, cfg.Providers.Len(), 0)
 }
 
+// TestConfig_configureProvidersSetProviderID 测试设置提供商 ID 的功能
 func TestConfig_configureProvidersSetProviderID(t *testing.T) {
 	knownProviders := []catwalk.Provider{
 		{
@@ -354,11 +376,12 @@ func TestConfig_configureProvidersSetProviderID(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, cfg.Providers.Len(), 1)
 
-	// Provider ID should be set
+	// 提供商 ID 应该被设置
 	pc, _ := cfg.Providers.Get("openai")
 	require.Equal(t, "openai", pc.ID)
 }
 
+// TestConfig_EnabledProviders 测试获取已启用提供商的功能
 func TestConfig_EnabledProviders(t *testing.T) {
 	t.Run("all providers enabled", func(t *testing.T) {
 		cfg := &Config{
@@ -411,6 +434,7 @@ func TestConfig_EnabledProviders(t *testing.T) {
 	})
 }
 
+// TestConfig_IsConfigured 测试检查配置是否已配置的功能
 func TestConfig_IsConfigured(t *testing.T) {
 	t.Run("returns true when at least one provider is enabled", func(t *testing.T) {
 		cfg := &Config{
@@ -454,6 +478,7 @@ func TestConfig_IsConfigured(t *testing.T) {
 	})
 }
 
+// TestConfig_setupAgentsWithNoDisabledTools 测试在没有禁用工具的情况下设置代理
 func TestConfig_setupAgentsWithNoDisabledTools(t *testing.T) {
 	cfg := &Config{
 		Options: &Options{
@@ -471,6 +496,7 @@ func TestConfig_setupAgentsWithNoDisabledTools(t *testing.T) {
 	assert.Equal(t, []string{"glob", "grep", "ls", "sourcegraph", "view"}, taskAgent.AllowedTools)
 }
 
+// TestConfig_setupAgentsWithDisabledTools 测试在有禁用工具的情况下设置代理
 func TestConfig_setupAgentsWithDisabledTools(t *testing.T) {
 	cfg := &Config{
 		Options: &Options{
@@ -493,6 +519,7 @@ func TestConfig_setupAgentsWithDisabledTools(t *testing.T) {
 	assert.Equal(t, []string{"glob", "ls", "sourcegraph", "view"}, taskAgent.AllowedTools)
 }
 
+// TestConfig_setupAgentsWithEveryReadOnlyToolDisabled 测试在所有只读工具都被禁用的情况下设置代理
 func TestConfig_setupAgentsWithEveryReadOnlyToolDisabled(t *testing.T) {
 	cfg := &Config{
 		Options: &Options{
@@ -516,6 +543,7 @@ func TestConfig_setupAgentsWithEveryReadOnlyToolDisabled(t *testing.T) {
 	assert.Len(t, taskAgent.AllowedTools, 0)
 }
 
+// TestConfig_configureProvidersWithDisabledProvider 测试配置禁用的提供商
 func TestConfig_configureProvidersWithDisabledProvider(t *testing.T) {
 	knownProviders := []catwalk.Provider{
 		{
@@ -550,6 +578,7 @@ func TestConfig_configureProvidersWithDisabledProvider(t *testing.T) {
 	require.True(t, prov.Disable)
 }
 
+// TestConfig_configureProvidersCustomProviderValidation 测试自定义提供商的验证
 func TestConfig_configureProvidersCustomProviderValidation(t *testing.T) {
 	t.Run("custom provider with missing API key is allowed, but not known providers", func(t *testing.T) {
 		cfg := &Config{
@@ -731,6 +760,7 @@ func TestConfig_configureProvidersCustomProviderValidation(t *testing.T) {
 	})
 }
 
+// TestConfig_configureProvidersEnhancedCredentialValidation 测试增强的凭证验证
 func TestConfig_configureProvidersEnhancedCredentialValidation(t *testing.T) {
 	t.Run("VertexAI provider removed when credentials missing with existing config", func(t *testing.T) {
 		knownProviders := []catwalk.Provider{
@@ -861,6 +891,7 @@ func TestConfig_configureProvidersEnhancedCredentialValidation(t *testing.T) {
 	})
 }
 
+// TestConfig_defaultModelSelection 测试默认模型选择功能
 func TestConfig_defaultModelSelection(t *testing.T) {
 	t.Run("default behavior uses the default models for given provider", func(t *testing.T) {
 		knownProviders := []catwalk.Provider{
@@ -1094,6 +1125,7 @@ func TestConfig_defaultModelSelection(t *testing.T) {
 	})
 }
 
+// TestConfig_configureProvidersDisableDefaultProviders 测试禁用默认提供商的功能
 func TestConfig_configureProvidersDisableDefaultProviders(t *testing.T) {
 	t.Run("when enabled, ignores all default providers and requires full specification", func(t *testing.T) {
 		knownProviders := []catwalk.Provider{
@@ -1107,9 +1139,9 @@ func TestConfig_configureProvidersDisableDefaultProviders(t *testing.T) {
 			},
 		}
 
-		// User references openai but doesn't fully specify it (no base_url, no
-		// models). This should be rejected because disable_default_providers
-		// treats all providers as custom.
+		// 用户引用了 openai 但没有完全指定它（没有 base_url，没有
+		// models）。这应该被拒绝，因为 disable_default_providers
+		// 将所有提供商视为自定义提供商。
 		cfg := &Config{
 			Options: &Options{
 				DisableDefaultProviders: true,
@@ -1129,7 +1161,7 @@ func TestConfig_configureProvidersDisableDefaultProviders(t *testing.T) {
 		err := cfg.configureProviders(env, resolver, knownProviders)
 		require.NoError(t, err)
 
-		// openai should NOT be present because it lacks base_url and models.
+		// openai 不应该存在，因为它缺少 base_url 和 models。
 		require.Equal(t, 0, cfg.Providers.Len())
 		_, exists := cfg.Providers.Get("openai")
 		require.False(t, exists, "openai should not be present without full specification")
@@ -1147,7 +1179,7 @@ func TestConfig_configureProvidersDisableDefaultProviders(t *testing.T) {
 			},
 		}
 
-		// User fully specifies their provider.
+		// 用户完全指定了他们的提供商。
 		cfg := &Config{
 			Options: &Options{
 				DisableDefaultProviders: true,
@@ -1172,14 +1204,14 @@ func TestConfig_configureProvidersDisableDefaultProviders(t *testing.T) {
 		err := cfg.configureProviders(env, resolver, knownProviders)
 		require.NoError(t, err)
 
-		// Only fully specified provider should be present.
+		// 只有完全指定的提供商应该存在。
 		require.Equal(t, 1, cfg.Providers.Len())
 		provider, exists := cfg.Providers.Get("my-llm")
 		require.True(t, exists, "my-llm should be present")
 		require.Equal(t, "https://my-llm.example.com/v1", provider.BaseURL)
 		require.Len(t, provider.Models, 1)
 
-		// Default openai should NOT be present.
+		// 默认的 openai 不应该存在。
 		_, exists = cfg.Providers.Get("openai")
 		require.False(t, exists, "openai should not be present")
 	})
@@ -1204,8 +1236,8 @@ func TestConfig_configureProvidersDisableDefaultProviders(t *testing.T) {
 			},
 		}
 
-		// User only configures openai, both API keys are available, but option
-		// is disabled.
+		// 用户只配置了 openai，两个 API 密钥都可用，但选项
+		// 被禁用。
 		cfg := &Config{
 			Options: &Options{
 				DisableDefaultProviders: false,
@@ -1226,7 +1258,7 @@ func TestConfig_configureProvidersDisableDefaultProviders(t *testing.T) {
 		err := cfg.configureProviders(env, resolver, knownProviders)
 		require.NoError(t, err)
 
-		// Both providers should be present.
+		// 两个提供商都应该存在。
 		require.Equal(t, 2, cfg.Providers.Len())
 		_, exists := cfg.Providers.Get("openai")
 		require.True(t, exists, "openai should be present")
@@ -1254,7 +1286,7 @@ func TestConfig_configureProvidersDisableDefaultProviders(t *testing.T) {
 		err := cfg.configureProviders(env, resolver, []catwalk.Provider{})
 		require.NoError(t, err)
 
-		// Provider should be rejected for missing models.
+		// 提供商应该因为缺少 models 而被拒绝。
 		require.Equal(t, 0, cfg.Providers.Len())
 	})
 
@@ -1278,11 +1310,12 @@ func TestConfig_configureProvidersDisableDefaultProviders(t *testing.T) {
 		err := cfg.configureProviders(env, resolver, []catwalk.Provider{})
 		require.NoError(t, err)
 
-		// Provider should be rejected for missing base_url.
+		// 提供商应该因为缺少 base_url 而被拒绝。
 		require.Equal(t, 0, cfg.Providers.Len())
 	})
 }
 
+// TestConfig_setDefaultsDisableDefaultProvidersEnvVar 测试从环境变量设置禁用默认提供商选项
 func TestConfig_setDefaultsDisableDefaultProvidersEnvVar(t *testing.T) {
 	t.Run("sets option from environment variable", func(t *testing.T) {
 		t.Setenv("CRUSH_DISABLE_DEFAULT_PROVIDERS", "true")
@@ -1305,6 +1338,7 @@ func TestConfig_setDefaultsDisableDefaultProvidersEnvVar(t *testing.T) {
 	})
 }
 
+// TestConfig_configureSelectedModels 测试配置选定模型的功能
 func TestConfig_configureSelectedModels(t *testing.T) {
 	t.Run("should override defaults", func(t *testing.T) {
 		knownProviders := []catwalk.Provider{

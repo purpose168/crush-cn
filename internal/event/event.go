@@ -44,7 +44,7 @@ func Init() {
 		ShutdownTimeout: 500 * time.Millisecond,
 	})
 	if err != nil {
-		slog.Error("Failed to initialize PostHog client", "error", err)
+		slog.Error("初始化 PostHog 客户端失败", "error", err)
 	}
 	client = c
 	distinctId = getDistinctId()
@@ -60,13 +60,13 @@ func Alias(userID string) {
 		DistinctId: distinctId,
 		Alias:      userID,
 	}); err != nil {
-		slog.Error("Failed to enqueue PostHog alias event", "error", err)
+		slog.Error("将 PostHog 别名事件加入队列失败", "error", err)
 		return
 	}
-	slog.Info("Aliased in PostHog", "machine_id", distinctId, "user_id", userID)
+	slog.Info("已在 PostHog 中设置别名", "machine_id", distinctId, "user_id", userID)
 }
 
-// send logs an event to PostHog with the given event name and properties.
+// send 使用给定的事件名称和属性向 PostHog 记录事件
 func send(event string, props ...any) {
 	if client == nil {
 		return
@@ -77,12 +77,12 @@ func send(event string, props ...any) {
 		Properties: pairsToProps(props...).Merge(baseProps),
 	})
 	if err != nil {
-		slog.Error("Failed to enqueue PostHog event", "event", event, "props", props, "error", err)
+		slog.Error("将 PostHog 事件加入队列失败", "event", event, "props", props, "error", err)
 		return
 	}
 }
 
-// Error logs an error event to PostHog with the error type and message.
+// Error 向 PostHog 记录错误事件，包含错误类型和消息
 func Error(errToLog any, props ...any) {
 	if client == nil {
 		return
@@ -94,7 +94,7 @@ func Error(errToLog any, props ...any) {
 		fmt.Sprintf("%v", errToLog),
 	))
 	if posthogErr != nil {
-		slog.Error("Failed to enqueue PostHog error", "err", errToLog, "props", props, "posthogErr", posthogErr)
+		slog.Error("将 PostHog 错误加入队列失败", "err", errToLog, "props", props, "posthogErr", posthogErr)
 		return
 	}
 }
@@ -104,7 +104,7 @@ func Flush() {
 		return
 	}
 	if err := client.Close(); err != nil {
-		slog.Error("Failed to flush PostHog events", "error", err)
+		slog.Error("刷新 PostHog 事件失败", "error", err)
 	}
 }
 
@@ -112,7 +112,7 @@ func pairsToProps(props ...any) posthog.Properties {
 	p := posthog.NewProperties()
 
 	if !isEven(len(props)) {
-		slog.Error("Event properties must be provided as key-value pairs", "props", props)
+		slog.Error("事件属性必须以键值对的形式提供", "props", props)
 		return p
 	}
 

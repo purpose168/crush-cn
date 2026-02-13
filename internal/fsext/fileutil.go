@@ -21,7 +21,7 @@ type FileInfo struct {
 }
 
 func SkipHidden(path string) bool {
-	// Check for hidden files (starting with a dot)
+	// 检查隐藏文件（以点开头）
 	base := filepath.Base(path)
 	if base != "." && strings.HasPrefix(base, ".") {
 		return true
@@ -57,9 +57,9 @@ func SkipHidden(path string) bool {
 	return false
 }
 
-// FastGlobWalker provides gitignore-aware file walking with fastwalk
-// It uses hierarchical ignore checking like git does, checking .gitignore/.crushignore
-// files in each directory from the root to the target path.
+// FastGlobWalker 提供支持 gitignore 的文件遍历功能（使用 fastwalk）
+// 它采用类似 git 的分层忽略检查机制，从根目录到目标路径检查每个目录中的
+// .gitignore/.crushignore 文件。
 type FastGlobWalker struct {
 	directoryLister *directoryLister
 }
@@ -70,15 +70,13 @@ func NewFastGlobWalker(searchPath string) *FastGlobWalker {
 	}
 }
 
-// ShouldSkip checks if a path should be skipped based on hierarchical gitignore,
-// crushignore, and hidden file rules
+// ShouldSkip 根据分层的 gitignore、crushignore 和隐藏文件规则检查路径是否应该被跳过
 func (w *FastGlobWalker) ShouldSkip(path string) bool {
 	return w.directoryLister.shouldIgnore(path, nil)
 }
 
 func GlobWithDoubleStar(pattern, searchPath string, limit int) ([]string, bool, error) {
-	// Normalize pattern to forward slashes on Windows so their config can use
-	// backslashes
+	// 将模式规范化为正斜杠（在 Windows 上），以便配置可以使用反斜杠
 	pattern = filepath.ToSlash(pattern)
 
 	walker := NewFastGlobWalker(searchPath)
@@ -90,7 +88,7 @@ func GlobWithDoubleStar(pattern, searchPath string, limit int) ([]string, bool, 
 	}
 	err := fastwalk.Walk(&conf, searchPath, func(path string, d os.DirEntry, err error) error {
 		if err != nil {
-			return nil // Skip files we can't access
+			return nil // 跳过无法访问的文件
 		}
 
 		if d.IsDir() {
@@ -108,10 +106,10 @@ func GlobWithDoubleStar(pattern, searchPath string, limit int) ([]string, bool, 
 			relPath = path
 		}
 
-		// Normalize separators to forward slashes
+		// 将分隔符规范化为正斜杠
 		relPath = filepath.ToSlash(relPath)
 
-		// Check if path matches the pattern
+		// 检查路径是否匹配模式
 		matched, err := doublestar.Match(pattern, relPath)
 		if err != nil || !matched {
 			return nil
@@ -123,7 +121,7 @@ func GlobWithDoubleStar(pattern, searchPath string, limit int) ([]string, bool, 
 		}
 
 		found.Append(FileInfo{Path: path, ModTime: info.ModTime()})
-		if limit > 0 && found.Len() >= limit*2 { // NOTE: why x2?
+		if limit > 0 && found.Len() >= limit*2 { // 注意：为什么乘以2？
 			return filepath.SkipAll
 		}
 		return nil
@@ -144,8 +142,7 @@ func GlobWithDoubleStar(pattern, searchPath string, limit int) ([]string, bool, 
 	return results, truncated || errors.Is(err, filepath.SkipAll), nil
 }
 
-// ShouldExcludeFile checks if a file should be excluded from processing
-// based on common patterns and ignore rules
+// ShouldExcludeFile 根据常见模式和忽略规则检查文件是否应该被排除在处理之外
 func ShouldExcludeFile(rootPath, filePath string) bool {
 	return NewDirectoryLister(rootPath).
 		shouldIgnore(filePath, nil)
@@ -179,8 +176,7 @@ func DirTrim(pwd string, lim int) string {
 	return out
 }
 
-// PathOrPrefix returns the prefix if the path starts with it, or falls back to
-// the path otherwise.
+// PathOrPrefix 如果路径以 prefix 开头则返回 prefix，否则返回路径本身
 func PathOrPrefix(path, prefix string) string {
 	if HasPrefix(path, prefix) {
 		return prefix
@@ -188,18 +184,18 @@ func PathOrPrefix(path, prefix string) string {
 	return path
 }
 
-// HasPrefix checks if the given path starts with the specified prefix.
-// Uses filepath.Rel to determine if path is within prefix.
+// HasPrefix 检查给定路径是否以指定的 prefix 开头
+// 使用 filepath.Rel 来判断路径是否在 prefix 内
 func HasPrefix(path, prefix string) bool {
 	rel, err := filepath.Rel(prefix, path)
 	if err != nil {
 		return false
 	}
-	// If path is within prefix, Rel will not return a path starting with ".."
+	// 如果路径在 prefix 内，Rel 不会返回以 ".." 开头的路径
 	return !strings.HasPrefix(rel, "..")
 }
 
-// ToUnixLineEndings converts Windows line endings (CRLF) to Unix line endings (LF).
+// ToUnixLineEndings 将 Windows 换行符（CRLF）转换为 Unix 换行符（LF）
 func ToUnixLineEndings(content string) (string, bool) {
 	if strings.Contains(content, "\r\n") {
 		return strings.ReplaceAll(content, "\r\n", "\n"), true
@@ -207,7 +203,7 @@ func ToUnixLineEndings(content string) (string, bool) {
 	return content, false
 }
 
-// ToWindowsLineEndings converts Unix line endings (LF) to Windows line endings (CRLF).
+// ToWindowsLineEndings 将 Unix 换行符（LF）转换为 Windows 换行符（CRLF）
 func ToWindowsLineEndings(content string) (string, bool) {
 	if !strings.Contains(content, "\r\n") {
 		return strings.ReplaceAll(content, "\n", "\r\n"), true

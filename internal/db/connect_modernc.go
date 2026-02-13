@@ -11,8 +11,8 @@ import (
 )
 
 func openDB(dbPath string) (*sql.DB, error) {
-	// Set pragmas for better performance via _pragma query params.
-	// Format: _pragma=name(value)
+	// 通过 _pragma 查询参数设置 pragma 以获得更好的性能。
+	// 格式：_pragma=name(value)
 	params := url.Values{}
 	params.Add("_pragma", "foreign_keys(on)")
 	params.Add("_pragma", "journal_mode(WAL)")
@@ -25,7 +25,7 @@ func openDB(dbPath string) (*sql.DB, error) {
 	dsn := fmt.Sprintf("file:%s?%s", dbPath, params.Encode())
 	db, err := sql.Open("sqlite", dsn)
 	if err != nil {
-		return nil, fmt.Errorf("failed to open database: %w", err)
+		return nil, fmt.Errorf("打开数据库失败: %w", err)
 	}
 	return db, nil
 }

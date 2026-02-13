@@ -53,7 +53,7 @@ var defaultContextPaths = []string{
 
 type SelectedModelType string
 
-// String returns the string representation of the [SelectedModelType].
+// String 返回 [SelectedModelType] 的字符串表示形式。
 func (s SelectedModelType) String() string {
 	return string(s)
 }
@@ -69,20 +69,20 @@ const (
 )
 
 type SelectedModel struct {
-	// The model id as used by the provider API.
-	// Required.
+	// 模型 ID，由提供者 API 使用。
+	// 必填字段。
 	Model string `json:"model" jsonschema:"required,description=The model ID as used by the provider API,example=gpt-4o"`
-	// The model provider, same as the key/id used in the providers config.
-	// Required.
+	// 模型提供者，与 providers 配置中使用的键/ID 相同。
+	// 必填字段。
 	Provider string `json:"provider" jsonschema:"required,description=The model provider ID that matches a key in the providers config,example=openai"`
 
-	// Only used by models that use the openai provider and need this set.
+	// 仅由使用 openai 提供者且需要设置此参数的模型使用。
 	ReasoningEffort string `json:"reasoning_effort,omitempty" jsonschema:"description=Reasoning effort level for OpenAI models that support it,enum=low,enum=medium,enum=high"`
 
-	// Used by anthropic models that can reason to indicate if the model should think.
+	// 由支持推理的 anthropic 模型使用，用于指示模型是否应该进行思考。
 	Think bool `json:"think,omitempty" jsonschema:"description=Enable thinking mode for Anthropic models that support reasoning"`
 
-	// Overrides the default model configuration.
+	// 覆盖默认模型配置。
 	MaxTokens        int64    `json:"max_tokens,omitempty" jsonschema:"description=Maximum number of tokens for model responses,maximum=200000,example=4096"`
 	Temperature      *float64 `json:"temperature,omitempty" jsonschema:"description=Sampling temperature,minimum=0,maximum=1,example=0.7"`
 	TopP             *float64 `json:"top_p,omitempty" jsonschema:"description=Top-p (nucleus) sampling parameter,minimum=0,maximum=1,example=0.9"`
@@ -90,55 +90,55 @@ type SelectedModel struct {
 	FrequencyPenalty *float64 `json:"frequency_penalty,omitempty" jsonschema:"description=Frequency penalty to reduce repetition"`
 	PresencePenalty  *float64 `json:"presence_penalty,omitempty" jsonschema:"description=Presence penalty to increase topic diversity"`
 
-	// Override provider specific options.
+	// 覆盖提供者特定的选项。
 	ProviderOptions map[string]any `json:"provider_options,omitempty" jsonschema:"description=Additional provider-specific options for the model"`
 }
 
 type ProviderConfig struct {
-	// The provider's id.
+	// 提供者的 ID。
 	ID string `json:"id,omitempty" jsonschema:"description=Unique identifier for the provider,example=openai"`
-	// The provider's name, used for display purposes.
+	// 提供者的名称，用于显示目的。
 	Name string `json:"name,omitempty" jsonschema:"description=Human-readable name for the provider,example=OpenAI"`
-	// The provider's API endpoint.
+	// 提供者的 API 端点。
 	BaseURL string `json:"base_url,omitempty" jsonschema:"description=Base URL for the provider's API,format=uri,example=https://api.openai.com/v1"`
-	// The provider type, e.g. "openai", "anthropic", etc. if empty it defaults to openai.
+	// 提供者类型，例如 "openai"、"anthropic" 等。如果为空，则默认为 openai。
 	Type catwalk.Type `json:"type,omitempty" jsonschema:"description=Provider type that determines the API format,enum=openai,enum=openai-compat,enum=anthropic,enum=gemini,enum=azure,enum=vertexai,default=openai"`
-	// The provider's API key.
+	// 提供者的 API 密钥。
 	APIKey string `json:"api_key,omitempty" jsonschema:"description=API key for authentication with the provider,example=$OPENAI_API_KEY"`
-	// The original API key template before resolution (for re-resolution on auth errors).
+	// 解析前的原始 API 密钥模板（用于在认证错误时重新解析）。
 	APIKeyTemplate string `json:"-"`
-	// OAuthToken for providers that use OAuth2 authentication.
+	// 使用 OAuth2 认证的提供者的 OAuthToken。
 	OAuthToken *oauth.Token `json:"oauth,omitempty" jsonschema:"description=OAuth2 token for authentication with the provider"`
-	// Marks the provider as disabled.
+	// 将提供者标记为已禁用。
 	Disable bool `json:"disable,omitempty" jsonschema:"description=Whether this provider is disabled,default=false"`
 
-	// Custom system prompt prefix.
+	// 自定义系统提示前缀。
 	SystemPromptPrefix string `json:"system_prompt_prefix,omitempty" jsonschema:"description=Custom prefix to add to system prompts for this provider"`
 
-	// Extra headers to send with each request to the provider.
+	// 发送给提供者的每个请求的额外请求头。
 	ExtraHeaders map[string]string `json:"extra_headers,omitempty" jsonschema:"description=Additional HTTP headers to send with requests"`
-	// Extra body
+	// 额外的请求体
 	ExtraBody map[string]any `json:"extra_body,omitempty" jsonschema:"description=Additional fields to include in request bodies, only works with openai-compatible providers"`
 
 	ProviderOptions map[string]any `json:"provider_options,omitempty" jsonschema:"description=Additional provider-specific options for this provider"`
 
-	// Used to pass extra parameters to the provider.
+	// 用于向提供者传递额外参数。
 	ExtraParams map[string]string `json:"-"`
 
-	// The provider models
+	// 提供者的模型列表
 	Models []catwalk.Model `json:"models,omitempty" jsonschema:"description=List of models available from this provider"`
 }
 
-// ToProvider converts the [ProviderConfig] to a [catwalk.Provider].
+// ToProvider 将 [ProviderConfig] 转换为 [catwalk.Provider]。
 func (pc *ProviderConfig) ToProvider() catwalk.Provider {
-	// Convert config provider to provider.Provider format
+	// 将配置提供者转换为 provider.Provider 格式
 	provider := catwalk.Provider{
 		Name:   pc.Name,
 		ID:     catwalk.InferenceProvider(pc.ID),
 		Models: make([]catwalk.Model, len(pc.Models)),
 	}
 
-	// Convert models
+	// 转换模型
 	for i, model := range pc.Models {
 		provider.Models[i] = catwalk.Model{
 			ID:                     model.ID,
@@ -181,7 +181,7 @@ type MCPConfig struct {
 	DisabledTools []string          `json:"disabled_tools,omitempty" jsonschema:"description=List of tools from this MCP server to disable,example=get-library-doc"`
 	Timeout       int               `json:"timeout,omitempty" jsonschema:"description=Timeout in seconds for MCP server connections,default=15,example=30,example=60,example=120"`
 
-	// TODO: maybe make it possible to get the value from the env
+	// TODO: 也许可以使其能够从环境变量获取值
 	Headers map[string]string `json:"headers,omitempty" jsonschema:"description=HTTP headers for HTTP/SSE MCP servers"`
 }
 
@@ -200,14 +200,14 @@ type LSPConfig struct {
 type TUIOptions struct {
 	CompactMode bool   `json:"compact_mode,omitempty" jsonschema:"description=Enable compact mode for the TUI interface,default=false"`
 	DiffMode    string `json:"diff_mode,omitempty" jsonschema:"description=Diff mode for the TUI interface,enum=unified,enum=split"`
-	// Here we can add themes later or any TUI related options
+	// 这里我们可以在以后添加主题或任何 TUI 相关的选项
 	//
 
 	Completions Completions `json:"completions,omitzero" jsonschema:"description=Completions UI options"`
 	Transparent *bool       `json:"transparent,omitempty" jsonschema:"description=Enable transparent background for the TUI interface,default=false"`
 }
 
-// Completions defines options for the completions UI.
+// Completions 定义补全 UI 的选项。
 type Completions struct {
 	MaxDepth *int `json:"max_depth,omitempty" jsonschema:"description=Maximum depth for the ls tool,default=0,example=10"`
 	MaxItems *int `json:"max_items,omitempty" jsonschema:"description=Maximum number of items to return for the ls tool,default=1000,example=100"`
@@ -218,8 +218,8 @@ func (c Completions) Limits() (depth, items int) {
 }
 
 type Permissions struct {
-	AllowedTools []string `json:"allowed_tools,omitempty" jsonschema:"description=List of tools that don't require permission prompts,example=bash,example=view"` // Tools that don't require permission prompts
-	SkipRequests bool     `json:"-"`                                                                                                                              // Automatically accept all permissions (YOLO mode)
+	AllowedTools []string `json:"allowed_tools,omitempty" jsonschema:"description=List of tools that don't require permission prompts,example=bash,example=view"` // 不需要权限提示的工具
+	SkipRequests bool     `json:"-"`                                                                                                                              // 自动接受所有权限（YOLO 模式）
 }
 
 type TrailerStyle string
@@ -236,7 +236,7 @@ type Attribution struct {
 	GeneratedWith bool         `json:"generated_with,omitempty" jsonschema:"description=Add Generated with Crush line to commit messages and issues and PRs,default=true"`
 }
 
-// JSONSchemaExtend marks the co_authored_by field as deprecated in the schema.
+// JSONSchemaExtend 在模式中将 co_authored_by 字段标记为已弃用。
 func (Attribution) JSONSchemaExtend(schema *jsonschema.Schema) {
 	if schema.Properties != nil {
 		if prop, ok := schema.Properties.Get("co_authored_by"); ok {
@@ -252,7 +252,7 @@ type Options struct {
 	Debug                     bool         `json:"debug,omitempty" jsonschema:"description=Enable debug logging,default=false"`
 	DebugLSP                  bool         `json:"debug_lsp,omitempty" jsonschema:"description=Enable debug logging for LSP servers,default=false"`
 	DisableAutoSummarize      bool         `json:"disable_auto_summarize,omitempty" jsonschema:"description=Disable automatic conversation summarization,default=false"`
-	DataDirectory             string       `json:"data_directory,omitempty" jsonschema:"description=Directory for storing application data (relative to working directory),default=.crush,example=.crush"` // Relative to the cwd
+	DataDirectory             string       `json:"data_directory,omitempty" jsonschema:"description=Directory for storing application data (relative to working directory),default=.crush,example=.crush"` // 相对于当前工作目录
 	DisabledTools             []string     `json:"disabled_tools,omitempty" jsonschema:"description=List of built-in tools to disable and hide from the agent,example=bash,example=sourcegraph"`
 	DisableProviderAutoUpdate bool         `json:"disable_provider_auto_update,omitempty" jsonschema:"description=Disable providers auto-update,default=false"`
 	DisableDefaultProviders   bool         `json:"disable_default_providers,omitempty" jsonschema:"description=Ignore all default/embedded providers. When enabled, providers must be fully specified in the config file with base_url, models, and api_key - no merging with defaults occurs,default=false"`
@@ -319,7 +319,7 @@ func (m MCPConfig) ResolvedHeaders() map[string]string {
 		var err error
 		m.Headers[e], err = resolver.ResolveValue(v)
 		if err != nil {
-			slog.Error("Error resolving header variable", "error", err, "variable", e, "value", v)
+			slog.Error("解析请求头变量时出错", "error", err, "variable", e, "value", v)
 			continue
 		}
 	}
@@ -330,22 +330,22 @@ type Agent struct {
 	ID          string `json:"id,omitempty"`
 	Name        string `json:"name,omitempty"`
 	Description string `json:"description,omitempty"`
-	// This is the id of the system prompt used by the agent
+	// 这是智能体使用的系统提示的 ID
 	Disabled bool `json:"disabled,omitempty"`
 
 	Model SelectedModelType `json:"model" jsonschema:"required,description=The model type to use for this agent,enum=large,enum=small,default=large"`
 
-	// The available tools for the agent
-	//  if this is nil, all tools are available
+	// 智能体可用的工具
+	//  如果为 nil，则所有工具都可用
 	AllowedTools []string `json:"allowed_tools,omitempty"`
 
-	// this tells us which MCPs are available for this agent
-	//  if this is empty all mcps are available
-	//  the string array is the list of tools from the AllowedMCP the agent has available
-	//  if the string array is nil, all tools from the AllowedMCP are available
+	// 这告诉我们哪些 MCP 对此智能体可用
+	//  如果为空，则所有 MCP 都可用
+	//  字符串数组是智能体可用的 AllowedMCP 中的工具列表
+	//  如果字符串数组为 nil，则 AllowedMCP 中的所有工具都可用
 	AllowedMCP map[string][]string `json:"allowed_mcp,omitempty"`
 
-	// Overrides the context paths for this agent
+	// 覆盖此智能体的上下文路径
 	ContextPaths []string `json:"context_paths,omitempty"`
 }
 
@@ -362,17 +362,17 @@ func (t ToolLs) Limits() (depth, items int) {
 	return ptrValOr(t.MaxDepth, 0), ptrValOr(t.MaxItems, 0)
 }
 
-// Config holds the configuration for crush.
+// Config 保存 crush 的配置。
 type Config struct {
 	Schema string `json:"$schema,omitempty"`
 
-	// We currently only support large/small as values here.
+	// 我们目前仅支持 large/small 作为此处的值。
 	Models map[SelectedModelType]SelectedModel `json:"models,omitempty" jsonschema:"description=Model configurations for different model types,example={\"large\":{\"model\":\"gpt-4o\",\"provider\":\"openai\"}}"`
 
-	// Recently used models stored in the data directory config.
+	// 最近使用的模型存储在数据目录配置中。
 	RecentModels map[SelectedModelType][]SelectedModel `json:"recent_models,omitempty" jsonschema:"-"`
 
-	// The providers that are configured
+	// 已配置的提供者
 	Providers *csync.Map[string, ProviderConfig] `json:"providers,omitempty" jsonschema:"description=AI provider configurations"`
 
 	MCP MCPs `json:"mcp,omitempty" jsonschema:"description=Model Context Protocol server configurations"`
@@ -387,9 +387,9 @@ type Config struct {
 
 	Agents map[string]Agent `json:"-"`
 
-	// Internal
+	// 内部字段
 	workingDir string `json:"-"`
-	// TODO: find a better way to do this this should probably not be part of the config
+	// TODO: 找到更好的方法来实现这一点，这可能不应该成为配置的一部分
 	resolver       VariableResolver
 	dataConfigDir  string             `json:"-"`
 	knownProviders []catwalk.Provider `json:"-"`
@@ -409,7 +409,7 @@ func (c *Config) EnabledProviders() []ProviderConfig {
 	return enabled
 }
 
-// IsConfigured  return true if at least one provider is configured
+// IsConfigured 如果至少配置了一个提供者，则返回 true
 func (c *Config) IsConfigured() bool {
 	return len(c.EnabledProviders()) > 0
 }
@@ -470,7 +470,7 @@ func (c *Config) SetCompactMode(enabled bool) error {
 
 func (c *Config) Resolve(key string) (string, error) {
 	if c.resolver == nil {
-		return "", fmt.Errorf("no variable resolver configured")
+		return "", fmt.Errorf("未配置变量解析器")
 	}
 	return c.resolver.ResolveValue(key)
 }
@@ -478,7 +478,7 @@ func (c *Config) Resolve(key string) (string, error) {
 func (c *Config) UpdatePreferredModel(modelType SelectedModelType, model SelectedModel) error {
 	c.Models[modelType] = model
 	if err := c.SetConfigField(fmt.Sprintf("models.%s", modelType), model); err != nil {
-		return fmt.Errorf("failed to update preferred model: %w", err)
+		return fmt.Errorf("更新首选模型失败: %w", err)
 	}
 	if err := c.recordRecentModel(modelType, model); err != nil {
 		return err
@@ -500,19 +500,19 @@ func (c *Config) SetConfigField(key string, value any) error {
 		if os.IsNotExist(err) {
 			data = []byte("{}")
 		} else {
-			return fmt.Errorf("failed to read config file: %w", err)
+			return fmt.Errorf("读取配置文件失败: %w", err)
 		}
 	}
 
 	newValue, err := sjson.Set(string(data), key, value)
 	if err != nil {
-		return fmt.Errorf("failed to set config field %s: %w", key, err)
+		return fmt.Errorf("设置配置字段 %s 失败: %w", key, err)
 	}
 	if err := os.MkdirAll(filepath.Dir(c.dataConfigDir), 0o755); err != nil {
-		return fmt.Errorf("failed to create config directory %q: %w", c.dataConfigDir, err)
+		return fmt.Errorf("创建配置目录 %q 失败: %w", c.dataConfigDir, err)
 	}
 	if err := os.WriteFile(c.dataConfigDir, []byte(newValue), 0o600); err != nil {
-		return fmt.Errorf("failed to write config file: %w", err)
+		return fmt.Errorf("写入配置文件失败: %w", err)
 	}
 	return nil
 }
@@ -520,31 +520,31 @@ func (c *Config) SetConfigField(key string, value any) error {
 func (c *Config) RemoveConfigField(key string) error {
 	data, err := os.ReadFile(c.dataConfigDir)
 	if err != nil {
-		return fmt.Errorf("failed to read config file: %w", err)
+		return fmt.Errorf("读取配置文件失败: %w", err)
 	}
 
 	newValue, err := sjson.Delete(string(data), key)
 	if err != nil {
-		return fmt.Errorf("failed to delete config field %s: %w", key, err)
+		return fmt.Errorf("删除配置字段 %s 失败: %w", key, err)
 	}
 	if err := os.MkdirAll(filepath.Dir(c.dataConfigDir), 0o755); err != nil {
-		return fmt.Errorf("failed to create config directory %q: %w", c.dataConfigDir, err)
+		return fmt.Errorf("创建配置目录 %q 失败: %w", c.dataConfigDir, err)
 	}
 	if err := os.WriteFile(c.dataConfigDir, []byte(newValue), 0o600); err != nil {
-		return fmt.Errorf("failed to write config file: %w", err)
+		return fmt.Errorf("写入配置文件失败: %w", err)
 	}
 	return nil
 }
 
-// RefreshOAuthToken refreshes the OAuth token for the given provider.
+// RefreshOAuthToken 刷新给定提供者的 OAuth 令牌。
 func (c *Config) RefreshOAuthToken(ctx context.Context, providerID string) error {
 	providerConfig, exists := c.Providers.Get(providerID)
 	if !exists {
-		return fmt.Errorf("provider %s not found", providerID)
+		return fmt.Errorf("未找到提供者 %s", providerID)
 	}
 
 	if providerConfig.OAuthToken == nil {
-		return fmt.Errorf("provider %s does not have an OAuth token", providerID)
+		return fmt.Errorf("提供者 %s 没有 OAuth 令牌", providerID)
 	}
 
 	var newToken *oauth.Token
@@ -555,13 +555,13 @@ func (c *Config) RefreshOAuthToken(ctx context.Context, providerID string) error
 	case hyperp.Name:
 		newToken, refreshErr = hyper.ExchangeToken(ctx, providerConfig.OAuthToken.RefreshToken)
 	default:
-		return fmt.Errorf("OAuth refresh not supported for provider %s", providerID)
+		return fmt.Errorf("提供者 %s 不支持 OAuth 刷新", providerID)
 	}
 	if refreshErr != nil {
-		return fmt.Errorf("failed to refresh OAuth token for provider %s: %w", providerID, refreshErr)
+		return fmt.Errorf("刷新提供者 %s 的 OAuth 令牌失败: %w", providerID, refreshErr)
 	}
 
-	slog.Info("Successfully refreshed OAuth token", "provider", providerID)
+	slog.Info("成功刷新 OAuth 令牌", "provider", providerID)
 	providerConfig.OAuthToken = newToken
 	providerConfig.APIKey = newToken.AccessToken
 
@@ -576,7 +576,7 @@ func (c *Config) RefreshOAuthToken(ctx context.Context, providerID string) error
 		c.SetConfigField(fmt.Sprintf("providers.%s.api_key", providerID), newToken.AccessToken),
 		c.SetConfigField(fmt.Sprintf("providers.%s.oauth", providerID), newToken),
 	); err != nil {
-		return fmt.Errorf("failed to persist refreshed token: %w", err)
+		return fmt.Errorf("持久化刷新后的令牌失败: %w", err)
 	}
 
 	return nil
@@ -590,7 +590,7 @@ func (c *Config) SetProviderAPIKey(providerID string, apiKey any) error {
 	switch v := apiKey.(type) {
 	case string:
 		if err := c.SetConfigField(fmt.Sprintf("providers.%s.api_key", providerID), v); err != nil {
-			return fmt.Errorf("failed to save api key to config file: %w", err)
+			return fmt.Errorf("将 API 密钥保存到配置文件失败: %w", err)
 		}
 		setKeyOrToken = func() { providerConfig.APIKey = v }
 	case *oauth.Token:
@@ -626,7 +626,7 @@ func (c *Config) SetProviderAPIKey(providerID string, apiKey any) error {
 	}
 
 	if foundProvider != nil {
-		// Create new provider config based on known provider
+		// 基于已知提供者创建新的提供者配置
 		providerConfig = ProviderConfig{
 			ID:           providerID,
 			Name:         foundProvider.Name,
@@ -639,9 +639,9 @@ func (c *Config) SetProviderAPIKey(providerID string, apiKey any) error {
 		}
 		setKeyOrToken()
 	} else {
-		return fmt.Errorf("provider with ID %s not found in known providers", providerID)
+		return fmt.Errorf("在已知提供者中未找到 ID 为 %s 的提供者", providerID)
 	}
-	// Store the updated provider config
+	// 存储更新后的提供者配置
 	c.Providers.Set(providerID, providerConfig)
 	return nil
 }
@@ -683,7 +683,7 @@ func (c *Config) recordRecentModel(modelType SelectedModelType, model SelectedMo
 	c.RecentModels[modelType] = updated
 
 	if err := c.SetConfigField(fmt.Sprintf("recent_models.%s", modelType), updated); err != nil {
-		return fmt.Errorf("failed to persist recent models: %w", err)
+		return fmt.Errorf("持久化最近模型失败: %w", err)
 	}
 
 	return nil
@@ -719,21 +719,21 @@ func resolveAllowedTools(allTools []string, disabledTools []string) []string {
 	if disabledTools == nil {
 		return allTools
 	}
-	// filter out disabled tools (exclude mode)
+	// 过滤掉已禁用的工具（排除模式）
 	return filterSlice(allTools, disabledTools, false)
 }
 
 func resolveReadOnlyTools(tools []string) []string {
 	readOnlyTools := []string{"glob", "grep", "ls", "sourcegraph", "view"}
-	// filter to only include tools that are in allowedtools (include mode)
+	// 过滤以仅包含在 allowedtools 中的工具（包含模式）
 	return filterSlice(tools, readOnlyTools, true)
 }
 
 func filterSlice(data []string, mask []string, include bool) []string {
 	var filtered []string
 	for _, s := range data {
-		// if include is true, we include items that ARE in the mask
-		// if include is false, we include items that are NOT in the mask
+		// 如果 include 为 true，我们包含在 mask 中的项
+		// 如果 include 为 false，我们包含不在 mask 中的项
 		if include == slices.Contains(mask, s) {
 			filtered = append(filtered, s)
 		}
@@ -748,7 +748,7 @@ func (c *Config) SetupAgents() {
 		AgentCoder: {
 			ID:           AgentCoder,
 			Name:         "Coder",
-			Description:  "An agent that helps with executing coding tasks.",
+			Description:  "一个帮助执行编码任务的智能体。",
 			Model:        SelectedModelTypeLarge,
 			ContextPaths: c.Options.ContextPaths,
 			AllowedTools: allowedTools,
@@ -757,11 +757,11 @@ func (c *Config) SetupAgents() {
 		AgentTask: {
 			ID:           AgentCoder,
 			Name:         "Task",
-			Description:  "An agent that helps with searching for context and finding implementation details.",
+			Description:  "一个帮助搜索上下文和查找实现细节的智能体。",
 			Model:        SelectedModelTypeLarge,
 			ContextPaths: c.Options.ContextPaths,
 			AllowedTools: resolveReadOnlyTools(allowedTools),
-			// NO MCPs or LSPs by default
+			// 默认情况下没有 MCP 或 LSP
 			AllowedMCP: map[string][]string{},
 		},
 	}
@@ -782,10 +782,10 @@ func (c *ProviderConfig) TestConnection(resolver VariableResolver) error {
 
 	switch providerID {
 	case catwalk.InferenceProviderMiniMax:
-		// NOTE: MiniMax has no good endpoint we can use to validate the API key.
-		// Let's at least check the pattern.
+		// 注意：MiniMax 没有好的端点可以用来验证 API 密钥。
+		// 让我们至少检查一下格式。
 		if !strings.HasPrefix(apiKey, "sk-") {
-			return fmt.Errorf("invalid API key format for provider %s", c.ID)
+			return fmt.Errorf("提供者 %s 的 API 密钥格式无效", c.ID)
 		}
 		return nil
 	}
@@ -828,7 +828,7 @@ func (c *ProviderConfig) TestConnection(resolver VariableResolver) error {
 	client := &http.Client{}
 	req, err := http.NewRequestWithContext(ctx, "GET", testURL, nil)
 	if err != nil {
-		return fmt.Errorf("failed to create request for provider %s: %w", c.ID, err)
+		return fmt.Errorf("为提供者 %s 创建请求失败: %w", c.ID, err)
 	}
 	for k, v := range headers {
 		req.Header.Set(k, v)
@@ -839,18 +839,18 @@ func (c *ProviderConfig) TestConnection(resolver VariableResolver) error {
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return fmt.Errorf("failed to create request for provider %s: %w", c.ID, err)
+		return fmt.Errorf("为提供者 %s 创建请求失败: %w", c.ID, err)
 	}
 	defer resp.Body.Close()
 
 	switch providerID {
 	case catwalk.InferenceProviderZAI:
 		if resp.StatusCode == http.StatusUnauthorized {
-			return fmt.Errorf("failed to connect to provider %s: %s", c.ID, resp.Status)
+			return fmt.Errorf("连接提供者 %s 失败: %s", c.ID, resp.Status)
 		}
 	default:
 		if resp.StatusCode != http.StatusOK {
-			return fmt.Errorf("failed to connect to provider %s: %s", c.ID, resp.Status)
+			return fmt.Errorf("连接提供者 %s 失败: %s", c.ID, resp.Status)
 		}
 	}
 	return nil
@@ -862,7 +862,7 @@ func resolveEnvs(envs map[string]string) []string {
 		var err error
 		envs[e], err = resolver.ResolveValue(v)
 		if err != nil {
-			slog.Error("Error resolving environment variable", "error", err, "variable", e, "value", v)
+			slog.Error("解析环境变量时出错", "error", err, "variable", e, "value", v)
 			continue
 		}
 	}

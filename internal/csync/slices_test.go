@@ -18,7 +18,7 @@ func TestLazySlice_Seq(t *testing.T) {
 		t.Helper()
 		data := []string{"a", "b", "c"}
 		s := NewLazySlice(func() []string {
-			time.Sleep(10 * time.Millisecond) // Small delay to ensure loading happens
+			time.Sleep(10 * time.Millisecond) // 小延迟以确保加载发生
 			return data
 		})
 		require.Equal(t, data, slices.Collect(s.Seq()))
@@ -39,9 +39,9 @@ func TestLazySlice_SeqWaitsForLoading(t *testing.T) {
 			return data
 		})
 
-		require.False(t, loaded.Load(), "should not be loaded immediately")
+		require.False(t, loaded.Load(), "不应立即加载")
 		require.Equal(t, data, slices.Collect(s.Seq()))
-		require.True(t, loaded.Load(), "should be loaded after Seq")
+		require.True(t, loaded.Load(), "应在调用 Seq 后加载")
 	})
 }
 
@@ -60,7 +60,7 @@ func TestLazySlice_EarlyBreak(t *testing.T) {
 		t.Helper()
 		data := []string{"a", "b", "c", "d", "e"}
 		s := NewLazySlice(func() []string {
-			time.Sleep(10 * time.Millisecond) // Small delay to ensure loading happens
+			time.Sleep(10 * time.Millisecond) // 小延迟以确保加载发生
 			return data
 		})
 
@@ -87,7 +87,7 @@ func TestSlice(t *testing.T) {
 		s := NewSliceFrom(original)
 		require.Equal(t, 3, s.Len())
 
-		// Verify it's a copy, not a reference
+		// 验证这是副本，而不是引用
 		original[0] = 999
 		val, ok := s.Get(0)
 		require.True(t, ok)
@@ -116,11 +116,11 @@ func TestSlice(t *testing.T) {
 		require.True(t, ok)
 		require.Equal(t, "b", val)
 
-		// Out of bounds
+		// 越界访问
 		_, ok = s.Get(10)
 		require.False(t, ok)
 
-		// Negative index
+		// 负索引
 		_, ok = s.Get(-1)
 		require.False(t, ok)
 	})
@@ -136,7 +136,7 @@ func TestSlice(t *testing.T) {
 		require.Equal(t, 3, s.Len())
 		require.Equal(t, newItems, slices.Collect(s.Seq()))
 
-		// Verify it's a copy
+		// 验证这是副本
 		newItems[0] = 999
 		val, ok := s.Get(0)
 		require.True(t, ok)
@@ -150,7 +150,7 @@ func TestSlice(t *testing.T) {
 		copied := slices.Collect(s.Seq())
 		require.Equal(t, original, copied)
 
-		// Verify it's a copy
+		// 验证这是副本
 		copied[0] = 999
 		val, ok := s.Get(0)
 		require.True(t, ok)
@@ -189,7 +189,7 @@ func TestSlice(t *testing.T) {
 
 		var wg sync.WaitGroup
 
-		// Concurrent appends
+		// 并发追加
 		for i := range numGoroutines {
 			wg.Add(2)
 			go func(start int) {
@@ -201,14 +201,14 @@ func TestSlice(t *testing.T) {
 			go func() {
 				defer wg.Done()
 				for range itemsPerGoroutine {
-					s.Len() // Just read the length
+					s.Len() // 仅读取长度
 				}
 			}()
 		}
 
 		wg.Wait()
 
-		// Should have all items
+		// 应包含所有元素
 		require.Equal(t, numGoroutines*itemsPerGoroutine, s.Len())
 	})
 }

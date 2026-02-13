@@ -56,7 +56,7 @@ type Session struct {
 
 var _ Dialog = (*Session)(nil)
 
-// NewSessions 创建一个新的Session对话框。
+// NewSessions 创建一个新的 Session 对话框。
 func NewSessions(com *common.Common, selectedSessionID string) (*Session, error) {
 	s := new(Session)
 	s.sessionsMode = sessionsModeNormal
@@ -84,61 +84,61 @@ func NewSessions(com *common.Common, selectedSessionID string) (*Session, error)
 
 	s.input = textinput.New()
 	s.input.SetVirtualCursor(false)
-	s.input.Placeholder = "Enter session name"
+	s.input.Placeholder = "输入会话名称"
 	s.input.SetStyles(com.Styles.TextInput)
 	s.input.Focus()
 
 	s.keyMap.Select = key.NewBinding(
 		key.WithKeys("enter", "tab", "ctrl+y"),
-		key.WithHelp("enter", "choose"),
+		key.WithHelp("enter", "确认"),
 	)
 	s.keyMap.Next = key.NewBinding(
 		key.WithKeys("down", "ctrl+n"),
-		key.WithHelp("↓", "next item"),
+		key.WithHelp("↓", "下一项"),
 	)
 	s.keyMap.Previous = key.NewBinding(
 		key.WithKeys("up", "ctrl+p"),
-		key.WithHelp("↑", "previous item"),
+		key.WithHelp("↑", "上一项"),
 	)
 	s.keyMap.UpDown = key.NewBinding(
 		key.WithKeys("up", "down"),
-		key.WithHelp("↑↓", "choose"),
+		key.WithHelp("↑↓", "选择"),
 	)
 	s.keyMap.Delete = key.NewBinding(
 		key.WithKeys("ctrl+x"),
-		key.WithHelp("ctrl+x", "delete"),
+		key.WithHelp("ctrl+x", "删除"),
 	)
 	s.keyMap.Rename = key.NewBinding(
 		key.WithKeys("ctrl+r"),
-		key.WithHelp("ctrl+r", "rename"),
+		key.WithHelp("ctrl+r", "重命名"),
 	)
 	s.keyMap.ConfirmRename = key.NewBinding(
 		key.WithKeys("enter"),
-		key.WithHelp("enter", "confirm"),
+		key.WithHelp("enter", "确认"),
 	)
 	s.keyMap.CancelRename = key.NewBinding(
 		key.WithKeys("esc"),
-		key.WithHelp("esc", "cancel"),
+		key.WithHelp("esc", "取消"),
 	)
 	s.keyMap.ConfirmDelete = key.NewBinding(
 		key.WithKeys("y"),
-		key.WithHelp("y", "delete"),
+		key.WithHelp("y", "删除"),
 	)
 	s.keyMap.CancelDelete = key.NewBinding(
 		key.WithKeys("n", "esc"),
-		key.WithHelp("n", "cancel"),
+		key.WithHelp("n", "取消"),
 	)
 	s.keyMap.Close = CloseKey
 
 	return s, nil
 }
 
-// ID implements Dialog.
+// ID 实现 Dialog 接口。
 func (s *Session) ID() string {
 	return SessionsID
 }
 
-// HandleMsg implements Dialog.
+// HandleMsg 实现 Dialog 接口。
 func (s *Session) HandleMsg(msg tea.Msg) Action {
 	switch msg := msg.(type) {
 	case tea.KeyPressMsg:
@@ -182,7 +182,7 @@ func (s *Session) HandleMsg(msg tea.Msg) Action {
 				s.list.SetItems(sessionItems(s.com.Styles, sessionsModeUpdating, s.sessions...)...)
 			case key.Matches(msg, s.keyMap.Delete):
 				if s.isCurrentSessionBusy() {
-					return ActionCmd{util.ReportWarn("Agent is busy, please wait...")}
+					return ActionCmd{util.ReportWarn("智能体正忙，请稍候...")}
 				}
 				s.sessionsMode = sessionsModeDeleting
 				s.list.SetItems(sessionItems(s.com.Styles, sessionsModeDeleting, s.sessions...)...)
@@ -228,7 +228,7 @@ func (s *Session) Cursor() *tea.Cursor {
 	return InputCursor(s.com.Styles, s.input.Cursor())
 }
 
-// Draw implements [Dialog].
+// Draw 实现 [Dialog] 接口。
 func (s *Session) Draw(scr uv.Screen, area uv.Rectangle) *tea.Cursor {
 	t := s.com.Styles
 	width := max(0, min(defaultDialogMaxWidth, area.Dx()))
@@ -252,20 +252,20 @@ func (s *Session) Draw(scr uv.Screen, area uv.Rectangle) *tea.Cursor {
 
 	var cur *tea.Cursor
 	rc := NewRenderContext(t, width)
-	rc.Title = "Sessions"
+	rc.Title = "会话"
 	switch s.sessionsMode {
 	case sessionsModeDeleting:
 		rc.TitleStyle = t.Dialog.Sessions.DeletingTitle
 		rc.TitleGradientFromColor = t.Dialog.Sessions.DeletingTitleGradientFromColor
 		rc.TitleGradientToColor = t.Dialog.Sessions.DeletingTitleGradientToColor
 		rc.ViewStyle = t.Dialog.Sessions.DeletingView
-		rc.AddPart(t.Dialog.Sessions.DeletingMessage.Render("Delete this session?"))
+		rc.AddPart(t.Dialog.Sessions.DeletingMessage.Render("删除此会话？"))
 	case sessionsModeUpdating:
 		rc.TitleStyle = t.Dialog.Sessions.RenamingingTitle
 		rc.TitleGradientFromColor = t.Dialog.Sessions.RenamingTitleGradientFromColor
 		rc.TitleGradientToColor = t.Dialog.Sessions.RenamingTitleGradientToColor
 		rc.ViewStyle = t.Dialog.Sessions.RenamingView
-		message := t.Dialog.Sessions.RenamingingMessage.Render("Rename this session?")
+		message := t.Dialog.Sessions.RenamingingMessage.Render("重命名此会话？")
 		rc.AddPart(message)
 		item := s.selectedSessionItem()
 		if item == nil {
@@ -301,7 +301,7 @@ func (s *Session) Draw(scr uv.Screen, area uv.Rectangle) *tea.Cursor {
 			dialogStyle.GetBorderTopSize() +
 			lipgloss.Height(message) - 1
 
-		// 向下移动光标，直到我们看到selectedIndex
+		// 向下移动光标，直到我们看到 selectedIndex
 		for ; start <= end && start != selectedIndex && selectedIndex > -1; start++ {
 			cur.Y += 1
 		}
@@ -408,7 +408,7 @@ func (s *Session) isCurrentSessionBusy() bool {
 	return s.com.App.AgentCoordinator.IsSessionBusy(sessionItem.ID())
 }
 
-// ShortHelp implements [help.KeyMap].
+// ShortHelp 实现 [help.KeyMap] 接口。
 func (s *Session) ShortHelp() []key.Binding {
 	switch s.sessionsMode {
 	case sessionsModeDeleting:
@@ -432,7 +432,7 @@ func (s *Session) ShortHelp() []key.Binding {
 	}
 }
 
-// FullHelp implements [help.KeyMap].
+// FullHelp 实现 [help.KeyMap] 接口。
 func (s *Session) FullHelp() [][]key.Binding {
 	m := [][]key.Binding{}
 	slice := []key.Binding{

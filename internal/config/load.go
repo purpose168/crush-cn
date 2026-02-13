@@ -29,13 +29,13 @@ import (
 
 const defaultCatwalkURL = "https://catwalk.charm.sh"
 
-// Load loads the configuration from the default paths.
+// Load 从默认路径加载配置
 func Load(workingDir, dataDir string, debug bool) (*Config, error) {
 	configPaths := lookupConfigs(workingDir)
 
 	cfg, err := loadFromConfigPaths(configPaths)
 	if err != nil {
-		return nil, fmt.Errorf("failed to load config from paths %v: %w", configPaths, err)
+		return nil, fmt.Errorf("从路径 %v 加载配置失败: %w", configPaths, err)
 	}
 
 	cfg.dataConfigDir = GlobalConfigData()
@@ -46,7 +46,7 @@ func Load(workingDir, dataDir string, debug bool) (*Config, error) {
 		cfg.Options.Debug = true
 	}
 
-	// Setup logs
+	// 设置日志
 	log.Setup(
 		filepath.Join(cfg.Options.DataDirectory, "logs", fmt.Sprintf("%s.log", appName)),
 		cfg.Options.Debug,
@@ -55,7 +55,7 @@ func Load(workingDir, dataDir string, debug bool) (*Config, error) {
 	if !isInsideWorktree() {
 		const depth = 2
 		const items = 100
-		slog.Warn("No git repository detected in working directory, will limit file walk operations", "depth", depth, "items", items)
+		slog.Warn("工作目录中未检测到git仓库，将限制文件遍历操作", "depth", depth, "items", items)
 		assignIfNil(&cfg.Tools.Ls.MaxDepth, depth)
 		assignIfNil(&cfg.Tools.Ls.MaxItems, items)
 		assignIfNil(&cfg.Options.TUI.Completions.MaxDepth, depth)
@@ -63,11 +63,11 @@ func Load(workingDir, dataDir string, debug bool) (*Config, error) {
 	}
 
 	if isAppleTerminal() {
-		slog.Warn("Detected Apple Terminal, enabling transparent mode")
+		slog.Warn("检测到Apple Terminal，启用透明模式")
 		assignIfNil(&cfg.Options.TUI.Transparent, true)
 	}
 
-	// Load known providers, this loads the config from catwalk
+	// 加载已知提供商，从catwalk加载配置
 	providers, err := Providers(cfg)
 	if err != nil {
 		return nil, err
@@ -75,20 +75,20 @@ func Load(workingDir, dataDir string, debug bool) (*Config, error) {
 	cfg.knownProviders = providers
 
 	env := env.New()
-	// Configure providers
+	// 配置提供商
 	valueResolver := NewShellVariableResolver(env)
 	cfg.resolver = valueResolver
 	if err := cfg.configureProviders(env, valueResolver, cfg.knownProviders); err != nil {
-		return nil, fmt.Errorf("failed to configure providers: %w", err)
+		return nil, fmt.Errorf("配置提供商失败: %w", err)
 	}
 
 	if !cfg.IsConfigured() {
-		slog.Warn("No providers configured")
+		slog.Warn("未配置提供商")
 		return cfg, nil
 	}
 
 	if err := cfg.configureSelectedModels(cfg.knownProviders); err != nil {
-		return nil, fmt.Errorf("failed to configure selected models: %w", err)
+		return nil, fmt.Errorf("配置选定的模型失败: %w", err)
 	}
 	cfg.SetupAgents()
 	return cfg, nil
@@ -127,10 +127,9 @@ func (c *Config) configureProviders(env env.Env, resolver VariableResolver, know
 	restore := PushPopCrushEnv()
 	defer restore()
 
-	// When disable_default_providers is enabled, skip all default/embedded
-	// providers entirely. Users must fully specify any providers they want.
-	// We skip to the custom provider validation loop which handles all
-	// user-configured providers uniformly.
+	// 当启用disable_default_providers时，完全跳过所有默认/嵌入的提供商
+	// 用户必须完全指定他们想要的任何提供商
+	// 我们跳转到自定义提供商验证循环，该循环统一处理所有用户配置的提供商
 	if c.Options.DisableDefaultProviders {
 		knownProviders = nil
 	}
@@ -138,7 +137,7 @@ func (c *Config) configureProviders(env env.Env, resolver VariableResolver, know
 	for _, p := range knownProviders {
 		knownProviderNames[string(p.ID)] = true
 		config, configExists := c.Providers.Get(string(p.ID))
-		// if the user configured a known provider we need to allow it to override a couple of parameters
+		// 如果用户配置了已知提供商，我们需要允许它覆盖几个参数
 		if configExists {
 			if config.BaseURL != "" {
 				p.APIEndpoint = config.BaseURL
@@ -185,7 +184,7 @@ func (c *Config) configureProviders(env env.Env, resolver VariableResolver, know
 		for k, v := range headers {
 			resolved, err := resolver.ResolveValue(v)
 			if err != nil {
-				slog.Error("Could not resolve provider header", "err", err.Error())
+				slog.Error("无法解析提供商头部", "err", err.Error())
 				continue
 			}
 			headers[k] = resolved
@@ -195,7 +194,7 @@ func (c *Config) configureProviders(env env.Env, resolver VariableResolver, know
 			Name:               p.Name,
 			BaseURL:            p.APIEndpoint,
 			APIKey:             p.APIKey,
-			APIKeyTemplate:     p.APIKey, // Store original template for re-resolution
+			APIKeyTemplate:     p.APIKey, // 存储原始模板以便重新解析
 			OAuthToken:         config.OAuthToken,
 			Type:               p.Type,
 			Disable:            config.Disable,
@@ -208,7 +207,7 @@ func (c *Config) configureProviders(env env.Env, resolver VariableResolver, know
 
 		switch {
 		case p.ID == catwalk.InferenceProviderAnthropic && config.OAuthToken != nil:
-			// Claude Code subscription is not supported anymore. Remove to show onboarding.
+			// Claude Code订阅不再受支持。移除以显示入门指南。
 			c.RemoveConfigField("providers.anthropic")
 			c.Providers.Del(string(p.ID))
 			continue
@@ -217,11 +216,11 @@ func (c *Config) configureProviders(env env.Env, resolver VariableResolver, know
 		}
 
 		switch p.ID {
-		// Handle specific providers that require additional configuration
+		// 处理需要额外配置的特定提供商
 		case catwalk.InferenceProviderVertexAI:
 			if !hasVertexCredentials(env) {
 				if configExists {
-					slog.Warn("Skipping Vertex AI provider due to missing credentials")
+					slog.Warn("由于缺少凭据，跳过Vertex AI提供商")
 					c.Providers.Del(string(p.ID))
 				}
 				continue
@@ -232,7 +231,7 @@ func (c *Config) configureProviders(env env.Env, resolver VariableResolver, know
 			endpoint, err := resolver.ResolveValue(p.APIEndpoint)
 			if err != nil || endpoint == "" {
 				if configExists {
-					slog.Warn("Skipping Azure provider due to missing API endpoint", "provider", p.ID, "error", err)
+					slog.Warn("由于缺少API端点，跳过Azure提供商", "provider", p.ID, "error", err)
 					c.Providers.Del(string(p.ID))
 				}
 				continue
@@ -242,7 +241,7 @@ func (c *Config) configureProviders(env env.Env, resolver VariableResolver, know
 		case catwalk.InferenceProviderBedrock:
 			if !hasAWSCredentials(env) {
 				if configExists {
-					slog.Warn("Skipping Bedrock provider due to missing AWS credentials")
+					slog.Warn("由于缺少AWS凭据，跳过Bedrock提供商")
 					c.Providers.Del(string(p.ID))
 				}
 				continue
@@ -253,15 +252,15 @@ func (c *Config) configureProviders(env env.Env, resolver VariableResolver, know
 			}
 			for _, model := range p.Models {
 				if !strings.HasPrefix(model.ID, "anthropic.") {
-					return fmt.Errorf("bedrock provider only supports anthropic models for now, found: %s", model.ID)
+					return fmt.Errorf("bedrock提供商目前仅支持anthropic模型，发现: %s", model.ID)
 				}
 			}
 		default:
-			// if the provider api or endpoint are missing we skip them
+			// 如果提供商的API或端点缺失，我们跳过它们
 			v, err := resolver.ResolveValue(p.APIKey)
 			if v == "" || err != nil {
 				if configExists {
-					slog.Warn("Skipping provider due to missing API key", "provider", p.ID)
+					slog.Warn("由于缺少API密钥，跳过提供商", "provider", p.ID)
 					c.Providers.Del(string(p.ID))
 				}
 				continue
@@ -270,52 +269,52 @@ func (c *Config) configureProviders(env env.Env, resolver VariableResolver, know
 		c.Providers.Set(string(p.ID), prepared)
 	}
 
-	// validate the custom providers
+	// 验证自定义提供商
 	for id, providerConfig := range c.Providers.Seq2() {
 		if knownProviderNames[id] {
 			continue
 		}
 
-		// Make sure the provider ID is set
+		// 确保提供商ID已设置
 		providerConfig.ID = id
 		if providerConfig.Name == "" {
-			providerConfig.Name = id // Use ID as name if not set
+			providerConfig.Name = id // 如果未设置，使用ID作为名称
 		}
-		// default to OpenAI if not set
+		// 如果未设置，默认为OpenAI
 		if providerConfig.Type == "" {
 			providerConfig.Type = catwalk.TypeOpenAICompat
 		}
 		if !slices.Contains(catwalk.KnownProviderTypes(), providerConfig.Type) && providerConfig.Type != hyper.Name {
-			slog.Warn("Skipping custom provider due to unsupported provider type", "provider", id)
+			slog.Warn("由于提供商类型不受支持，跳过自定义提供商", "provider", id)
 			c.Providers.Del(id)
 			continue
 		}
 
 		if providerConfig.Disable {
-			slog.Debug("Skipping custom provider due to disable flag", "provider", id)
+			slog.Debug("由于禁用标志，跳过自定义提供商", "provider", id)
 			c.Providers.Del(id)
 			continue
 		}
 		if providerConfig.APIKey == "" {
-			slog.Warn("Provider is missing API key, this might be OK for local providers", "provider", id)
+			slog.Warn("提供商缺少API密钥，这对于本地提供商可能是正常的", "provider", id)
 		}
 		if providerConfig.BaseURL == "" {
-			slog.Warn("Skipping custom provider due to missing API endpoint", "provider", id)
+			slog.Warn("由于缺少API端点，跳过自定义提供商", "provider", id)
 			c.Providers.Del(id)
 			continue
 		}
 		if len(providerConfig.Models) == 0 {
-			slog.Warn("Skipping custom provider because the provider has no models", "provider", id)
+			slog.Warn("跳过自定义提供商，因为该提供商没有模型", "provider", id)
 			c.Providers.Del(id)
 			continue
 		}
 		apiKey, err := resolver.ResolveValue(providerConfig.APIKey)
 		if apiKey == "" || err != nil {
-			slog.Warn("Provider is missing API key, this might be OK for local providers", "provider", id)
+			slog.Warn("提供商缺少API密钥，这对于本地提供商可能是正常的", "provider", id)
 		}
 		baseURL, err := resolver.ResolveValue(providerConfig.BaseURL)
 		if baseURL == "" || err != nil {
-			slog.Warn("Skipping custom provider due to missing API endpoint", "provider", id, "error", err)
+			slog.Warn("由于缺少API端点，跳过自定义提供商", "provider", id, "error", err)
 			c.Providers.Del(id)
 			continue
 		}
@@ -323,7 +322,7 @@ func (c *Config) configureProviders(env env.Env, resolver VariableResolver, know
 		for k, v := range providerConfig.ExtraHeaders {
 			resolved, err := resolver.ResolveValue(v)
 			if err != nil {
-				slog.Error("Could not resolve provider header", "err", err.Error())
+				slog.Error("无法解析提供商头部", "err", err.Error())
 				continue
 			}
 			providerConfig.ExtraHeaders[k] = resolved
@@ -367,15 +366,15 @@ func (c *Config) setDefaults(workingDir, dataDir string) {
 		c.LSP = make(map[string]LSPConfig)
 	}
 
-	// Apply defaults to LSP configurations
+	// 将默认值应用到LSP配置
 	c.applyLSPDefaults()
 
-	// Add the default context paths if they are not already present
+	// 如果默认上下文路径尚未存在，则添加它们
 	c.Options.ContextPaths = append(defaultContextPaths, c.Options.ContextPaths...)
 	slices.Sort(c.Options.ContextPaths)
 	c.Options.ContextPaths = slices.Compact(c.Options.ContextPaths)
 
-	// Add the default skills directories if not already present.
+	// 如果尚未存在，则添加默认技能目录
 	for _, dir := range GlobalSkillsDirs() {
 		if !slices.Contains(c.Options.SkillsPaths, dir) {
 			c.Options.SkillsPaths = append(c.Options.SkillsPaths, dir)
@@ -396,7 +395,7 @@ func (c *Config) setDefaults(workingDir, dataDir string) {
 			GeneratedWith: true,
 		}
 	} else if c.Options.Attribution.TrailerStyle == "" {
-		// Migrate deprecated co_authored_by or apply default
+		// 迁移已弃用的co_authored_by或应用默认值
 		if c.Options.Attribution.CoAuthoredBy != nil {
 			if *c.Options.Attribution.CoAuthoredBy {
 				c.Options.Attribution.TrailerStyle = TrailerStyleCoAuthoredBy
@@ -412,15 +411,15 @@ func (c *Config) setDefaults(workingDir, dataDir string) {
 	}
 }
 
-// applyLSPDefaults applies default values from powernap to LSP configurations
+// applyLSPDefaults 将powernap的默认值应用到LSP配置
 func (c *Config) applyLSPDefaults() {
-	// Get powernap's default configuration
+	// 获取powernap的默认配置
 	configManager := powernapConfig.NewManager()
 	configManager.LoadDefaults()
 
-	// Apply defaults to each LSP configuration
+	// 将默认值应用到每个LSP配置
 	for name, cfg := range c.LSP {
-		// Try to get defaults from powernap based on name or command name.
+		// 尝试根据名称或命令名称从powernap获取默认值
 		base, ok := configManager.GetServer(name)
 		if !ok {
 			base, ok = configManager.GetServer(cfg.Command)
@@ -449,19 +448,19 @@ func (c *Config) applyLSPDefaults() {
 		if len(cfg.Env) == 0 {
 			cfg.Env = base.Environment
 		}
-		// Update the config in the map
+		// 更新映射中的配置
 		c.LSP[name] = cfg
 	}
 }
 
 func (c *Config) defaultModelSelection(knownProviders []catwalk.Provider) (largeModel SelectedModel, smallModel SelectedModel, err error) {
 	if len(knownProviders) == 0 && c.Providers.Len() == 0 {
-		err = fmt.Errorf("no providers configured, please configure at least one provider")
+		err = fmt.Errorf("未配置提供商，请至少配置一个提供商")
 		return largeModel, smallModel, err
 	}
 
-	// Use the first provider enabled based on the known providers order
-	// if no provider found that is known use the first provider configured
+	// 根据已知提供商的顺序使用第一个启用的提供商
+	// 如果未找到已知提供商，则使用第一个配置的提供商
 	for _, p := range knownProviders {
 		providerConfig, ok := c.Providers.Get(string(p.ID))
 		if !ok || providerConfig.Disable {
@@ -469,7 +468,7 @@ func (c *Config) defaultModelSelection(knownProviders []catwalk.Provider) (large
 		}
 		defaultLargeModel := c.GetModel(string(p.ID), p.DefaultLargeModelID)
 		if defaultLargeModel == nil {
-			err = fmt.Errorf("default large model %s not found for provider %s", p.DefaultLargeModelID, p.ID)
+			err = fmt.Errorf("提供商 %s 的默认大模型 %s 未找到", p.DefaultLargeModelID, p.ID)
 			return largeModel, smallModel, err
 		}
 		largeModel = SelectedModel{
@@ -481,7 +480,7 @@ func (c *Config) defaultModelSelection(knownProviders []catwalk.Provider) (large
 
 		defaultSmallModel := c.GetModel(string(p.ID), p.DefaultSmallModelID)
 		if defaultSmallModel == nil {
-			err = fmt.Errorf("default small model %s not found for provider %s", p.DefaultSmallModelID, p.ID)
+			err = fmt.Errorf("提供商 %s 的默认小模型 %s 未找到", p.DefaultSmallModelID, p.ID)
 			return largeModel, smallModel, err
 		}
 		smallModel = SelectedModel{
@@ -499,13 +498,13 @@ func (c *Config) defaultModelSelection(knownProviders []catwalk.Provider) (large
 	})
 
 	if len(enabledProviders) == 0 {
-		err = fmt.Errorf("no providers configured, please configure at least one provider")
+		err = fmt.Errorf("未配置提供商，请至少配置一个提供商")
 		return largeModel, smallModel, err
 	}
 
 	providerConfig := enabledProviders[0]
 	if len(providerConfig.Models) == 0 {
-		err = fmt.Errorf("provider %s has no models configured", providerConfig.ID)
+		err = fmt.Errorf("提供商 %s 没有配置模型", providerConfig.ID)
 		return largeModel, smallModel, err
 	}
 	defaultLargeModel := c.GetModel(providerConfig.ID, providerConfig.Models[0].ID)
@@ -526,7 +525,7 @@ func (c *Config) defaultModelSelection(knownProviders []catwalk.Provider) (large
 func (c *Config) configureSelectedModels(knownProviders []catwalk.Provider) error {
 	defaultLarge, defaultSmall, err := c.defaultModelSelection(knownProviders)
 	if err != nil {
-		return fmt.Errorf("failed to select default models: %w", err)
+		return fmt.Errorf("选择默认模型失败: %w", err)
 	}
 	large, small := defaultLarge, defaultSmall
 
@@ -541,10 +540,10 @@ func (c *Config) configureSelectedModels(knownProviders []catwalk.Provider) erro
 		model := c.GetModel(large.Provider, large.Model)
 		if model == nil {
 			large = defaultLarge
-			// override the model type to large
+			// 覆盖模型类型为大模型
 			err := c.UpdatePreferredModel(SelectedModelTypeLarge, large)
 			if err != nil {
-				return fmt.Errorf("failed to update preferred large model: %w", err)
+				return fmt.Errorf("更新首选大模型失败: %w", err)
 			}
 		} else {
 			if largeModelSelected.MaxTokens > 0 {
@@ -585,10 +584,10 @@ func (c *Config) configureSelectedModels(knownProviders []catwalk.Provider) erro
 		model := c.GetModel(small.Provider, small.Model)
 		if model == nil {
 			small = defaultSmall
-			// override the model type to small
+			// 覆盖模型类型为小模型
 			err := c.UpdatePreferredModel(SelectedModelTypeSmall, small)
 			if err != nil {
-				return fmt.Errorf("failed to update preferred small model: %w", err)
+				return fmt.Errorf("更新首选小模型失败: %w", err)
 			}
 		} else {
 			if smallModelSelected.MaxTokens > 0 {
@@ -622,9 +621,9 @@ func (c *Config) configureSelectedModels(knownProviders []catwalk.Provider) erro
 	return nil
 }
 
-// lookupConfigs searches config files recursively from CWD up to FS root
+// lookupConfigs 从当前工作目录向上递归搜索配置文件
 func lookupConfigs(cwd string) []string {
-	// prepend default config paths
+	// 在前面添加默认配置路径
 	configPaths := []string{
 		GlobalConfig(),
 		GlobalConfigData(),
@@ -634,11 +633,11 @@ func lookupConfigs(cwd string) []string {
 
 	foundConfigs, err := fsext.Lookup(cwd, configNames...)
 	if err != nil {
-		// returns at least default configs
+		// 至少返回默认配置
 		return configPaths
 	}
 
-	// reverse order so last config has more priority
+	// 反转顺序，使最后一个配置具有更高优先级
 	slices.Reverse(foundConfigs)
 
 	return append(configPaths, foundConfigs...)
@@ -653,7 +652,7 @@ func loadFromConfigPaths(configPaths []string) (*Config, error) {
 			if os.IsNotExist(err) {
 				continue
 			}
-			return nil, fmt.Errorf("failed to open config file %s: %w", path, err)
+			return nil, fmt.Errorf("打开配置文件 %s 失败: %w", path, err)
 		}
 		if len(data) == 0 {
 			continue
@@ -715,7 +714,7 @@ func hasAWSCredentials(env env.Env) bool {
 	return false
 }
 
-// GlobalConfig returns the global configuration file path for the application.
+// GlobalConfig 返回应用程序的全局配置文件路径
 func GlobalConfig() string {
 	if crushGlobal := os.Getenv("CRUSH_GLOBAL_CONFIG"); crushGlobal != "" {
 		return filepath.Join(crushGlobal, fmt.Sprintf("%s.json", appName))
@@ -726,8 +725,8 @@ func GlobalConfig() string {
 	return filepath.Join(home.Dir(), ".config", appName, fmt.Sprintf("%s.json", appName))
 }
 
-// GlobalConfigData returns the path to the main data directory for the application.
-// this config is used when the app overrides configurations instead of updating the global config.
+// GlobalConfigData 返回应用程序主数据目录的路径
+// 当应用程序覆盖配置而不是更新全局配置时，使用此配置
 func GlobalConfigData() string {
 	if crushData := os.Getenv("CRUSH_GLOBAL_DATA"); crushData != "" {
 		return filepath.Join(crushData, fmt.Sprintf("%s.json", appName))
@@ -736,9 +735,9 @@ func GlobalConfigData() string {
 		return filepath.Join(xdgDataHome, appName, fmt.Sprintf("%s.json", appName))
 	}
 
-	// return the path to the main data directory
-	// for windows, it should be in `%LOCALAPPDATA%/crush/`
-	// for linux and macOS, it should be in `$HOME/.local/share/crush/`
+	// 返回主数据目录的路径
+	// 对于Windows，应该在 `%LOCALAPPDATA%/crush/`
+	// 对于Linux和macOS，应该在 `$HOME/.local/share/crush/`
 	if runtime.GOOS == "windows" {
 		localAppData := cmp.Or(
 			os.Getenv("LOCALAPPDATA"),
@@ -765,15 +764,14 @@ func isInsideWorktree() bool {
 	return err == nil && strings.TrimSpace(string(bts)) == "true"
 }
 
-// GlobalSkillsDirs returns the default directories for Agent Skills.
-// Skills in these directories are auto-discovered and their files can be read
-// without permission prompts.
+// GlobalSkillsDirs 返回Agent Skills的默认目录
+// 这些目录中的技能会被自动发现，它们的文件可以在没有权限提示的情况下读取
 func GlobalSkillsDirs() []string {
 	if crushSkills := os.Getenv("CRUSH_SKILLS_DIR"); crushSkills != "" {
 		return []string{crushSkills}
 	}
 
-	// Determine the base config directory.
+	// 确定基础配置目录
 	var configBase string
 	if xdgConfigHome := os.Getenv("XDG_CONFIG_HOME"); xdgConfigHome != "" {
 		configBase = xdgConfigHome

@@ -9,6 +9,7 @@ import (
 	"github.com/charmbracelet/x/exp/golden"
 )
 
+// TestUdiff 测试统一差异格式生成功能
 func TestUdiff(t *testing.T) {
 	before := `package main
 
@@ -37,20 +38,22 @@ func TestUdiff(t *testing.T) {
 	})
 
 	t.Run("ToUnifiedDiff", func(t *testing.T) {
+		// toUnifiedDiff 将文本差异转换为统一差异格式
 		toUnifiedDiff := func(t *testing.T, before, after string, contextLines int) udiff.UnifiedDiff {
 			edits := udiff.Strings(before, after)
 			unifiedDiff, err := udiff.ToUnifiedDiff("main.go", "main.go", before, edits, contextLines)
 			if err != nil {
-				t.Fatalf("ToUnifiedDiff failed: %v", err)
+				t.Fatalf("ToUnifiedDiff 失败: %v", err)
 			}
 			return unifiedDiff
 		}
+		// toJSON 将统一差异转换为 JSON 格式
 		toJSON := func(t *testing.T, unifiedDiff udiff.UnifiedDiff) []byte {
 			var buff bytes.Buffer
 			encoder := json.NewEncoder(&buff)
 			encoder.SetIndent("", "  ")
 			if err := encoder.Encode(unifiedDiff); err != nil {
-				t.Fatalf("Failed to encode unified diff: %v", err)
+				t.Fatalf("编码统一差异失败: %v", err)
 			}
 			return buff.Bytes()
 		}

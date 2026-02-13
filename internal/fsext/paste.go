@@ -8,7 +8,7 @@ import (
 func ParsePastedFiles(s string) []string {
 	s = strings.TrimSpace(s)
 
-	// NOTE: Rio on Windows adds NULL chars for some reason.
+	// 注意：Rio 在 Windows 上出于某种原因会添加 NULL 字符。
 	s = strings.ReplaceAll(s, "\x00", "")
 
 	switch {
@@ -46,30 +46,30 @@ func windowsTerminalParsePastedFiles(s string) []string {
 		switch {
 		case ch == '"':
 			if inQuotes {
-				// End of quoted section
+				// 引号部分结束
 				if current.Len() > 0 {
 					paths = append(paths, current.String())
 					current.Reset()
 				}
 				inQuotes = false
 			} else {
-				// Start of quoted section
+				// 引号部分开始
 				inQuotes = true
 			}
 		case inQuotes:
 			current.WriteByte(ch)
 		case ch != ' ':
-			// Text outside quotes is not allowed
+			// 引号外的文本不被允许
 			return nil
 		}
 	}
 
-	// Add any remaining content if quotes were properly closed
+	// 如果引号正确关闭，添加任何剩余内容
 	if current.Len() > 0 && !inQuotes {
 		paths = append(paths, current.String())
 	}
 
-	// If quotes were not closed, return empty (malformed input)
+	// 如果引号未关闭，返回空（格式错误的输入）
 	if inQuotes {
 		return nil
 	}
@@ -92,20 +92,20 @@ func unixParsePastedFiles(s string) []string {
 
 		switch {
 		case escaped:
-			// After a backslash, add the character as-is (including space)
+			// 反斜杠之后，按原样添加字符（包括空格）
 			current.WriteByte(ch)
 			escaped = false
 		case ch == '\\':
-			// Check if this backslash is at the end of the string
+			// 检查此反斜杠是否在字符串末尾
 			if i == len(s)-1 {
-				// Trailing backslash, treat as literal
+				// 尾部反斜杠，按字面值处理
 				current.WriteByte(ch)
 			} else {
-				// Start of escape sequence
+				// 转义序列开始
 				escaped = true
 			}
 		case ch == ' ':
-			// Space separates paths (unless escaped)
+			// 空格分隔路径（除非被转义）
 			if current.Len() > 0 {
 				paths = append(paths, current.String())
 				current.Reset()
@@ -115,12 +115,12 @@ func unixParsePastedFiles(s string) []string {
 		}
 	}
 
-	// Handle trailing backslash if present
+	// 如果存在尾部反斜杠则处理
 	if escaped {
 		current.WriteByte('\\')
 	}
 
-	// Add the last path if any
+	// 添加最后一个路径（如果有）
 	if current.Len() > 0 {
 		paths = append(paths, current.String())
 	}

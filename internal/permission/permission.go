@@ -13,7 +13,7 @@ import (
 	"github.com/purpose168/crush-cn/internal/pubsub"
 )
 
-var ErrorPermissionDenied = errors.New("user denied permission")
+var ErrorPermissionDenied = errors.New("用户拒绝授权")
 
 type CreatePermissionRequest struct {
 	SessionID   string `json:"session_id"`
@@ -67,7 +67,7 @@ type permissionService struct {
 	skip                  bool
 	allowedTools          []string
 
-	// used to make sure we only process one request at a time
+	// 用于确保一次只处理一个请求
 	requestMu       sync.Mutex
 	activeRequest   *PermissionRequest
 	activeRequestMu sync.Mutex
@@ -134,14 +134,14 @@ func (s *permissionService) Request(ctx context.Context, opts CreatePermissionRe
 		return true, nil
 	}
 
-	// tell the UI that a permission was requested
+	// 通知 UI 已请求权限
 	s.notificationBroker.Publish(pubsub.CreatedEvent, PermissionNotification{
 		ToolCallID: opts.ToolCallID,
 	})
 	s.requestMu.Lock()
 	defer s.requestMu.Unlock()
 
-	// Check if the tool/action combination is in the allowlist
+	// 检查工具/操作组合是否在允许列表中
 	commandKey := opts.ToolName + ":" + opts.Action
 	if slices.Contains(s.allowedTools, commandKey) || slices.Contains(s.allowedTools, opts.ToolName) {
 		return true, nil
@@ -204,7 +204,7 @@ func (s *permissionService) Request(ctx context.Context, opts CreatePermissionRe
 	s.pendingRequests.Set(permission.ID, respCh)
 	defer s.pendingRequests.Del(permission.ID)
 
-	// Publish the request
+	// 发布请求
 	s.Publish(pubsub.CreatedEvent, permission)
 
 	select {

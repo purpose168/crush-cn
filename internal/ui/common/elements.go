@@ -33,7 +33,7 @@ func ModelInfo(t *styles.Styles, modelName, providerName, reasoningInfo string, 
 	// 构建第一行，包含模型名称和可选的提供商在同一行
 	var firstLine string
 	if providerName != "" {
-		providerInfo := t.Muted.Render(fmt.Sprintf("via %s", providerName))
+		providerInfo := t.Muted.Render(fmt.Sprintf("通过 %s", providerName))
 		modelWithProvider := fmt.Sprintf("%s %s %s", modelIcon, modelName, providerInfo)
 
 		// 检查是否适合一行
@@ -50,8 +50,8 @@ func ModelInfo(t *styles.Styles, modelName, providerName, reasoningInfo string, 
 	parts := []string{firstLine}
 
 	// 如果提供商不适合第一行，将其作为第二行添加
-	if providerName != "" && !strings.Contains(firstLine, "via") {
-		providerInfo := fmt.Sprintf("via %s", providerName)
+	if providerName != "" && !strings.Contains(firstLine, "通过") {
+		providerInfo := fmt.Sprintf("通过 %s", providerName)
 		parts = append(parts, t.Muted.PaddingLeft(2).Render(providerInfo))
 	}
 

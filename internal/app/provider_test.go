@@ -8,51 +8,52 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestParseModelStr 测试解析模型字符串的函数
 func TestParseModelStr(t *testing.T) {
 	tests := []struct {
-		name            string
-		modelStr        string
-		expectedFilter  string
-		expectedModelID string
-		setupProviders  func() map[string]config.ProviderConfig
+		name            string // 测试用例名称
+		modelStr        string // 模型字符串
+		expectedFilter  string // 期望的提供者过滤器
+		expectedModelID string // 期望的模型 ID
+		setupProviders  func() map[string]config.ProviderConfig // 设置提供者的函数
 	}{
 		{
-			name:            "simple model with no slashes",
+			name:            "无斜杠的简单模型",
 			modelStr:        "gpt-4o",
 			expectedFilter:  "",
 			expectedModelID: "gpt-4o",
 			setupProviders:  setupMockProviders,
 		},
 		{
-			name:            "valid provider and model",
+			name:            "有效的提供者和模型",
 			modelStr:        "openai/gpt-4o",
 			expectedFilter:  "openai",
 			expectedModelID: "gpt-4o",
 			setupProviders:  setupMockProviders,
 		},
 		{
-			name:            "model with multiple slashes and first part is invalid provider",
+			name:            "带多个斜杠且第一部分为无效提供者的模型",
 			modelStr:        "moonshot/kimi-k2",
 			expectedFilter:  "",
 			expectedModelID: "moonshot/kimi-k2",
 			setupProviders:  setupMockProviders,
 		},
 		{
-			name:            "full path with valid provider and model with slashes",
+			name:            "带有效提供者和带斜杠模型的完整路径",
 			modelStr:        "synthetic/moonshot/kimi-k2",
 			expectedFilter:  "synthetic",
 			expectedModelID: "moonshot/kimi-k2",
 			setupProviders:  setupMockProvidersWithSlashes,
 		},
 		{
-			name:            "empty model string",
+			name:            "空模型字符串",
 			modelStr:        "",
 			expectedFilter:  "",
 			expectedModelID: "",
 			setupProviders:  setupMockProviders,
 		},
 		{
-			name:            "model with trailing slash but valid provider",
+			name:            "带尾部斜杠但提供者有效的模型",
 			modelStr:        "openai/",
 			expectedFilter:  "openai",
 			expectedModelID: "",
@@ -65,12 +66,13 @@ func TestParseModelStr(t *testing.T) {
 			providers := tt.setupProviders()
 			filter, modelID := parseModelStr(providers, tt.modelStr)
 
-			require.Equal(t, tt.expectedFilter, filter, "provider filter mismatch")
-			require.Equal(t, tt.expectedModelID, modelID, "model ID mismatch")
+			require.Equal(t, tt.expectedFilter, filter, "提供者过滤器不匹配")
+			require.Equal(t, tt.expectedModelID, modelID, "模型 ID 不匹配")
 		})
 	}
 }
 
+// setupMockProviders 设置模拟的提供者配置
 func setupMockProviders() map[string]config.ProviderConfig {
 	return map[string]config.ProviderConfig{
 		"openai": {
@@ -86,6 +88,7 @@ func setupMockProviders() map[string]config.ProviderConfig {
 	}
 }
 
+// setupMockProvidersWithSlashes 设置包含带斜杠模型的模拟提供者配置
 func setupMockProvidersWithSlashes() map[string]config.ProviderConfig {
 	return map[string]config.ProviderConfig{
 		"synthetic": {
@@ -104,18 +107,19 @@ func setupMockProvidersWithSlashes() map[string]config.ProviderConfig {
 	}
 }
 
+// TestFindModels 测试查找模型的函数
 func TestFindModels(t *testing.T) {
 	tests := []struct {
-		name             string
-		modelStr         string
-		expectedProvider string
-		expectedModelID  string
-		expectError      bool
-		errorContains    string
-		setupProviders   func() map[string]config.ProviderConfig
+		name             string // 测试用例名称
+		modelStr         string // 模型字符串
+		expectedProvider string // 期望的提供者
+		expectedModelID  string // 期望的模型 ID
+		expectError      bool   // 是否期望错误
+		errorContains    string // 错误消息中应包含的内容
+		setupProviders   func() map[string]config.ProviderConfig // 设置提供者的函数
 	}{
 		{
-			name:             "simple model found in one provider",
+			name:             "在一个提供者中找到的简单模型",
 			modelStr:         "gpt-4o",
 			expectedProvider: "openai",
 			expectedModelID:  "gpt-4o",
@@ -123,7 +127,7 @@ func TestFindModels(t *testing.T) {
 			setupProviders:   setupMockProviders,
 		},
 		{
-			name:             "model with slashes in ID",
+			name:             "ID 中带斜杠的模型",
 			modelStr:         "moonshot/kimi-k2",
 			expectedProvider: "synthetic",
 			expectedModelID:  "moonshot/kimi-k2",
@@ -131,7 +135,7 @@ func TestFindModels(t *testing.T) {
 			setupProviders:   setupMockProvidersWithSlashes,
 		},
 		{
-			name:             "provider and model with slashes in ID",
+			name:             "提供者和 ID 中带斜杠的模型",
 			modelStr:         "synthetic/moonshot/kimi-k2",
 			expectedProvider: "synthetic",
 			expectedModelID:  "moonshot/kimi-k2",
@@ -139,21 +143,21 @@ func TestFindModels(t *testing.T) {
 			setupProviders:   setupMockProvidersWithSlashes,
 		},
 		{
-			name:           "model not found",
+			name:           "未找到模型",
 			modelStr:       "nonexistent-model",
 			expectError:    true,
 			errorContains:  "not found",
 			setupProviders: setupMockProviders,
 		},
 		{
-			name:           "invalid provider specified",
+			name:           "指定了无效的提供者",
 			modelStr:       "nonexistent-provider/gpt-4o",
 			expectError:    true,
 			errorContains:  "provider",
 			setupProviders: setupMockProviders,
 		},
 		{
-			name:          "model found in multiple providers without provider filter",
+			name:          "在多个提供者中找到模型但未指定提供者过滤器",
 			modelStr:      "shared-model",
 			expectError:   true,
 			errorContains: "multiple providers",
@@ -171,7 +175,7 @@ func TestFindModels(t *testing.T) {
 			},
 		},
 		{
-			name:           "empty model string",
+			name:           "空模型字符串",
 			modelStr:       "",
 			expectError:    true,
 			errorContains:  "not found",
@@ -183,7 +187,7 @@ func TestFindModels(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			providers := tt.setupProviders()
 
-			// Use findModels with the model as "large" and empty "small".
+			// 使用 findModels，模型类型为 "large"，小型模型为空。
 			matches, _, err := findModels(providers, tt.modelStr, "")
 			if err != nil {
 				if tt.expectError {
@@ -194,7 +198,7 @@ func TestFindModels(t *testing.T) {
 				return
 			}
 
-			// Validate the matches.
+			// 验证匹配结果。
 			match, err := validateMatches(matches, tt.modelStr, "large")
 
 			if tt.expectError {

@@ -10,7 +10,7 @@ import (
 )
 
 func TestProjectsEmpty(t *testing.T) {
-	// Use a temp directory for projects.json
+	// 使用临时目录存储 projects.json
 	tmpDir := t.TempDir()
 	t.Setenv("XDG_DATA_HOME", tmpDir)
 
@@ -27,7 +27,7 @@ func TestProjectsJSON(t *testing.T) {
 	tmpDir := t.TempDir()
 	t.Setenv("XDG_DATA_HOME", tmpDir)
 
-	// Register a project
+	// 注册一个项目
 	err := projects.Register("/test/project", "/test/project/.crush")
 	require.NoError(t, err)
 
@@ -36,14 +36,14 @@ func TestProjectsJSON(t *testing.T) {
 	projectsCmd.SetErr(&b)
 	projectsCmd.SetIn(bytes.NewReader(nil))
 
-	// Set the --json flag
+	// 设置 --json 标志
 	projectsCmd.Flags().Set("json", "true")
 	defer projectsCmd.Flags().Set("json", "false")
 
 	err = projectsCmd.RunE(projectsCmd, nil)
 	require.NoError(t, err)
 
-	// Parse the JSON output
+	// 解析 JSON 输出
 	var result struct {
 		Projects []projects.Project `json:"projects"`
 	}

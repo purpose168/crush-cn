@@ -8,16 +8,18 @@ import (
 )
 
 func TestCommandBlocking(t *testing.T) {
+	// 测试命令拦截功能的测试用例
 	tests := []struct {
-		name        string
-		blockFuncs  []BlockFunc
-		command     string
-		shouldBlock bool
+		name        string // 测试用例名称
+		blockFuncs  []BlockFunc // 拦截函数列表
+		command     string // 要执行的命令
+		shouldBlock bool // 是否应该被拦截
 	}{
 		{
-			name: "block simple command",
+			name: "拦截简单命令",
 			blockFuncs: []BlockFunc{
 				func(args []string) bool {
+					// 如果命令的第一个参数是"curl"，则拦截该命令
 					return len(args) > 0 && args[0] == "curl"
 				},
 			},
@@ -25,9 +27,10 @@ func TestCommandBlocking(t *testing.T) {
 			shouldBlock: true,
 		},
 		{
-			name: "allow non-blocked command",
+			name: "允许非拦截命令",
 			blockFuncs: []BlockFunc{
 				func(args []string) bool {
+					// 如果命令的第一个参数是"curl"，则拦截该命令
 					return len(args) > 0 && args[0] == "curl"
 				},
 			},
@@ -35,9 +38,10 @@ func TestCommandBlocking(t *testing.T) {
 			shouldBlock: false,
 		},
 		{
-			name: "block subcommand",
+			name: "拦截子命令",
 			blockFuncs: []BlockFunc{
 				func(args []string) bool {
+					// 如果命令是"brew install"，则拦截该命令
 					return len(args) >= 2 && args[0] == "brew" && args[1] == "install"
 				},
 			},
@@ -45,9 +49,10 @@ func TestCommandBlocking(t *testing.T) {
 			shouldBlock: true,
 		},
 		{
-			name: "allow different subcommand",
+			name: "允许不同的子命令",
 			blockFuncs: []BlockFunc{
 				func(args []string) bool {
+					// 如果命令是"brew install"，则拦截该命令
 					return len(args) >= 2 && args[0] == "brew" && args[1] == "install"
 				},
 			},
@@ -55,7 +60,7 @@ func TestCommandBlocking(t *testing.T) {
 			shouldBlock: false,
 		},
 		{
-			name: "block npm global install with -g",
+			name: "拦截使用 -g 参数的 npm 全局安装",
 			blockFuncs: []BlockFunc{
 				ArgumentsBlocker("npm", []string{"install"}, []string{"-g"}),
 			},
@@ -63,7 +68,7 @@ func TestCommandBlocking(t *testing.T) {
 			shouldBlock: true,
 		},
 		{
-			name: "block npm global install with --global",
+			name: "拦截使用 --global 参数的 npm 全局安装",
 			blockFuncs: []BlockFunc{
 				ArgumentsBlocker("npm", []string{"install"}, []string{"--global"}),
 			},
@@ -71,7 +76,7 @@ func TestCommandBlocking(t *testing.T) {
 			shouldBlock: true,
 		},
 		{
-			name: "allow npm local install",
+			name: "允许 npm 本地安装",
 			blockFuncs: []BlockFunc{
 				ArgumentsBlocker("npm", []string{"install"}, []string{"-g"}),
 				ArgumentsBlocker("npm", []string{"install"}, []string{"--global"}),
@@ -83,7 +88,7 @@ func TestCommandBlocking(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Create a temporary directory for each test
+			// 为每个测试创建临时目录
 			tmpDir := t.TempDir()
 
 			shell := NewShell(&Options{
@@ -95,15 +100,15 @@ func TestCommandBlocking(t *testing.T) {
 
 			if tt.shouldBlock {
 				if err == nil {
-					t.Errorf("Expected command to be blocked, but it was allowed")
+					t.Errorf("预期命令应被拦截，但实际被允许执行")
 				} else if !strings.Contains(err.Error(), "not allowed for security reasons") {
-					t.Errorf("Expected security error, got: %v", err)
+					t.Errorf("预期安全错误，但得到: %v", err)
 				}
 			} else {
-				// For non-blocked commands, we might get other errors (like command not found)
-				// but we shouldn't get the security error
+				// 对于非拦截命令，可能会遇到其他错误（如命令未找到）
+				// 但不应该收到安全错误
 				if err != nil && strings.Contains(err.Error(), "not allowed for security reasons") {
-					t.Errorf("Command was unexpectedly blocked: %v", err)
+					t.Errorf("命令意外被拦截: %v", err)
 				}
 			}
 		})
@@ -111,17 +116,18 @@ func TestCommandBlocking(t *testing.T) {
 }
 
 func TestArgumentsBlocker(t *testing.T) {
+	// 测试基于参数的命令拦截功能
 	tests := []struct {
-		name        string
-		cmd         string
-		args        []string
-		flags       []string
-		input       []string
-		shouldBlock bool
+		name        string // 测试用例名称
+		cmd         string // 命令名称
+		args        []string // 命令参数
+		flags       []string // 命令标志
+		input       []string // 输入参数
+		shouldBlock bool // 是否应该被拦截
 	}{
-		// Basic command blocking
+		// 基本命令拦截测试
 		{
-			name:        "block exact command match",
+			name:        "拦截精确匹配的命令",
 			cmd:         "npm",
 			args:        []string{"install"},
 			flags:       nil,
@@ -129,7 +135,7 @@ func TestArgumentsBlocker(t *testing.T) {
 			shouldBlock: true,
 		},
 		{
-			name:        "allow different command",
+			name:        "允许不同的命令",
 			cmd:         "npm",
 			args:        []string{"install"},
 			flags:       nil,
@@ -137,7 +143,7 @@ func TestArgumentsBlocker(t *testing.T) {
 			shouldBlock: false,
 		},
 		{
-			name:        "allow different subcommand",
+			name:        "允许不同的子命令",
 			cmd:         "npm",
 			args:        []string{"install"},
 			flags:       nil,
@@ -145,9 +151,9 @@ func TestArgumentsBlocker(t *testing.T) {
 			shouldBlock: false,
 		},
 
-		// Flag-based blocking
+		// 基于标志的拦截测试
 		{
-			name:        "block with single flag",
+			name:        "拦截带单个标志的命令",
 			cmd:         "npm",
 			args:        []string{"install"},
 			flags:       []string{"-g"},
@@ -155,7 +161,7 @@ func TestArgumentsBlocker(t *testing.T) {
 			shouldBlock: true,
 		},
 		{
-			name:        "block with flag in different position",
+			name:        "拦截标志在不同位置的命令",
 			cmd:         "npm",
 			args:        []string{"install"},
 			flags:       []string{"-g"},
@@ -163,7 +169,7 @@ func TestArgumentsBlocker(t *testing.T) {
 			shouldBlock: true,
 		},
 		{
-			name:        "allow without required flag",
+			name:        "允许不带必需标志的命令",
 			cmd:         "npm",
 			args:        []string{"install"},
 			flags:       []string{"-g"},
@@ -171,7 +177,7 @@ func TestArgumentsBlocker(t *testing.T) {
 			shouldBlock: false,
 		},
 		{
-			name:        "block with multiple flags",
+			name:        "拦截带多个标志的命令",
 			cmd:         "pip",
 			args:        []string{"install"},
 			flags:       []string{"--user"},
@@ -179,9 +185,9 @@ func TestArgumentsBlocker(t *testing.T) {
 			shouldBlock: true,
 		},
 
-		// Complex argument patterns
+		// 复杂参数模式测试
 		{
-			name:        "block multi-arg subcommand",
+			name:        "拦截多参数子命令",
 			cmd:         "yarn",
 			args:        []string{"global", "add"},
 			flags:       nil,
@@ -189,7 +195,7 @@ func TestArgumentsBlocker(t *testing.T) {
 			shouldBlock: true,
 		},
 		{
-			name:        "allow partial multi-arg match",
+			name:        "允许部分多参数匹配",
 			cmd:         "yarn",
 			args:        []string{"global", "add"},
 			flags:       nil,
@@ -197,9 +203,9 @@ func TestArgumentsBlocker(t *testing.T) {
 			shouldBlock: false,
 		},
 
-		// Edge cases
+		// 边界情况测试
 		{
-			name:        "handle empty input",
+			name:        "处理空输入",
 			cmd:         "npm",
 			args:        []string{"install"},
 			flags:       nil,
@@ -207,7 +213,7 @@ func TestArgumentsBlocker(t *testing.T) {
 			shouldBlock: false,
 		},
 		{
-			name:        "handle command only",
+			name:        "处理仅命令的情况",
 			cmd:         "npm",
 			args:        []string{"install"},
 			flags:       nil,
@@ -215,7 +221,7 @@ func TestArgumentsBlocker(t *testing.T) {
 			shouldBlock: false,
 		},
 		{
-			name:        "block pacman with -S flag",
+			name:        "拦截带 -S 标志的 pacman 命令",
 			cmd:         "pacman",
 			args:        nil,
 			flags:       []string{"-S"},
@@ -223,7 +229,7 @@ func TestArgumentsBlocker(t *testing.T) {
 			shouldBlock: true,
 		},
 		{
-			name:        "allow pacman without -S flag",
+			name:        "允许不带 -S 标志的 pacman 命令",
 			cmd:         "pacman",
 			args:        nil,
 			flags:       []string{"-S"},
@@ -231,7 +237,7 @@ func TestArgumentsBlocker(t *testing.T) {
 			shouldBlock: false,
 		},
 
-		// `go test -exec`
+		// `go test -exec` 测试
 		{
 			name:        "go test exec",
 			cmd:         "go",
@@ -255,44 +261,45 @@ func TestArgumentsBlocker(t *testing.T) {
 			blocker := ArgumentsBlocker(tt.cmd, tt.args, tt.flags)
 			result := blocker(tt.input)
 			require.Equal(t, tt.shouldBlock, result,
-				"Expected block=%v for input %v", tt.shouldBlock, tt.input)
+				"预期 block=%v，输入 %v", tt.shouldBlock, tt.input)
 		})
 	}
 }
 
 func TestCommandsBlocker(t *testing.T) {
+	// 测试命令黑名单拦截功能
 	tests := []struct {
-		name        string
-		banned      []string
-		input       []string
-		shouldBlock bool
+		name        string // 测试用例名称
+		banned      []string // 被禁止的命令列表
+		input       []string // 输入参数
+		shouldBlock bool // 是否应该被拦截
 	}{
 		{
-			name:        "block single banned command",
+			name:        "拦截单个被禁止的命令",
 			banned:      []string{"curl"},
 			input:       []string{"curl", "https://example.com"},
 			shouldBlock: true,
 		},
 		{
-			name:        "allow non-banned command",
+			name:        "允许非禁止命令",
 			banned:      []string{"curl", "wget"},
 			input:       []string{"echo", "hello"},
 			shouldBlock: false,
 		},
 		{
-			name:        "block from multiple banned",
+			name:        "从多个禁止命令中拦截",
 			banned:      []string{"curl", "wget", "nc"},
 			input:       []string{"wget", "https://example.com"},
 			shouldBlock: true,
 		},
 		{
-			name:        "handle empty input",
+			name:        "处理空输入",
 			banned:      []string{"curl"},
 			input:       []string{},
 			shouldBlock: false,
 		},
 		{
-			name:        "case sensitive matching",
+			name:        "区分大小写匹配",
 			banned:      []string{"curl"},
 			input:       []string{"CURL", "https://example.com"},
 			shouldBlock: false,
@@ -304,62 +311,63 @@ func TestCommandsBlocker(t *testing.T) {
 			blocker := CommandsBlocker(tt.banned)
 			result := blocker(tt.input)
 			require.Equal(t, tt.shouldBlock, result,
-				"Expected block=%v for input %v", tt.shouldBlock, tt.input)
+				"预期 block=%v，输入 %v", tt.shouldBlock, tt.input)
 		})
 	}
 }
 
 func TestSplitArgsFlags(t *testing.T) {
+	// 测试参数和标志分离功能
 	tests := []struct {
-		name      string
-		input     []string
-		wantArgs  []string
-		wantFlags []string
+		name      string // 测试用例名称
+		input     []string // 输入参数
+		wantArgs  []string // 期望的参数
+		wantFlags []string // 期望的标志
 	}{
 		{
-			name:      "only args",
+			name:      "仅包含参数",
 			input:     []string{"install", "package", "another"},
 			wantArgs:  []string{"install", "package", "another"},
 			wantFlags: []string{},
 		},
 		{
-			name:      "only flags",
+			name:      "仅包含标志",
 			input:     []string{"-g", "--verbose", "-f"},
 			wantArgs:  []string{},
 			wantFlags: []string{"-g", "--verbose", "-f"},
 		},
 		{
-			name:      "mixed args and flags",
+			name:      "参数和标志混合",
 			input:     []string{"install", "-g", "package", "--verbose"},
 			wantArgs:  []string{"install", "package"},
 			wantFlags: []string{"-g", "--verbose"},
 		},
 		{
-			name:      "empty input",
+			name:      "空输入",
 			input:     []string{},
 			wantArgs:  []string{},
 			wantFlags: []string{},
 		},
 		{
-			name:      "single dash flag",
+			name:      "单短划线标志",
 			input:     []string{"-S", "package"},
 			wantArgs:  []string{"package"},
 			wantFlags: []string{"-S"},
 		},
 		{
-			name:      "flag with equals sign",
+			name:      "带等号的标志",
 			input:     []string{"-exec=bash", "package"},
 			wantArgs:  []string{"package"},
 			wantFlags: []string{"-exec"},
 		},
 		{
-			name:      "long flag with equals sign",
+			name:      "带等号的长标志",
 			input:     []string{"--config=/path/to/config", "run"},
 			wantArgs:  []string{"run"},
 			wantFlags: []string{"--config"},
 		},
 		{
-			name:      "flag with complex value",
+			name:      "带复杂值的标志",
 			input:     []string{`-exec="bash -c 'echo hello'"`, "test"},
 			wantArgs:  []string{"test"},
 			wantFlags: []string{"-exec"},
@@ -369,8 +377,8 @@ func TestSplitArgsFlags(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			args, flags := splitArgsFlags(tt.input)
-			require.Equal(t, tt.wantArgs, args, "args mismatch")
-			require.Equal(t, tt.wantFlags, flags, "flags mismatch")
+			require.Equal(t, tt.wantArgs, args, "参数不匹配")
+			require.Equal(t, tt.wantFlags, flags, "标志不匹配")
 		})
 	}
 }

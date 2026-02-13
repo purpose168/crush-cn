@@ -2,6 +2,14 @@
 // versions:
 //   sqlc v1.30.0
 // source: files.sql
+//
+// 本文件由 sqlc 自动生成，请勿手动编辑
+// 版本信息：
+//   sqlc v1.30.0
+// 源文件：files.sql
+//
+// 文件数据库操作模块
+// 提供文件的增删改查功能，包括创建、删除、查询和列表操作
 
 package db
 
@@ -9,6 +17,9 @@ import (
 	"context"
 )
 
+// createFile 创建文件的SQL语句
+// 功能：向files表中插入一条新记录，包含文件ID、会话ID、路径、内容和版本信息
+// 返回：插入的完整记录，包括自动生成的时间戳
 const createFile = `-- name: CreateFile :one
 INSERT INTO files (
     id,
@@ -24,14 +35,24 @@ INSERT INTO files (
 RETURNING id, session_id, path, content, version, created_at, updated_at
 `
 
+// CreateFileParams 创建文件参数结构体
+// 用于封装创建文件时所需的输入参数
 type CreateFileParams struct {
-	ID        string `json:"id"`
-	SessionID string `json:"session_id"`
-	Path      string `json:"path"`
-	Content   string `json:"content"`
-	Version   int64  `json:"version"`
+	ID        string `json:"id"`         // 文件唯一标识符
+	SessionID string `json:"session_id"` // 所属会话的ID
+	Path      string `json:"path"`       // 文件路径
+	Content   string `json:"content"`    // 文件内容
+	Version   int64  `json:"version"`    // 文件版本号
 }
 
+// CreateFile 创建文件
+// 参数：
+//   - ctx: 上下文对象，用于控制请求超时和取消
+//   - arg: 创建文件的参数，包含ID、会话ID、路径、内容和版本
+//
+// 返回：
+//   - File: 创建成功的文件记录
+//   - error: 操作过程中可能出现的错误
 func (q *Queries) CreateFile(ctx context.Context, arg CreateFileParams) (File, error) {
 	row := q.queryRow(ctx, q.createFileStmt, createFile,
 		arg.ID,
@@ -53,32 +74,60 @@ func (q *Queries) CreateFile(ctx context.Context, arg CreateFileParams) (File, e
 	return i, err
 }
 
+// deleteFile 删除文件的SQL语句
+// 功能：根据文件ID从files表中删除对应的记录
 const deleteFile = `-- name: DeleteFile :exec
 DELETE FROM files
 WHERE id = ?
 `
 
+// DeleteFile 根据ID删除文件
+// 参数：
+//   - ctx: 上下文对象，用于控制请求超时和取消
+//   - id: 要删除的文件ID
+//
+// 返回：
+//   - error: 操作过程中可能出现的错误
 func (q *Queries) DeleteFile(ctx context.Context, id string) error {
 	_, err := q.exec(ctx, q.deleteFileStmt, deleteFile, id)
 	return err
 }
 
+// deleteSessionFiles 删除会话所有文件的SQL语句
+// 功能：根据会话ID删除该会话下的所有文件记录
 const deleteSessionFiles = `-- name: DeleteSessionFiles :exec
 DELETE FROM files
 WHERE session_id = ?
 `
 
+// DeleteSessionFiles 根据会话ID删除该会话下的所有文件
+// 参数：
+//   - ctx: 上下文对象，用于控制请求超时和取消
+//   - sessionID: 要删除文件的会话ID
+//
+// 返回：
+//   - error: 操作过程中可能出现的错误
 func (q *Queries) DeleteSessionFiles(ctx context.Context, sessionID string) error {
 	_, err := q.exec(ctx, q.deleteSessionFilesStmt, deleteSessionFiles, sessionID)
 	return err
 }
 
+// getFile 获取文件的SQL语句
+// 功能：根据文件ID从files表中查询单个文件记录
 const getFile = `-- name: GetFile :one
 SELECT id, session_id, path, content, version, created_at, updated_at
 FROM files
 WHERE id = ? LIMIT 1
 `
 
+// GetFile 根据ID获取文件
+// 参数：
+//   - ctx: 上下文对象，用于控制请求超时和取消
+//   - id: 要查询的文件ID
+//
+// 返回：
+//   - File: 查询到的文件记录
+//   - error: 操作过程中可能出现的错误
 func (q *Queries) GetFile(ctx context.Context, id string) (File, error) {
 	row := q.queryRow(ctx, q.getFileStmt, getFile, id)
 	var i File
@@ -94,6 +143,9 @@ func (q *Queries) GetFile(ctx context.Context, id string) (File, error) {
 	return i, err
 }
 
+// getFileByPathAndSession 根据路径和会话ID获取文件的SQL语句
+// 功能：根据文件路径和会话ID查询文件，返回最新版本的文件记录
+// 排序规则：按版本号降序、创建时间降序排序，取第一条
 const getFileByPathAndSession = `-- name: GetFileByPathAndSession :one
 SELECT id, session_id, path, content, version, created_at, updated_at
 FROM files
@@ -102,11 +154,21 @@ ORDER BY version DESC, created_at DESC
 LIMIT 1
 `
 
+// GetFileByPathAndSessionParams 根据路径和会话ID获取文件的参数结构体
+// 用于封装查询文件时所需的输入参数
 type GetFileByPathAndSessionParams struct {
-	Path      string `json:"path"`
-	SessionID string `json:"session_id"`
+	Path      string `json:"path"`       // 文件路径
+	SessionID string `json:"session_id"` // 所属会话的ID
 }
 
+// GetFileByPathAndSession 根据路径和会话ID获取文件
+// 参数：
+//   - ctx: 上下文对象，用于控制请求超时和取消
+//   - arg: 查询参数，包含文件路径和会话ID
+//
+// 返回：
+//   - File: 查询到的最新版本文件记录
+//   - error: 操作过程中可能出现的错误
 func (q *Queries) GetFileByPathAndSession(ctx context.Context, arg GetFileByPathAndSessionParams) (File, error) {
 	row := q.queryRow(ctx, q.getFileByPathAndSessionStmt, getFileByPathAndSession, arg.Path, arg.SessionID)
 	var i File
@@ -122,6 +184,9 @@ func (q *Queries) GetFileByPathAndSession(ctx context.Context, arg GetFileByPath
 	return i, err
 }
 
+// listFilesByPath 根据路径列出文件的SQL语句
+// 功能：根据文件路径查询所有版本的文件记录
+// 排序规则：按版本号降序、创建时间降序排序
 const listFilesByPath = `-- name: ListFilesByPath :many
 SELECT id, session_id, path, content, version, created_at, updated_at
 FROM files
@@ -129,6 +194,14 @@ WHERE path = ?
 ORDER BY version DESC, created_at DESC
 `
 
+// ListFilesByPath 根据路径列出所有版本的文件
+// 参数：
+//   - ctx: 上下文对象，用于控制请求超时和取消
+//   - path: 要查询的文件路径
+//
+// 返回：
+//   - []File: 查询到的文件记录列表，按版本号和创建时间降序排列
+//   - error: 操作过程中可能出现的错误
 func (q *Queries) ListFilesByPath(ctx context.Context, path string) ([]File, error) {
 	rows, err := q.query(ctx, q.listFilesByPathStmt, listFilesByPath, path)
 	if err != nil {
@@ -160,6 +233,9 @@ func (q *Queries) ListFilesByPath(ctx context.Context, path string) ([]File, err
 	return items, nil
 }
 
+// listFilesBySession 根据会话ID列出文件的SQL语句
+// 功能：根据会话ID查询该会话下的所有文件记录
+// 排序规则：按版本号升序、创建时间升序排序
 const listFilesBySession = `-- name: ListFilesBySession :many
 SELECT id, session_id, path, content, version, created_at, updated_at
 FROM files
@@ -167,6 +243,14 @@ WHERE session_id = ?
 ORDER BY version ASC, created_at ASC
 `
 
+// ListFilesBySession 根据会话ID列出所有文件
+// 参数：
+//   - ctx: 上下文对象，用于控制请求超时和取消
+//   - sessionID: 要查询的会话ID
+//
+// 返回：
+//   - []File: 查询到的文件记录列表，按版本号和创建时间升序排列
+//   - error: 操作过程中可能出现的错误
 func (q *Queries) ListFilesBySession(ctx context.Context, sessionID string) ([]File, error) {
 	rows, err := q.query(ctx, q.listFilesBySessionStmt, listFilesBySession, sessionID)
 	if err != nil {
@@ -198,6 +282,9 @@ func (q *Queries) ListFilesBySession(ctx context.Context, sessionID string) ([]F
 	return items, nil
 }
 
+// listLatestSessionFiles 列出会话最新版本文件的SQL语句
+// 功能：查询指定会话下每个路径的最新版本文件记录
+// 实现方式：通过子查询找出每个路径的最大版本和最大创建时间，然后与主表关联
 const listLatestSessionFiles = `-- name: ListLatestSessionFiles :many
 SELECT f.id, f.session_id, f.path, f.content, f.version, f.created_at, f.updated_at
 FROM files f
@@ -210,6 +297,14 @@ WHERE f.session_id = ?
 ORDER BY f.path
 `
 
+// ListLatestSessionFiles 列出会话中每个路径的最新版本文件
+// 参数：
+//   - ctx: 上下文对象，用于控制请求超时和取消
+//   - sessionID: 要查询的会话ID
+//
+// 返回：
+//   - []File: 查询到的最新版本文件记录列表，按路径排序
+//   - error: 操作过程中可能出现的错误
 func (q *Queries) ListLatestSessionFiles(ctx context.Context, sessionID string) ([]File, error) {
 	rows, err := q.query(ctx, q.listLatestSessionFilesStmt, listLatestSessionFiles, sessionID)
 	if err != nil {
@@ -241,6 +336,9 @@ func (q *Queries) ListLatestSessionFiles(ctx context.Context, sessionID string) 
 	return items, nil
 }
 
+// listNewFiles 列出新文件的SQL语句
+// 功能：查询所有标记为新文件的记录（is_new = 1）
+// 排序规则：按版本号降序、创建时间降序排序
 const listNewFiles = `-- name: ListNewFiles :many
 SELECT id, session_id, path, content, version, created_at, updated_at
 FROM files
@@ -248,6 +346,13 @@ WHERE is_new = 1
 ORDER BY version DESC, created_at DESC
 `
 
+// ListNewFiles 列出所有新文件
+// 参数：
+//   - ctx: 上下文对象，用于控制请求超时和取消
+//
+// 返回：
+//   - []File: 查询到的新文件记录列表，按版本号和创建时间降序排列
+//   - error: 操作过程中可能出现的错误
 func (q *Queries) ListNewFiles(ctx context.Context) ([]File, error) {
 	rows, err := q.query(ctx, q.listNewFilesStmt, listNewFiles)
 	if err != nil {

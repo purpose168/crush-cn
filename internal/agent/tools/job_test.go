@@ -166,11 +166,11 @@ func TestBackgroundShell_WithBlockFuncs(t *testing.T) {
 	// 命令应该已被阻止，检查 stderr 或错误
 	if execErr != nil {
 		// 错误可能包含消息
-		require.Contains(t, execErr.Error(), "not allowed")
+		require.Contains(t, execErr.Error(), "不允许")
 	} else {
 		// 或者消息可能在 stderr 中
 		output := stdout + stderr
-		require.Contains(t, output, "not allowed")
+		require.Contains(t, output, "不允许")
 	}
 }
 

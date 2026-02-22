@@ -48,18 +48,18 @@ func (sb *syncBuffer) String() string {
 
 // BackgroundShell 表示在后台运行的 shell
 type BackgroundShell struct {
-	ID          string          // 任务唯一标识符
-	Command     string          // 执行的命令
-	Description string          // 任务描述
-	Shell       *Shell          // Shell 实例
-	WorkingDir  string          // 工作目录
-	ctx         context.Context // 上下文，用于取消操作
+	ID          string             // 任务唯一标识符
+	Command     string             // 执行的命令
+	Description string             // 任务描述
+	Shell       *Shell             // Shell 实例
+	WorkingDir  string             // 工作目录
+	ctx         context.Context    // 上下文，用于取消操作
 	cancel      context.CancelFunc // 取消函数
-	stdout      *syncBuffer     // 标准输出缓冲区
-	stderr      *syncBuffer     // 标准错误输出缓冲区
-	done        chan struct{}   // 完成信号通道
-	exitErr     error           // 退出错误
-	completedAt int64           // 任务完成的 Unix 时间戳（0 表示仍在运行）
+	stdout      *syncBuffer        // 标准输出缓冲区
+	stderr      *syncBuffer        // 标准错误输出缓冲区
+	done        chan struct{}      // 完成信号通道
+	exitErr     error              // 退出错误
+	completedAt int64              // 任务完成的 Unix 时间戳（0 表示仍在运行）
 }
 
 // BackgroundShellManager 管理后台 shell 实例

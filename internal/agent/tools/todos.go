@@ -28,12 +28,12 @@ type TodoItem struct {
 // 包含待办事项列表的状态信息和变更详情
 
 type TodosResponseMetadata struct {
-	IsNew         bool           `json:"is_new"`         // 是否是新的待办事项列表
-	Todos         []session.Todo `json:"todos"`         // 完整的待办事项列表
+	IsNew         bool           `json:"is_new"`                   // 是否是新的待办事项列表
+	Todos         []session.Todo `json:"todos"`                    // 完整的待办事项列表
 	JustCompleted []string       `json:"just_completed,omitempty"` // 本次更新中刚完成的任务
 	JustStarted   string         `json:"just_started,omitempty"`   // 本次更新中刚开始的任务
-	Completed     int            `json:"completed"`     // 已完成任务数量
-	Total         int            `json:"total"`         // 总任务数量
+	Completed     int            `json:"completed"`                // 已完成任务数量
+	Total         int            `json:"total"`                    // 总任务数量
 }
 
 // NewTodosTool 创建一个新的待办事项管理工具
@@ -77,7 +77,7 @@ func NewTodosTool(sessions session.Service) fantasy.AgentTool {
 			todos := make([]session.Todo, len(params.Todos))
 			var justCompleted []string // 刚完成的任务
 			var justStarted string     // 刚开始的任务
-			completedCount := 0         // 已完成任务计数
+			completedCount := 0        // 已完成任务计数
 
 			for i, item := range params.Todos {
 				todos[i] = session.Todo{

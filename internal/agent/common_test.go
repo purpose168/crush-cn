@@ -33,12 +33,12 @@ import (
 
 // fakeEnv 是测试用的环境
 type fakeEnv struct {
-	workingDir  string // 工作目录
-	sessions    session.Service // 会话服务
-	messages    message.Service // 消息服务
-	permissions permission.Service // 权限服务
-	history     history.Service // 历史服务
-	filetracker *filetracker.Service // 文件追踪服务
+	workingDir  string                          // 工作目录
+	sessions    session.Service                 // 会话服务
+	messages    message.Service                 // 消息服务
+	permissions permission.Service              // 权限服务
+	history     history.Service                 // 历史服务
+	filetracker *filetracker.Service            // 文件追踪服务
 	lspClients  *csync.Map[string, *lsp.Client] // LSP 客户端映射
 }
 
@@ -47,7 +47,7 @@ type builderFunc func(t *testing.T, r *vcr.Recorder) (fantasy.LanguageModel, err
 
 // modelPair 模型对，包含大型模型和小型模型
 type modelPair struct {
-	name       string // 模型对名称
+	name       string      // 模型对名称
 	largeModel builderFunc // 大型模型构建函数
 	smallModel builderFunc // 小型模型构建函数
 }

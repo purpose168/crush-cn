@@ -12,6 +12,7 @@ vars:
 env:
   CGO_ENABLED: 0  # 禁用 CGO
   GOEXPERIMENT: greenteagc  # 启用 Go 实验性功能 greenteagc
+  GOTOOLCHAIN: go1.25.7  # 使用 Go 1.25.7 工具链
 
 tasks:
   lint:install:
@@ -45,8 +46,9 @@ tasks:
     desc: 构建项目
     vars:
       LDFLAGS: '{{if .VERSION}}-ldflags="-X github.com/purpose168/crush-cn/internal/version.Version={{.VERSION}}"{{end}}'  # 构建标志，设置版本信息
+      GO: /home/pps/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.25.5.linux-amd64/bin/go
     cmds:
-      - "go build {{if .RACE}}-race{{end}} {{.LDFLAGS}} ."  # 构建项目，根据需要启用竞态检测
+      - "{{.GO}} build -o crush {{if .RACE}}-race{{end}} {{.LDFLAGS}} ."
     generates:
       - crush  # 生成的可执行文件
 
@@ -58,12 +60,16 @@ tasks:
 
   test:
     desc: 运行测试
+    vars:
+      GO: /home/pps/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.25.5.linux-amd64/bin/go
     cmds:
-      - go test -race -failfast ./... {{.CLI_ARGS}}  # 运行所有测试，启用竞态检测，快速失败
+      - "{{.GO}} test -race -failfast ./... {{.CLI_ARGS}}"  # 运行所有测试，启用竞态检测，快速失败
 
   test:record:
     desc: 运行测试并重新记录所有 VCR 磁带
     aliases: [record]  # 别名
+    env:
+      GOTOOLCHAIN: auto  # 自动下载和切换工具链
     cmds:
       - rm -r internal/agent/testdata  # 删除旧的测试数据
       - go test -v -count=1 -timeout=1h ./internal/agent  # 运行代理测试，详细输出，不使用缓存，设置超时

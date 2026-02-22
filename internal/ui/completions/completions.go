@@ -19,17 +19,17 @@ import (
 )
 
 const (
-	minHeight = 1  // 弹出窗口最小高度
-	maxHeight = 10 // 弹出窗口最大高度
-	minWidth  = 10 // 弹出窗口最小宽度
+	minHeight = 1   // 弹出窗口最小高度
+	maxHeight = 10  // 弹出窗口最大高度
+	minWidth  = 10  // 弹出窗口最小宽度
 	maxWidth  = 100 // 弹出窗口最大宽度
 )
 
 // SelectionMsg 在选择补全时发送的消息
 // T 是补全值的类型参数
 type SelectionMsg[T any] struct {
-	Value    T      // 选中的补全值
-	KeepOpen bool   // 如果为 true,则在插入后不关闭补全窗口
+	Value    T    // 选中的补全值
+	KeepOpen bool // 如果为 true,则在插入后不关闭补全窗口
 }
 
 // ClosedMsg 在补全窗口关闭时发送的消息
@@ -70,10 +70,11 @@ type Completions struct {
 //   - normalStyle: 普通状态样式
 //   - focusedStyle: 焦点状态样式
 //   - matchStyle: 匹配文本高亮样式
+//
 // 返回初始化后的补全组件指针
 func New(normalStyle, focusedStyle, matchStyle lipgloss.Style) *Completions {
 	l := list.NewFilterableList()
-	l.SetGap(0)      // 设置列表项间距为 0
+	l.SetGap(0)        // 设置列表项间距为 0
 	l.SetReverse(true) // 设置列表反向显示
 
 	return &Completions{
@@ -113,6 +114,7 @@ func (c *Completions) KeyMap() KeyMap {
 // 参数:
 //   - depth: 文件系统遍历深度
 //   - limit: 文件数量限制
+//
 // 返回一个命令,用于异步加载补全项目
 func (c *Completions) Open(depth, limit int) tea.Cmd {
 	return func() tea.Msg {
@@ -229,6 +231,7 @@ func (c *Completions) HasItems() bool {
 // Update 处理补全组件的按键事件
 // 参数:
 //   - msg: 按键消息
+//
 // 返回值:
 //   - tea.Msg: 生成的消息(如果有)
 //   - bool: 是否处理了该按键
@@ -292,6 +295,7 @@ func (c *Completions) selectNext() {
 // selectCurrent 返回一个带有当前选中项目的消息
 // 参数:
 //   - keepOpen: 是否保持补全窗口打开
+//
 // 返回选中的补全项目消息
 func (c *Completions) selectCurrent(keepOpen bool) tea.Msg {
 	items := c.list.FilteredItems()
@@ -349,6 +353,7 @@ func (c *Completions) Render() string {
 // 参数:
 //   - depth: 遍历深度
 //   - limit: 文件数量限制
+//
 // 返回文件补全值列表
 func loadFiles(depth, limit int) []FileCompletionValue {
 	files, _, _ := fsext.ListDirectory(".", nil, depth, limit)

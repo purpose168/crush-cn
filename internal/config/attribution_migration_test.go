@@ -13,10 +13,10 @@ func TestAttributionMigration(t *testing.T) {
 
 	// 定义测试用例集合，包含各种配置场景
 	tests := []struct {
-		name             string            // 测试用例名称
-		configJSON       string            // 配置JSON字符串
-		expectedTrailer  TrailerStyle      // 期望的尾部样式
-		expectedGenerate bool              // 期望的生成标记
+		name             string       // 测试用例名称
+		configJSON       string       // 配置JSON字符串
+		expectedTrailer  TrailerStyle // 期望的尾部样式
+		expectedGenerate bool         // 期望的生成标记
 	}{
 		{
 			// 测试用例1：旧设置 co_authored_by=true 迁移到 co-authored-by

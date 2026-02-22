@@ -10,6 +10,7 @@ import (
 // 参数:
 //   - n: 要创建的附件数量
 //   - contentSize: 每个附件的内容大小（字节数）
+//
 // 返回:
 //   - []Attachment: 生成的附件切片
 func makeTestAttachments(n int, contentSize int) []Attachment {
@@ -35,10 +36,10 @@ func BenchmarkPromptWithTextAttachments(b *testing.B) {
 		numFiles    int    // 文件数量
 		contentSize int    // 内容大小（字节）
 	}{
-		{"1file_100bytes", 1, 100},         // 1个文件，100字节
-		{"5files_1KB", 5, 1024},            // 5个文件，每个1KB
-		{"10files_10KB", 10, 10 * 1024},    // 10个文件，每个10KB
-		{"20files_50KB", 20, 50 * 1024},    // 20个文件，每个50KB
+		{"1file_100bytes", 1, 100},      // 1个文件，100字节
+		{"5files_1KB", 5, 1024},         // 5个文件，每个1KB
+		{"10files_10KB", 10, 10 * 1024}, // 10个文件，每个10KB
+		{"20files_50KB", 20, 50 * 1024}, // 20个文件，每个50KB
 	}
 
 	for _, tc := range cases {

@@ -26,12 +26,12 @@ var _ syncer[catwalk.Provider] = (*hyperSync)(nil)
 
 // hyperSync 负责 Hyper 提供商信息的同步和缓存管理
 type hyperSync struct {
-	once       sync.Once         // 确保初始化只执行一次
-	result     catwalk.Provider  // 存储获取到的提供商信息
+	once       sync.Once               // 确保初始化只执行一次
+	result     catwalk.Provider        // 存储获取到的提供商信息
 	cache      cache[catwalk.Provider] // 缓存管理器
-	client     hyperClient       // Hyper 客户端
-	autoupdate bool              // 是否启用自动更新
-	init       atomic.Bool       // 标记是否已初始化
+	client     hyperClient             // Hyper 客户端
+	autoupdate bool                    // 是否启用自动更新
+	init       atomic.Bool             // 标记是否已初始化
 }
 
 // Init 初始化 hyperSync，设置客户端、缓存路径和自动更新选项

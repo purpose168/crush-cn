@@ -243,7 +243,7 @@ func TestToPromptXML(t *testing.T) {
 	require.Contains(t, xml, "<available_skills>")
 	require.Contains(t, xml, "<name>pdf-processing</name>")
 	require.Contains(t, xml, "<description>Extracts text from PDFs.</description>")
-	require.Contains(t, xml, "&amp;")  // XML转义
+	require.Contains(t, xml, "&amp;") // XML转义
 }
 
 // TestToPromptXMLEmpty 测试空技能列表的XML生成

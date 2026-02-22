@@ -15,11 +15,11 @@ import (
 
 // CreateMessageParams 创建消息的参数结构体
 type CreateMessageParams struct {
-	Role             MessageRole    // 消息角色（用户/助手）
-	Parts            []ContentPart  // 消息内容部分
-	Model            string         // 使用的模型名称
-	Provider         string         // 提供商名称
-	IsSummaryMessage bool           // 是否为摘要消息
+	Role             MessageRole   // 消息角色（用户/助手）
+	Parts            []ContentPart // 消息内容部分
+	Model            string        // 使用的模型名称
+	Provider         string        // 提供商名称
+	IsSummaryMessage bool          // 是否为摘要消息
 }
 
 // Service 消息服务接口，定义了消息管理的核心操作

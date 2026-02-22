@@ -52,9 +52,9 @@ type Service interface {
 
 // service 文件服务实现结构体
 type service struct {
-	*pubsub.Broker[File] // 发布订阅代理
-	db *sql.DB           // 数据库连接
-	q  *db.Queries       // 数据库查询对象
+	*pubsub.Broker[File]             // 发布订阅代理
+	db                   *sql.DB     // 数据库连接
+	q                    *db.Queries // 数据库查询对象
 }
 
 // NewService 创建新的文件服务实例

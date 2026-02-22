@@ -16,7 +16,7 @@ type Attachment struct {
 
 // IsText 判断附件是否为文本类型
 // 返回值：如果附件的 MIME 类型以 "text/" 开头则返回 true，否则返回 false
-func (a Attachment) IsText() bool  { return strings.HasPrefix(a.MimeType, "text/") }
+func (a Attachment) IsText() bool { return strings.HasPrefix(a.MimeType, "text/") }
 
 // IsImage 判断附件是否为图片类型
 // 返回值：如果附件的 MIME 类型以 "image/" 开头则返回 true，否则返回 false
@@ -25,6 +25,7 @@ func (a Attachment) IsImage() bool { return strings.HasPrefix(a.MimeType, "image
 // ContainsTextAttachment 检查附件列表中是否包含文本类型的附件
 // 参数：
 //   - attachments: 附件切片，需要检查的附件列表
+//
 // 返回值：
 //   - bool: 如果附件列表中至少有一个文本类型的附件则返回 true，否则返回 false
 func ContainsTextAttachment(attachments []Attachment) bool {

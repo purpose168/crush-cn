@@ -14,6 +14,7 @@ import (
 // 参数:
 //   - uri: 文档URI
 //   - edits: 要应用的文本编辑列表
+//
 // 返回值: 应用编辑时发生的错误
 func applyTextEdits(uri protocol.DocumentURI, edits []protocol.TextEdit) error {
 	path, err := uri.Path()
@@ -94,6 +95,7 @@ func applyTextEdits(uri protocol.DocumentURI, edits []protocol.TextEdit) error {
 // 参数:
 //   - lines: 当前行列表
 //   - edit: 要应用的文本编辑
+//
 // 返回值: 修改后的行列表和可能的错误
 func applyTextEdit(lines []string, edit protocol.TextEdit) ([]string, error) {
 	startLine := int(edit.Range.Start.Line)
@@ -161,6 +163,7 @@ func applyTextEdit(lines []string, edit protocol.TextEdit) ([]string, error) {
 // applyDocumentChange 应用文档变更（创建/重命名/删除操作）
 // 参数:
 //   - change: 文档变更对象
+//
 // 返回值: 应用变更时发生的错误
 func applyDocumentChange(change protocol.DocumentChange) error {
 	// 处理创建文件操作
@@ -175,7 +178,7 @@ func applyDocumentChange(change protocol.DocumentChange) error {
 				// 继续覆盖操作
 			} else if change.CreateFile.Options.IgnoreIfExists {
 				if _, err := os.Stat(path); err == nil {
-					return nil  // 文件存在，忽略创建
+					return nil // 文件存在，忽略创建
 				}
 			}
 		}
@@ -248,6 +251,7 @@ func applyDocumentChange(change protocol.DocumentChange) error {
 // ApplyWorkspaceEdit 将给定的工作区编辑应用到文件系统
 // 参数:
 //   - edit: 工作区编辑对象
+//
 // 返回值: 应用编辑时发生的错误
 func ApplyWorkspaceEdit(edit protocol.WorkspaceEdit) error {
 	// 处理Changes字段（按URI映射的文本编辑）
@@ -271,6 +275,7 @@ func ApplyWorkspaceEdit(edit protocol.WorkspaceEdit) error {
 // 参数:
 //   - r1: 第一个范围
 //   - r2: 第二个范围
+//
 // 返回值: 如果范围重叠返回true，否则返回false
 func rangesOverlap(r1, r2 protocol.Range) bool {
 	if r1.Start.Line > r2.End.Line || r2.Start.Line > r1.End.Line {

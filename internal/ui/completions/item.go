@@ -26,10 +26,10 @@ type ResourceCompletionValue struct {
 // CompletionItem 表示补全列表中的一个项目
 // 实现了 list.Item, list.FilterableItem, list.MatchSettable 和 list.Focusable 接口
 type CompletionItem struct {
-	text    string       // 显示文本
-	value   any          // 项目值(可以是 FileCompletionValue 或 ResourceCompletionValue)
-	match   fuzzy.Match  // 模糊匹配结果
-	focused bool         // 是否获得焦点
+	text    string         // 显示文本
+	value   any            // 项目值(可以是 FileCompletionValue 或 ResourceCompletionValue)
+	match   fuzzy.Match    // 模糊匹配结果
+	focused bool           // 是否获得焦点
 	cache   map[int]string // 渲染缓存,按宽度缓存渲染结果
 
 	// 样式定义
@@ -45,6 +45,7 @@ type CompletionItem struct {
 //   - normalStyle: 普通状态样式
 //   - focusedStyle: 焦点状态样式
 //   - matchStyle: 匹配文本高亮样式
+//
 // 返回初始化后的补全项目指针
 func NewCompletionItem(text string, value any, normalStyle, focusedStyle, matchStyle lipgloss.Style) *CompletionItem {
 	return &CompletionItem{
@@ -113,6 +114,7 @@ func (c *CompletionItem) Render(width int) string {
 //   - width: 渲染宽度
 //   - cache: 渲染缓存
 //   - match: 模糊匹配结果
+//
 // 返回渲染后的字符串
 func renderItem(
 	normalStyle, focusedStyle, matchStyle lipgloss.Style,
@@ -167,6 +169,7 @@ func renderItem(
 // matchedRanges 将匹配索引列表转换为连续范围
 // 参数:
 //   - in: 匹配索引列表
+//
 // 返回连续的范围列表,每个范围包含起始和结束索引
 func matchedRanges(in []int) [][2]int {
 	if len(in) == 0 {
@@ -195,6 +198,7 @@ func matchedRanges(in []int) [][2]int {
 // 参数:
 //   - str: 源字符串
 //   - rng: 字节范围 [起始, 结束]
+//
 // 返回可见字符的起始和结束位置
 func bytePosToVisibleCharPos(str string, rng [2]int) (int, int) {
 	bytePos, byteStart, byteStop := 0, rng[0], rng[1]

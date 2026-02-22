@@ -14,8 +14,8 @@ import (
 )
 
 var (
-	initOnce    sync.Once      // 确保初始化只执行一次
-	initialized atomic.Bool    // 标记日志系统是否已初始化
+	initOnce    sync.Once   // 确保初始化只执行一次
+	initialized atomic.Bool // 标记日志系统是否已初始化
 )
 
 // Setup 初始化日志系统
@@ -26,11 +26,11 @@ func Setup(logFile string, debug bool) {
 	initOnce.Do(func() {
 		// 创建日志轮转器，用于管理日志文件的大小和备份数量
 		logRotator := &lumberjack.Logger{
-			Filename:   logFile,  // 日志文件名
-			MaxSize:    10,       // 单个日志文件最大大小（MB）
-			MaxBackups: 0,        // 保留的旧日志文件最大数量，0表示不限制
-			MaxAge:     30,       // 保留旧日志文件的最大天数
-			Compress:   false,    // 是否压缩旧日志文件
+			Filename:   logFile, // 日志文件名
+			MaxSize:    10,      // 单个日志文件最大大小（MB）
+			MaxBackups: 0,       // 保留的旧日志文件最大数量，0表示不限制
+			MaxAge:     30,      // 保留旧日志文件的最大天数
+			Compress:   false,   // 是否压缩旧日志文件
 		}
 
 		// 根据调试模式设置日志级别
@@ -41,8 +41,8 @@ func Setup(logFile string, debug bool) {
 
 		// 创建JSON格式的日志处理器
 		logger := slog.NewJSONHandler(logRotator, &slog.HandlerOptions{
-			Level:     level,      // 日志级别
-			AddSource: true,       // 添加源代码位置信息
+			Level:     level, // 日志级别
+			AddSource: true,  // 添加源代码位置信息
 		})
 
 		// 设置为默认日志记录器

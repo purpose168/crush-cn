@@ -266,7 +266,7 @@ func getCopilotToken(ctx context.Context, githubToken string) (*oauth.Token, err
 	}
 	if resp.StatusCode != http.StatusOK {
 		// 其他非 200 状态码，返回错误
-		return nil, fmt.Errorf("Copilot 令牌请求失败: %s - %s", resp.Status, string(body))
+		return nil, fmt.Errorf("copilot 令牌请求失败: %s - %s", resp.Status, string(body))
 	}
 
 	// 解析 JSON 响应，提取 Copilot 令牌和过期时间
@@ -280,9 +280,9 @@ func getCopilotToken(ctx context.Context, githubToken string) (*oauth.Token, err
 
 	// 构造 OAuth 令牌对象
 	copilotToken := &oauth.Token{
-		AccessToken:  result.Token,      // Copilot 访问令牌
-		RefreshToken: githubToken,       // GitHub 访问令牌，用于刷新
-		ExpiresAt:    result.ExpiresAt,  // 令牌过期时间戳
+		AccessToken:  result.Token,     // Copilot 访问令牌
+		RefreshToken: githubToken,      // GitHub 访问令牌，用于刷新
+		ExpiresAt:    result.ExpiresAt, // 令牌过期时间戳
 	}
 	// 计算并设置过期时长
 	copilotToken.SetExpiresIn()

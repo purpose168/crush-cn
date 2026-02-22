@@ -55,6 +55,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 //   - ctx: 上下文，用于控制生命周期
 //   - cancel: 取消函数，用于中断操作
 //   - animSettings: 动画配置参数
+//
 // 返回:
 //   - *Spinner: 初始化后的 Spinner 实例
 func NewSpinner(ctx context.Context, cancel context.CancelFunc, animSettings anim.Settings) *Spinner {

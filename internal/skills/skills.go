@@ -18,10 +18,10 @@ import (
 
 // 常量定义
 const (
-	SkillFileName          = "SKILL.md"  // 技能文件名
-	MaxNameLength          = 64          // 名称最大长度
-	MaxDescriptionLength   = 1024        // 描述最大长度
-	MaxCompatibilityLength = 500         // 兼容性说明最大长度
+	SkillFileName          = "SKILL.md" // 技能文件名
+	MaxNameLength          = 64         // 名称最大长度
+	MaxDescriptionLength   = 1024       // 描述最大长度
+	MaxCompatibilityLength = 500        // 兼容性说明最大长度
 )
 
 // namePattern 技能名称的正则表达式模式
@@ -30,14 +30,14 @@ var namePattern = regexp.MustCompile(`^[a-zA-Z0-9]+(-[a-zA-Z0-9]+)*$`)
 
 // Skill 表示解析后的SKILL.md文件内容
 type Skill struct {
-	Name          string            `yaml:"name" json:"name"`                              // 技能名称
-	Description   string            `yaml:"description" json:"description"`                // 技能描述
-	License       string            `yaml:"license,omitempty" json:"license,omitempty"`    // 许可证
-	Compatibility string            `yaml:"compatibility,omitempty" json:"compatibility,omitempty"`  // 兼容性说明
-	Metadata      map[string]string `yaml:"metadata,omitempty" json:"metadata,omitempty"`  // 元数据
-	Instructions  string            `yaml:"-" json:"instructions"`                         // 技能指令（正文内容）
-	Path          string            `yaml:"-" json:"path"`                                 // 技能目录路径
-	SkillFilePath string            `yaml:"-" json:"skill_file_path"`                      // SKILL.md文件的完整路径
+	Name          string            `yaml:"name" json:"name"`                                       // 技能名称
+	Description   string            `yaml:"description" json:"description"`                         // 技能描述
+	License       string            `yaml:"license,omitempty" json:"license,omitempty"`             // 许可证
+	Compatibility string            `yaml:"compatibility,omitempty" json:"compatibility,omitempty"` // 兼容性说明
+	Metadata      map[string]string `yaml:"metadata,omitempty" json:"metadata,omitempty"`           // 元数据
+	Instructions  string            `yaml:"-" json:"instructions"`                                  // 技能指令（正文内容）
+	Path          string            `yaml:"-" json:"path"`                                          // 技能目录路径
+	SkillFilePath string            `yaml:"-" json:"skill_file_path"`                               // SKILL.md文件的完整路径
 }
 
 // Validate 检查技能是否符合规范要求
@@ -78,6 +78,7 @@ func (s *Skill) Validate() error {
 // Parse 解析SKILL.md文件
 // 参数:
 //   - path: SKILL.md文件的路径
+//
 // 返回值: 解析后的Skill对象和可能的错误
 func Parse(path string) (*Skill, error) {
 	content, err := os.ReadFile(path)
@@ -106,6 +107,7 @@ func Parse(path string) (*Skill, error) {
 // splitFrontmatter 从Markdown内容中提取YAML前置元数据和正文
 // 参数:
 //   - content: Markdown文件内容
+//
 // 返回值:
 //   - frontmatter: YAML前置元数据部分
 //   - body: 正文部分
@@ -129,6 +131,7 @@ func splitFrontmatter(content string) (frontmatter, body string, err error) {
 // Discover 在给定路径中查找所有有效的技能
 // 参数:
 //   - paths: 要搜索的目录路径列表
+//
 // 返回值: 发现的所有有效技能列表
 func Discover(paths []string) []*Skill {
 	var skills []*Skill
@@ -181,6 +184,7 @@ func Discover(paths []string) []*Skill {
 // ToPromptXML 生成用于注入系统提示的XML格式
 // 参数:
 //   - skills: 技能列表
+//
 // 返回值: XML格式的字符串
 func ToPromptXML(skills []*Skill) string {
 	if len(skills) == 0 {

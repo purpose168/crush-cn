@@ -11,10 +11,10 @@ import (
 // TestParseModelStr 测试解析模型字符串的函数
 func TestParseModelStr(t *testing.T) {
 	tests := []struct {
-		name            string // 测试用例名称
-		modelStr        string // 模型字符串
-		expectedFilter  string // 期望的提供者过滤器
-		expectedModelID string // 期望的模型 ID
+		name            string                                  // 测试用例名称
+		modelStr        string                                  // 模型字符串
+		expectedFilter  string                                  // 期望的提供者过滤器
+		expectedModelID string                                  // 期望的模型 ID
 		setupProviders  func() map[string]config.ProviderConfig // 设置提供者的函数
 	}{
 		{
@@ -110,12 +110,12 @@ func setupMockProvidersWithSlashes() map[string]config.ProviderConfig {
 // TestFindModels 测试查找模型的函数
 func TestFindModels(t *testing.T) {
 	tests := []struct {
-		name             string // 测试用例名称
-		modelStr         string // 模型字符串
-		expectedProvider string // 期望的提供者
-		expectedModelID  string // 期望的模型 ID
-		expectError      bool   // 是否期望错误
-		errorContains    string // 错误消息中应包含的内容
+		name             string                                  // 测试用例名称
+		modelStr         string                                  // 模型字符串
+		expectedProvider string                                  // 期望的提供者
+		expectedModelID  string                                  // 期望的模型 ID
+		expectError      bool                                    // 是否期望错误
+		errorContains    string                                  // 错误消息中应包含的内容
 		setupProviders   func() map[string]config.ProviderConfig // 设置提供者的函数
 	}{
 		{

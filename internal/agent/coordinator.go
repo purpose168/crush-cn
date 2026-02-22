@@ -74,15 +74,15 @@ type Coordinator interface {
 
 // coordinator 协调器实现
 type coordinator struct {
-	cfg         *config.Config // 配置
-	sessions    session.Service // 会话服务
-	messages    message.Service // 消息服务
-	permissions permission.Service // 权限服务
-	history     history.Service // 历史服务
+	cfg         *config.Config      // 配置
+	sessions    session.Service     // 会话服务
+	messages    message.Service     // 消息服务
+	permissions permission.Service  // 权限服务
+	history     history.Service     // 历史服务
 	filetracker filetracker.Service // 文件追踪服务
-	lspManager  *lsp.Manager // LSP 管理器
+	lspManager  *lsp.Manager        // LSP 管理器
 
-	currentAgent SessionAgent // 当前代理
+	currentAgent SessionAgent            // 当前代理
 	agents       map[string]SessionAgent // 代理映射
 
 	readyWg errgroup.Group // 就绪等待组
@@ -580,9 +580,9 @@ func (c *coordinator) buildAgentModels(ctx context.Context, isSubAgent bool) (Mo
 			CatwalkCfg: *largeCatwalkModel,
 			ModelCfg:   largeModelCfg,
 		}, Model{
-		Model:      smallModel,
-		CatwalkCfg: *smallCatwalkModel,
-		ModelCfg:   smallModelCfg,
+			Model:      smallModel,
+			CatwalkCfg: *smallCatwalkModel,
+			ModelCfg:   smallModelCfg,
 		}, nil
 }
 

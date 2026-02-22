@@ -30,6 +30,7 @@ type Keymap struct {
 // 参数:
 //   - renderer: 渲染器实例，用于渲染附件显示样式
 //   - keyMap: 键盘快捷键映射配置
+//
 // 返回:
 //   - *Attachments: 初始化后的附件管理器实例
 func New(renderer *Renderer, keyMap Keymap) *Attachments {
@@ -59,6 +60,7 @@ func (m *Attachments) Reset() { m.list = nil }
 // Update 处理消息更新，包括添加附件和键盘交互
 // 参数:
 //   - msg: 接收到的消息，可以是附件消息或键盘消息
+//
 // 返回:
 //   - bool: 是否需要重新渲染界面
 func (m *Attachments) Update(msg tea.Msg) bool {
@@ -103,6 +105,7 @@ func (m *Attachments) Update(msg tea.Msg) bool {
 // Render 渲染附件列表的显示内容
 // 参数:
 //   - width: 可用的显示宽度
+//
 // 返回:
 //   - string: 渲染后的字符串表示
 func (m *Attachments) Render(width int) string {
@@ -115,6 +118,7 @@ func (m *Attachments) Render(width int) string {
 //   - deletingStyle: 删除模式下数字的样式
 //   - imageStyle: 图片附件图标的样式
 //   - textStyle: 文本附件图标的样式
+//
 // 返回:
 //   - *Renderer: 初始化后的渲染器实例
 func NewRenderer(normalStyle, deletingStyle, imageStyle, textStyle lipgloss.Style) *Renderer {
@@ -136,6 +140,7 @@ type Renderer struct {
 //   - attachments: 要渲染的附件列表
 //   - deleting: 是否处于删除模式
 //   - width: 可用的显示宽度
+//
 // 返回:
 //   - string: 渲染后的字符串，包含所有附件的视觉表示
 func (r *Renderer) Render(attachments []message.Attachment, deleting bool, width int) string {
@@ -182,6 +187,7 @@ func (r *Renderer) Render(attachments []message.Attachment, deleting bool, width
 // icon 根据附件类型返回对应的图标样式
 // 参数:
 //   - a: 附件对象
+//
 // 返回:
 //   - lipgloss.Style: 对应的图标样式（图片样式或文本样式）
 func (r *Renderer) icon(a message.Attachment) lipgloss.Style {

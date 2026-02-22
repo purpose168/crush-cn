@@ -24,10 +24,10 @@ const (
 //
 // 返回值:
 //   - map[string]string: 包含以下键值对的映射:
-//     - "User-Agent": 用户代理字符串，标识客户端类型
-//     - "Editor-Version": 编辑器版本信息
-//     - "Editor-Plugin-Version": 编辑器插件版本信息
-//     - "Copilot-Integration-Id": Copilot 集成标识符
+//   - "User-Agent": 用户代理字符串，标识客户端类型
+//   - "Editor-Version": 编辑器版本信息
+//   - "Editor-Plugin-Version": 编辑器插件版本信息
+//   - "Copilot-Integration-Id": Copilot 集成标识符
 //
 // 这些头信息用于在请求 GitHub Copilot API 时进行身份验证和客户端识别，
 // 确保请求能够被服务器正确处理和授权。

@@ -7,9 +7,9 @@ import (
 // KeyMap 定义补全组件的按键绑定
 // 包含所有用于导航和选择补全项目的按键绑定
 type KeyMap struct {
-	Down,       // 向下移动
-	Up,         // 向上移动
-	Select,     // 选择当前项目
+	Down, // 向下移动
+	Up, // 向上移动
+	Select, // 选择当前项目
 	Cancel key.Binding // 取消补全
 	DownInsert, // 向下移动并插入
 	UpInsert key.Binding // 向上移动并插入

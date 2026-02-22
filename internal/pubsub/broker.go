@@ -11,11 +11,11 @@ const bufferSize = 64
 // Broker 事件代理，实现发布-订阅模式
 // T 是事件载荷的类型
 type Broker[T any] struct {
-	subs      map[chan Event[T]]struct{}  // 订阅者通道映射
-	mu        sync.RWMutex                // 读写互斥锁，保护并发访问
-	done      chan struct{}               // 关闭信号通道
-	subCount  int                         // 当前订阅者数量
-	maxEvents int                         // 最大事件数量限制
+	subs      map[chan Event[T]]struct{} // 订阅者通道映射
+	mu        sync.RWMutex               // 读写互斥锁，保护并发访问
+	done      chan struct{}              // 关闭信号通道
+	subCount  int                        // 当前订阅者数量
+	maxEvents int                        // 最大事件数量限制
 }
 
 // NewBroker 创建新的事件代理
@@ -40,7 +40,7 @@ func NewBrokerWithOptions[T any](channelBufferSize, maxEvents int) *Broker[T] {
 // 关闭所有订阅者通道并清理资源
 func (b *Broker[T]) Shutdown() {
 	select {
-	case <-b.done:  // 已经关闭
+	case <-b.done: // 已经关闭
 		return
 	default:
 		close(b.done)

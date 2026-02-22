@@ -335,9 +335,9 @@ func processMultiEditExistingFile(edit editContext, params MultiEditParams, call
 	editsApplied := len(params.Edits) - len(failedEdits)
 	var description string
 	if len(failedEdits) > 0 {
-		description = fmt.Sprintf("对文件 %s 应用 %d/%d 个编辑（%d 个失败）", editsApplied, len(params.Edits), params.FilePath, len(failedEdits))
+		description = fmt.Sprintf("对文件 %s 应用 %d/%d 个编辑（%d 个失败）", params.FilePath, editsApplied, len(params.Edits), len(failedEdits))
 	} else {
-		description = fmt.Sprintf("对文件 %s 应用 %d 个编辑", editsApplied, params.FilePath)
+		description = fmt.Sprintf("对文件 %s 应用 %d 个编辑", params.FilePath, editsApplied)
 	}
 	p, err := edit.permissions.Request(edit.ctx, permission.CreatePermissionRequest{
 		SessionID:   sessionID,

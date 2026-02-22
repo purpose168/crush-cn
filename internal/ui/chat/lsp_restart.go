@@ -23,6 +23,7 @@ var _ ToolMessageItem = (*LSPRestartToolMessageItem)(nil)
 //   - toolCall: 工具调用信息，包含工具名称和输入参数
 //   - result: 工具执行结果，包含输出内容和执行状态
 //   - canceled: 标识工具调用是否被取消
+//
 // 返回值：实现了 ToolMessageItem 接口的消息项实例
 func NewLSPRestartToolMessageItem(
 	sty *styles.Styles,
@@ -43,11 +44,12 @@ type LSPRestartToolRenderContext struct{}
 //   - sty: 样式配置对象
 //   - width: 可用的显示宽度（字符数）
 //   - opts: 工具渲染选项，包含工具调用信息、结果和显示状态
+//
 // 返回值：格式化后的工具消息字符串
 func (r *LSPRestartToolRenderContext) RenderTool(sty *styles.Styles, width int, opts *ToolRenderOpts) string {
 	// 计算限制后的消息宽度，确保内容不会超出显示区域
 	cappedWidth := cappedMessageWidth(width)
-	
+
 	// 如果工具调用处于待处理状态，显示加载动画
 	if opts.IsPending() {
 		return pendingTool(sty, "重启 LSP", opts.Anim)
@@ -65,7 +67,7 @@ func (r *LSPRestartToolRenderContext) RenderTool(sty *styles.Styles, width int, 
 
 	// 生成工具头部信息，包含状态图标、工具名称和参数
 	header := toolHeader(sty, opts.Status, "重启 LSP", cappedWidth, opts.Compact, toolParams...)
-	
+
 	// 如果是紧凑模式，仅返回头部信息
 	if opts.Compact {
 		return header

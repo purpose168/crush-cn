@@ -22,6 +22,7 @@ type mockHyperClient struct {
 // 参数:
 //   - ctx: 上下文对象,用于控制请求生命周期
 //   - etag: 实体标签,用于缓存验证
+//
 // 返回:
 //   - catwalk.Provider: 提供者配置
 //   - error: 错误信息
@@ -41,8 +42,8 @@ func TestHyperSync_Init(t *testing.T) {
 
 	syncer.Init(client, path, true)
 
-	require.True(t, syncer.init.Load())      // 验证初始化标志已设置
-	require.Equal(t, client, syncer.client) // 验证客户端已正确设置
+	require.True(t, syncer.init.Load())       // 验证初始化标志已设置
+	require.Equal(t, client, syncer.client)   // 验证客户端已正确设置
 	require.Equal(t, path, syncer.cache.path) // 验证缓存路径已正确设置
 }
 
@@ -83,7 +84,7 @@ func TestHyperSync_GetFreshProvider(t *testing.T) {
 
 	// 验证缓存文件已写入
 	fileInfo, err := os.Stat(path)
-	require.NoError(t, err)           // 验证文件信息获取成功
+	require.NoError(t, err)            // 验证文件信息获取成功
 	require.False(t, fileInfo.IsDir()) // 验证是文件而非目录
 }
 
@@ -101,7 +102,7 @@ func TestHyperSync_GetNotModifiedUsesCached(t *testing.T) {
 		ID:   "hyper",
 	}
 	data, err := json.Marshal(cachedProvider)
-	require.NoError(t, err) // 验证序列化成功
+	require.NoError(t, err)                             // 验证序列化成功
 	require.NoError(t, os.WriteFile(path, data, 0o644)) // 验证文件写入成功
 
 	syncer := &hyperSync{}
@@ -112,9 +113,9 @@ func TestHyperSync_GetNotModifiedUsesCached(t *testing.T) {
 	syncer.Init(client, path, true)
 
 	provider, err := syncer.Get(t.Context())
-	require.NoError(t, err)                    // 验证没有错误
+	require.NoError(t, err)                         // 验证没有错误
 	require.Equal(t, "Cached Hyper", provider.Name) // 验证使用的是缓存的提供者
-	require.Equal(t, 1, client.callCount)      // 验证客户端被调用一次
+	require.Equal(t, 1, client.callCount)           // 验证客户端被调用一次
 }
 
 // TestHyperSync_GetClientError 测试客户端发生错误时的回退机制
@@ -133,8 +134,8 @@ func TestHyperSync_GetClientError(t *testing.T) {
 	syncer.Init(client, path, true)
 
 	provider, err := syncer.Get(t.Context())
-	require.NoError(t, err) // 应该回退使用内置配置,不返回错误
-	require.Equal(t, "Charm Hyper", provider.Name) // 验证使用的是内置的 Charm Hyper 提供者
+	require.NoError(t, err)                                           // 应该回退使用内置配置,不返回错误
+	require.Equal(t, "Charm Hyper", provider.Name)                    // 验证使用的是内置的 Charm Hyper 提供者
 	require.Equal(t, catwalk.InferenceProvider("hyper"), provider.ID) // 验证提供者 ID 正确
 }
 
@@ -160,7 +161,7 @@ func TestHyperSync_GetEmptyCache(t *testing.T) {
 	syncer.Init(client, path, true)
 
 	provider, err := syncer.Get(t.Context())
-	require.NoError(t, err) // 验证没有错误
+	require.NoError(t, err)                        // 验证没有错误
 	require.Equal(t, "Fresh Hyper", provider.Name) // 验证获取到新的提供者配置
 }
 
@@ -185,11 +186,11 @@ func TestHyperSync_GetCalledMultipleTimesUsesOnce(t *testing.T) {
 
 	// 多次调用 Get 方法
 	provider1, err1 := syncer.Get(t.Context())
-	require.NoError(t, err1) // 验证第一次调用没有错误
+	require.NoError(t, err1)                  // 验证第一次调用没有错误
 	require.Equal(t, "Hyper", provider1.Name) // 验证第一次获取的提供者名称正确
 
 	provider2, err2 := syncer.Get(t.Context())
-	require.NoError(t, err2) // 验证第二次调用没有错误
+	require.NoError(t, err2)                  // 验证第二次调用没有错误
 	require.Equal(t, "Hyper", provider2.Name) // 验证第二次获取的提供者名称正确
 
 	// 由于使用了 sync.Once,客户端应该只被调用一次
@@ -223,7 +224,7 @@ func TestHyperSync_GetCacheStoreError(t *testing.T) {
 	syncer.Init(client, path, true)
 
 	provider, err := syncer.Get(t.Context())
-	require.Error(t, err) // 验证返回错误
+	require.Error(t, err)                                                             // 验证返回错误
 	require.Contains(t, err.Error(), "failed to create directory for provider cache") // 验证错误信息包含创建目录失败的内容
-	require.Equal(t, "Hyper", provider.Name) // 提供者仍然会被返回
+	require.Equal(t, "Hyper", provider.Name)                                          // 提供者仍然会被返回
 }

@@ -19,7 +19,7 @@ func TestClient(t *testing.T) {
 
 	// 创建用于测试的简单配置
 	cfg := config.LSPConfig{
-		Command:   "$THE_CMD",  // 使用echo作为不会失败的虚拟命令
+		Command:   "$THE_CMD", // 使用echo作为不会失败的虚拟命令
 		Args:      []string{"hello"},
 		FileTypes: []string{"go"},
 		Env:       map[string]string{},

@@ -24,10 +24,10 @@ import (
 // 该结构体用于存储从 /device/auth 端点返回的设备授权信息，
 // 包括设备码、用户码和验证 URL 等关键信息。
 type DeviceAuthResponse struct {
-	DeviceCode      string `json:"device_code"`       // 设备码，用于后续轮询获取令牌
-	UserCode        string `json:"user_code"`         // 用户码，用户在验证页面输入的代码
-	VerificationURL string `json:"verification_url"`  // 验证 URL，用户访问的验证页面地址
-	ExpiresIn       int    `json:"expires_in"`        // 过期时间（秒），设备码的有效期
+	DeviceCode      string `json:"device_code"`      // 设备码，用于后续轮询获取令牌
+	UserCode        string `json:"user_code"`        // 用户码，用户在验证页面输入的代码
+	VerificationURL string `json:"verification_url"` // 验证 URL，用户访问的验证页面地址
+	ExpiresIn       int    `json:"expires_in"`       // 过期时间（秒），设备码的有效期
 }
 
 // TokenResponse 包含轮询端点的响应数据。
@@ -295,13 +295,13 @@ func ExchangeToken(ctx context.Context, refreshToken string) (*oauth.Token, erro
 // 该结构体用于存储从 /token/introspect 端点返回的令牌验证信息，
 // 包括令牌是否有效、用户标识和组织信息等。
 type IntrospectTokenResponse struct {
-	Active bool   `json:"active"`          // 令牌是否有效，true 表示令牌有效
-	Sub    string `json:"sub,omitempty"`   // 主体标识，通常是用户 ID
+	Active bool   `json:"active"`           // 令牌是否有效，true 表示令牌有效
+	Sub    string `json:"sub,omitempty"`    // 主体标识，通常是用户 ID
 	OrgID  string `json:"org_id,omitempty"` // 组织 ID，令牌所属组织
-	Exp    int64  `json:"exp,omitempty"`   // 过期时间戳（Unix 时间戳）
-	Iat    int64  `json:"iat,omitempty"`   // 签发时间戳（Unix 时间戳）
-	Iss    string `json:"iss,omitempty"`   // 签发者，令牌的签发方
-	Jti    string `json:"jti,omitempty"`   // JWT ID，令牌的唯一标识符
+	Exp    int64  `json:"exp,omitempty"`    // 过期时间戳（Unix 时间戳）
+	Iat    int64  `json:"iat,omitempty"`    // 签发时间戳（Unix 时间戳）
+	Iss    string `json:"iss,omitempty"`    // 签发者，令牌的签发方
+	Jti    string `json:"jti,omitempty"`    // JWT ID，令牌的唯一标识符
 }
 
 // IntrospectToken 使用自省端点验证访问令牌。

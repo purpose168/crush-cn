@@ -39,7 +39,7 @@ type ViewToolRenderContext struct{}
 func (v *ViewToolRenderContext) RenderTool(sty *styles.Styles, width int, opts *ToolRenderOpts) string {
 	// 计算限制后的消息宽度
 	cappedWidth := cappedMessageWidth(width)
-	
+
 	// 如果工具调用处于待处理状态，返回待处理工具显示
 	if opts.IsPending() {
 		return pendingTool(sty, "View", opts.Anim)
@@ -127,7 +127,7 @@ type WriteToolRenderContext struct{}
 func (w *WriteToolRenderContext) RenderTool(sty *styles.Styles, width int, opts *ToolRenderOpts) string {
 	// 计算限制后的消息宽度
 	cappedWidth := cappedMessageWidth(width)
-	
+
 	// 如果工具调用处于待处理状态，返回待处理工具显示
 	if opts.IsPending() {
 		return pendingTool(sty, "Write", opts.Anim)
@@ -331,7 +331,7 @@ type DownloadToolRenderContext struct{}
 func (d *DownloadToolRenderContext) RenderTool(sty *styles.Styles, width int, opts *ToolRenderOpts) string {
 	// 计算限制后的消息宽度
 	cappedWidth := cappedMessageWidth(width)
-	
+
 	// 如果工具调用处于待处理状态，返回待处理工具显示
 	if opts.IsPending() {
 		return pendingTool(sty, "Download", opts.Anim)

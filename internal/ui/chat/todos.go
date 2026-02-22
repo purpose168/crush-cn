@@ -41,7 +41,7 @@ type TodosToolRenderContext struct{}
 func (t *TodosToolRenderContext) RenderTool(sty *styles.Styles, width int, opts *ToolRenderOpts) string {
 	// 计算限制后的消息宽度
 	cappedWidth := cappedMessageWidth(width)
-	
+
 	// 如果工具调用处于待处理状态，返回待处理工具显示
 	if opts.IsPending() {
 		return pendingTool(sty, "待办事项", opts.Anim)
@@ -56,7 +56,7 @@ func (t *TodosToolRenderContext) RenderTool(sty *styles.Styles, width int, opts 
 	if err := json.Unmarshal([]byte(opts.ToolCall.Input), &params); err == nil {
 		completedCount := 0
 		inProgressTask := ""
-		
+
 		// 遍历所有待办事项，统计已完成数量和正在进行的任务
 		for _, todo := range params.Todos {
 			if todo.Status == "completed" {
@@ -181,7 +181,7 @@ func FormatTodosList(sty *styles.Styles, todos []session.Todo, inProgressIcon st
 		if todo.Status == session.TodoStatusInProgress && todo.ActiveForm != "" {
 			text = todo.ActiveForm
 		}
-		
+
 		// 构建行并截断以适应宽度
 		line := prefix + textStyle.Render(text)
 		line = ansi.Truncate(line, width, "…")

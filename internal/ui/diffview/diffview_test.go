@@ -12,44 +12,54 @@ import (
 	"github.com/purpose168/crush-cn/internal/ui/diffview"
 )
 
-//go:embed testdata/TestDefault.before
 // TestDefaultBefore 是默认测试用例的修改前文件内容
+//
+//go:embed testdata/TestDefault.before
 var TestDefaultBefore string
 
-//go:embed testdata/TestDefault.after
 // TestDefaultAfter 是默认测试用例的修改后文件内容
+//
+//go:embed testdata/TestDefault.after
 var TestDefaultAfter string
 
-//go:embed testdata/TestMultipleHunks.before
 // TestMultipleHunksBefore 是多个块测试用例的修改前文件内容
+//
+//go:embed testdata/TestMultipleHunks.before
 var TestMultipleHunksBefore string
 
-//go:embed testdata/TestMultipleHunks.after
 // TestMultipleHunksAfter 是多个块测试用例的修改后文件内容
+//
+//go:embed testdata/TestMultipleHunks.after
 var TestMultipleHunksAfter string
 
-//go:embed testdata/TestNarrow.before
 // TestNarrowBefore 是窄宽度测试用例的修改前文件内容
+//
+//go:embed testdata/TestNarrow.before
 var TestNarrowBefore string
 
-//go:embed testdata/TestNarrow.after
 // TestNarrowAfter 是窄宽度测试用例的修改后文件内容
+//
+//go:embed testdata/TestNarrow.after
 var TestNarrowAfter string
 
-//go:embed testdata/TestTabs.before
 // TestTabsBefore 是制表符测试用例的修改前文件内容
+//
+//go:embed testdata/TestTabs.before
 var TestTabsBefore string
 
-//go:embed testdata/TestTabs.after
 // TestTabsAfter 是制表符测试用例的修改后文件内容
+//
+//go:embed testdata/TestTabs.after
 var TestTabsAfter string
 
-//go:embed testdata/TestLineBreakIssue.before
 // TestLineBreakIssueBefore 是换行问题测试用例的修改前文件内容
+//
+//go:embed testdata/TestLineBreakIssue.before
 var TestLineBreakIssueBefore string
 
-//go:embed testdata/TestLineBreakIssue.after
 // TestLineBreakIssueAfter 是换行问题测试用例的修改后文件内容
+//
+//go:embed testdata/TestLineBreakIssue.after
 var TestLineBreakIssueAfter string
 
 type (

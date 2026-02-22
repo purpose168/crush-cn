@@ -229,8 +229,8 @@ func formatSearchResults(results []SearchResult) string {
 }
 
 var (
-	lastSearchMu   sync.Mutex    // 保护lastSearchTime的互斥锁
-	lastSearchTime time.Time     // 上次搜索的时间
+	lastSearchMu   sync.Mutex // 保护lastSearchTime的互斥锁
+	lastSearchTime time.Time  // 上次搜索的时间
 )
 
 // maybeDelaySearch 如果上次搜索是最近的，则添加随机延迟

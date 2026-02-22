@@ -725,23 +725,23 @@ func (dv *DiffView) hightlightCode(source string, bgColor color.Color) string {
 	result := b.String()
 
 	// 缓存结果以供将来使用
-        dv.syntaxCache[cacheKey] = result
+	dv.syntaxCache[cacheKey] = result
 
-        return result
+	return result
 }
 
 // createSyntaxCacheKey 从源内容和背景色创建缓存键。
 // 我们使用简单的哈希来保持合理的内存使用。
 func (dv *DiffView) createSyntaxCacheKey(source string, bgColor color.Color) string {
-        // 将颜色转换为字符串表示
-        r, g, b, a := bgColor.RGBA()
-        colorStr := fmt.Sprintf("%d,%d,%d,%d", r, g, b, a)
+	// 将颜色转换为字符串表示
+	r, g, b, a := bgColor.RGBA()
+	colorStr := fmt.Sprintf("%d,%d,%d,%d", r, g, b, a)
 
-        // 创建内容+颜色的哈希作为缓存键
-        h := xxh3.New()
-        h.Write([]byte(source))
-        h.Write([]byte(colorStr))
-        return fmt.Sprintf("%x", h.Sum(nil))
+	// 创建内容+颜色的哈希作为缓存键
+	h := xxh3.New()
+	h.Write([]byte(source))
+	h.Write([]byte(colorStr))
+	return fmt.Sprintf("%x", h.Sum(nil))
 }
 
 func (dv *DiffView) getChromaLexer() chroma.Lexer {

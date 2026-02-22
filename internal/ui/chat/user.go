@@ -103,7 +103,7 @@ func (m *UserMessageItem) renderAttachments(width int) string {
 	// 遍历消息中的二进制内容，转换为附件格式
 	for _, at := range m.message.BinaryContent() {
 		attachments = append(attachments, message.Attachment{
-			FileName: at.Path,    // 文件路径作为文件名
+			FileName: at.Path,     // 文件路径作为文件名
 			MimeType: at.MIMEType, // MIME 类型
 		})
 	}

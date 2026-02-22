@@ -23,17 +23,17 @@ import (
 
 // DiagnosticCounts 按严重程度统计诊断信息的数量
 type DiagnosticCounts struct {
-	Error       int  // 错误数量
-	Warning     int  // 警告数量
-	Information int  // 信息数量
-	Hint        int  // 提示数量
+	Error       int // 错误数量
+	Warning     int // 警告数量
+	Information int // 信息数量
+	Hint        int // 提示数量
 }
 
 // Client LSP客户端结构体，封装了与语言服务器交互的所有功能
 type Client struct {
-	client *powernap.Client  // 底层powernap客户端实例
-	name   string            // LSP客户端名称
-	debug  bool              // 是否启用调试模式
+	client *powernap.Client // 底层powernap客户端实例
+	name   string           // LSP客户端名称
+	debug  bool             // 是否启用调试模式
 
 	// 此LSP服务器的工作目录范围
 	workDir string
@@ -73,6 +73,7 @@ type Client struct {
 //   - cfg: LSP配置
 //   - resolver: 变量解析器
 //   - debug: 是否启用调试模式
+//
 // 返回值: 创建的客户端实例和可能的错误
 func New(ctx context.Context, name string, cfg config.LSPConfig, resolver config.VariableResolver, debug bool) (*Client, error) {
 	client := &Client{
@@ -98,6 +99,7 @@ func New(ctx context.Context, name string, cfg config.LSPConfig, resolver config
 // 参数:
 //   - ctx: 上下文
 //   - workspaceDir: 工作区目录路径
+//
 // 返回值: 初始化结果和可能的错误
 func (c *Client) Initialize(ctx context.Context, workspaceDir string) (*protocol.InitializeResult, error) {
 	if err := c.client.Initialize(ctx, false); err != nil {
@@ -253,11 +255,11 @@ func (c *Client) Restart() error {
 type ServerState int
 
 const (
-	StateStopped  ServerState = iota  // 已停止
-	StateStarting                      // 启动中
-	StateReady                         // 已就绪
-	StateError                         // 错误状态
-	StateDisabled                      // 已禁用
+	StateStopped  ServerState = iota // 已停止
+	StateStarting                    // 启动中
+	StateReady                       // 已就绪
+	StateError                       // 错误状态
+	StateDisabled                    // 已禁用
 )
 
 // GetServerState 返回LSP服务器的当前状态
@@ -574,6 +576,7 @@ func (c *Client) WaitForDiagnostics(ctx context.Context, d time.Duration) {
 //   - line: 行号
 //   - character: 列号
 //   - includeDeclaration: 是否包含声明
+//
 // 返回值: 引用位置列表和可能的错误
 // 注意: line和character应该从0开始计数
 // 参见: https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#position

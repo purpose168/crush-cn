@@ -23,11 +23,11 @@ import (
 
 // Manager 处理基于文件类型的LSP客户端延迟初始化
 type Manager struct {
-	clients  *csync.Map[string, *Client]  // LSP客户端映射
-	cfg      *config.Config               // 配置
-	manager  *powernapconfig.Manager      // powernap配置管理器
-	callback func(name string, client *Client)  // 客户端启动回调
-	mu       sync.Mutex                   // 互斥锁
+	clients  *csync.Map[string, *Client]       // LSP客户端映射
+	cfg      *config.Config                    // 配置
+	manager  *powernapconfig.Manager           // powernap配置管理器
+	callback func(name string, client *Client) // 客户端启动回调
+	mu       sync.Mutex                        // 互斥锁
 }
 
 // NewManager 创建新的LSP管理器服务

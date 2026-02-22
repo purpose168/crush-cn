@@ -30,9 +30,9 @@ type syncer[T any] interface {
 
 // 全局变量，用于确保提供者列表只加载一次
 var (
-	providerOnce sync.Once              // 确保提供者列表只初始化一次
-	providerList []catwalk.Provider     // 缓存的提供者列表
-	providerErr  error                  // 获取提供者时产生的错误
+	providerOnce sync.Once          // 确保提供者列表只初始化一次
+	providerList []catwalk.Provider // 缓存的提供者列表
+	providerErr  error              // 获取提供者时产生的错误
 )
 
 // cachePathFor 根据名称生成缓存文件路径
@@ -113,7 +113,7 @@ func UpdateProviders(pathOrURL string) error {
 func UpdateHyper(pathOrURL string) error {
 	// 检查 Hyper 功能是否启用
 	if !hyper.Enabled() {
-		return fmt.Errorf("Hyper 未启用")
+		return fmt.Errorf("hyper 未启用")
 	}
 	var provider catwalk.Provider
 	// 优先使用传入的路径，其次是 Hyper 的基础 URL
@@ -153,8 +153,8 @@ func UpdateHyper(pathOrURL string) error {
 
 // 全局同步器实例
 var (
-	catwalkSyncer = &catwalkSync{}  // Catwalk 提供者同步器
-	hyperSyncer   = &hyperSync{}    // Hyper 提供者同步器
+	catwalkSyncer = &catwalkSync{} // Catwalk 提供者同步器
+	hyperSyncer   = &hyperSync{}   // Hyper 提供者同步器
 )
 
 // Providers 返回提供者列表，考虑缓存结果以及是否启用自动更新
@@ -169,8 +169,8 @@ func Providers(cfg *Config) ([]catwalk.Provider, error) {
 	providerOnce.Do(func() {
 		var wg sync.WaitGroup
 		var errs []error
-		providers := csync.NewSlice[catwalk.Provider]()  // 使用并发安全的切片收集提供者
-		autoupdate := !cfg.Options.DisableProviderAutoUpdate  // 自动更新标志
+		providers := csync.NewSlice[catwalk.Provider]()      // 使用并发安全的切片收集提供者
+		autoupdate := !cfg.Options.DisableProviderAutoUpdate // 自动更新标志
 
 		// 设置 45 秒超时的上下文
 		ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
@@ -220,7 +220,7 @@ func Providers(cfg *Config) ([]catwalk.Provider, error) {
 
 // cache 是一个泛型缓存结构，用于存储和读取类型为 T 的数据
 type cache[T any] struct {
-	path string  // 缓存文件的路径
+	path string // 缓存文件的路径
 }
 
 // newCache 创建一个新的缓存实例

@@ -24,12 +24,13 @@ func NewHTTPClient() *http.Client {
 // HTTPRoundTripLogger 是一个实现了 http.RoundTripper 接口的传输层
 // 用于拦截并记录HTTP请求和响应的详细信息
 type HTTPRoundTripLogger struct {
-	Transport http.RoundTripper  // 底层传输层，用于实际执行HTTP请求
+	Transport http.RoundTripper // 底层传输层，用于实际执行HTTP请求
 }
 
 // RoundTrip 实现了 http.RoundTripper 接口，在请求前后添加日志记录
 // 参数:
 //   - req: 要发送的HTTP请求
+//
 // 返回值:
 //   - *http.Response: HTTP响应
 //   - error: 请求过程中发生的错误
@@ -95,6 +96,7 @@ func (h *HTTPRoundTripLogger) RoundTrip(req *http.Request) (*http.Response, erro
 // 如果内容是JSON格式，会进行格式化输出
 // 参数:
 //   - body: HTTP请求或响应的body
+//
 // 返回值: 格式化后的字符串表示
 func bodyToString(body io.ReadCloser) string {
 	if body == nil {
@@ -118,6 +120,7 @@ func bodyToString(body io.ReadCloser) string {
 // 对于包含认证信息的头部（如Authorization、API-Key、Token等），会用[REDACTED]替换实际值
 // 参数:
 //   - headers: 原始HTTP头部
+//
 // 返回值: 过滤后的头部映射
 func formatHeaders(headers http.Header) map[string][]string {
 	filtered := make(map[string][]string)
@@ -140,6 +143,7 @@ func formatHeaders(headers http.Header) map[string][]string {
 // 由于HTTP body只能读取一次，此函数创建两个副本供不同用途使用
 // 参数:
 //   - b: 原始HTTP body
+//
 // 返回值:
 //   - r1: body的第一个副本
 //   - r2: body的第二个副本

@@ -36,7 +36,7 @@ type FetchToolRenderContext struct{}
 func (f *FetchToolRenderContext) RenderTool(sty *styles.Styles, width int, opts *ToolRenderOpts) string {
 	// 计算受限的消息宽度
 	cappedWidth := cappedMessageWidth(width)
-	
+
 	// 如果工具调用处于待处理状态，返回待处理工具显示
 	if opts.IsPending() {
 		return pendingTool(sty, "Fetch", opts.Anim)
@@ -119,7 +119,7 @@ type WebFetchToolRenderContext struct{}
 func (w *WebFetchToolRenderContext) RenderTool(sty *styles.Styles, width int, opts *ToolRenderOpts) string {
 	// 计算受限的消息宽度
 	cappedWidth := cappedMessageWidth(width)
-	
+
 	// 如果工具调用处于待处理状态，返回待处理工具显示
 	if opts.IsPending() {
 		return pendingTool(sty, "Fetch", opts.Anim)
@@ -181,7 +181,7 @@ type WebSearchToolRenderContext struct{}
 func (w *WebSearchToolRenderContext) RenderTool(sty *styles.Styles, width int, opts *ToolRenderOpts) string {
 	// 计算受限的消息宽度
 	cappedWidth := cappedMessageWidth(width)
-	
+
 	// 如果工具调用处于待处理状态，返回待处理工具显示
 	if opts.IsPending() {
 		return pendingTool(sty, "Search", opts.Anim)

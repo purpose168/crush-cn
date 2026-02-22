@@ -10,10 +10,10 @@ import (
 func TestCommandBlocking(t *testing.T) {
 	// 测试命令拦截功能的测试用例
 	tests := []struct {
-		name        string // 测试用例名称
+		name        string      // 测试用例名称
 		blockFuncs  []BlockFunc // 拦截函数列表
-		command     string // 要执行的命令
-		shouldBlock bool // 是否应该被拦截
+		command     string      // 要执行的命令
+		shouldBlock bool        // 是否应该被拦截
 	}{
 		{
 			name: "拦截简单命令",
@@ -118,12 +118,12 @@ func TestCommandBlocking(t *testing.T) {
 func TestArgumentsBlocker(t *testing.T) {
 	// 测试基于参数的命令拦截功能
 	tests := []struct {
-		name        string // 测试用例名称
-		cmd         string // 命令名称
+		name        string   // 测试用例名称
+		cmd         string   // 命令名称
 		args        []string // 命令参数
 		flags       []string // 命令标志
 		input       []string // 输入参数
-		shouldBlock bool // 是否应该被拦截
+		shouldBlock bool     // 是否应该被拦截
 	}{
 		// 基本命令拦截测试
 		{
@@ -269,10 +269,10 @@ func TestArgumentsBlocker(t *testing.T) {
 func TestCommandsBlocker(t *testing.T) {
 	// 测试命令黑名单拦截功能
 	tests := []struct {
-		name        string // 测试用例名称
+		name        string   // 测试用例名称
 		banned      []string // 被禁止的命令列表
 		input       []string // 输入参数
-		shouldBlock bool // 是否应该被拦截
+		shouldBlock bool     // 是否应该被拦截
 	}{
 		{
 			name:        "拦截单个被禁止的命令",
@@ -319,7 +319,7 @@ func TestCommandsBlocker(t *testing.T) {
 func TestSplitArgsFlags(t *testing.T) {
 	// 测试参数和标志分离功能
 	tests := []struct {
-		name      string // 测试用例名称
+		name      string   // 测试用例名称
 		input     []string // 输入参数
 		wantArgs  []string // 期望的参数
 		wantFlags []string // 期望的标志

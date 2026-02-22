@@ -332,7 +332,7 @@ func (q *Queries) Close() error {
 func (q *Queries) exec(ctx context.Context, stmt *sql.Stmt, query string, args ...interface{}) (sql.Result, error) {
 	switch {
 	case stmt != nil && q.tx != nil:
-		return q.tx.StmtContext(ctx, stmt).ExecContext(ctx, args...)
+		return q.tx.StmtContext(ctx, stmt).ExecContext(ctx, args...) //nolint:sqlclosecheck // Stmt 在事务中，事务结束时会自动关闭
 	case stmt != nil:
 		return stmt.ExecContext(ctx, args...)
 	default:
@@ -349,7 +349,7 @@ func (q *Queries) exec(ctx context.Context, stmt *sql.Stmt, query string, args .
 func (q *Queries) query(ctx context.Context, stmt *sql.Stmt, query string, args ...interface{}) (*sql.Rows, error) {
 	switch {
 	case stmt != nil && q.tx != nil:
-		return q.tx.StmtContext(ctx, stmt).QueryContext(ctx, args...)
+		return q.tx.StmtContext(ctx, stmt).QueryContext(ctx, args...) //nolint:sqlclosecheck // Stmt 在事务中，事务结束时会自动关闭
 	case stmt != nil:
 		return stmt.QueryContext(ctx, args...)
 	default:
@@ -366,7 +366,7 @@ func (q *Queries) query(ctx context.Context, stmt *sql.Stmt, query string, args 
 func (q *Queries) queryRow(ctx context.Context, stmt *sql.Stmt, query string, args ...interface{}) *sql.Row {
 	switch {
 	case stmt != nil && q.tx != nil:
-		return q.tx.StmtContext(ctx, stmt).QueryRowContext(ctx, args...)
+		return q.tx.StmtContext(ctx, stmt).QueryRowContext(ctx, args...) //nolint:sqlclosecheck // Stmt 在事务中，事务结束时会自动关闭
 	case stmt != nil:
 		return stmt.QueryRowContext(ctx, args...)
 	default:

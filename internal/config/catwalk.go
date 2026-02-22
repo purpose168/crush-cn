@@ -21,12 +21,12 @@ var _ syncer[[]catwalk.Provider] = (*catwalkSync)(nil)
 
 // catwalkSync 管理 Catwalk 提供商信息的同步，支持缓存和自动更新
 type catwalkSync struct {
-	once       sync.Once         // 确保初始化只执行一次
-	result     []catwalk.Provider // 存储提供商结果
+	once       sync.Once                 // 确保初始化只执行一次
+	result     []catwalk.Provider        // 存储提供商结果
 	cache      cache[[]catwalk.Provider] // 缓存接口
-	client     catwalkClient     // Catwalk 客户端
-	autoupdate bool              // 是否启用自动更新
-	init       atomic.Bool       // 初始化状态标志
+	client     catwalkClient             // Catwalk 客户端
+	autoupdate bool                      // 是否启用自动更新
+	init       atomic.Bool               // 初始化状态标志
 }
 
 // Init 初始化 catwalkSync 实例

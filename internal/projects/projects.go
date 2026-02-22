@@ -78,6 +78,7 @@ func Load() (*ProjectList, error) {
 // 该函数是线程安全的，使用互斥锁保护并发访问
 // 参数：
 //   - list: 要保存的项目列表指针
+//
 // 返回值：
 //   - error: 保存过程中的错误
 func Save(list *ProjectList) error {
@@ -109,6 +110,7 @@ func Save(list *ProjectList) error {
 // 参数：
 //   - workingDir: 项目的工作目录路径
 //   - dataDir: 项目的数据存储目录路径
+//
 // 返回值：
 //   - error: 加载或保存过程中的错误
 func Register(workingDir, dataDir string) error {

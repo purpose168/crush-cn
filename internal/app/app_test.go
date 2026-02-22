@@ -137,10 +137,10 @@ func TestSetupSubscriber_NoTimerLeak(t *testing.T) {
 
 // subscriberFixture 是测试订阅者的辅助结构体
 type subscriberFixture struct {
-	broker   *pubsub.Broker[string]  // 消息代理
-	wg       sync.WaitGroup          // 等待组，用于同步协程
-	outputCh chan tea.Msg            // 输出通道，用于接收消息
-	cancel   context.CancelFunc      // 取消函数，用于取消上下文
+	broker   *pubsub.Broker[string] // 消息代理
+	wg       sync.WaitGroup         // 等待组，用于同步协程
+	outputCh chan tea.Msg           // 输出通道，用于接收消息
+	cancel   context.CancelFunc     // 取消函数，用于取消上下文
 }
 
 // newSubscriberFixture 创建一个新的订阅者测试夹具

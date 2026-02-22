@@ -94,7 +94,7 @@ func TestApplyEditToContentPartialSuccess(t *testing.T) {
 		NewString: "LINE 99",
 	})
 	require.Error(t, err)
-	require.Contains(t, err.Error(), "not found")
+	require.Contains(t, err.Error(), "未找到")
 }
 
 func TestMultiEditSequentialApplication(t *testing.T) {
@@ -142,7 +142,7 @@ func TestMultiEditSequentialApplication(t *testing.T) {
 
 	// 检查失败编辑的详细信息。
 	require.Equal(t, 2, failedEdits[0].Index)
-	require.Contains(t, failedEdits[0].Error, "not found")
+	require.Contains(t, failedEdits[0].Error, "未找到")
 
 	// 验证内容变更。
 	require.Contains(t, currentContent, "LINE 1")

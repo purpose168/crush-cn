@@ -30,9 +30,9 @@ import (
 type ShellType int
 
 const (
-	ShellTypePOSIX ShellType = iota // POSIX shell
-	ShellTypeCmd                    // Windows CMD
-	ShellTypePowerShell             // PowerShell
+	ShellTypePOSIX      ShellType = iota // POSIX shell
+	ShellTypeCmd                         // Windows CMD
+	ShellTypePowerShell                  // PowerShell
 )
 
 // Logger 接口用于可选的日志记录
@@ -50,18 +50,18 @@ type BlockFunc func(args []string) bool
 
 // Shell 提供跨平台的 shell 执行功能,支持可选的状态持久化
 type Shell struct {
-	env        []string // 环境变量
-	cwd        string   // 当前工作目录
-	mu         sync.Mutex // 互斥锁,用于保护并发访问
-	logger     Logger   // 日志记录器
+	env        []string    // 环境变量
+	cwd        string      // 当前工作目录
+	mu         sync.Mutex  // 互斥锁,用于保护并发访问
+	logger     Logger      // 日志记录器
 	blockFuncs []BlockFunc // 命令阻止函数列表
 }
 
 // Options 用于创建新的 shell 实例的配置选项
 type Options struct {
-	WorkingDir string   // 工作目录
-	Env        []string // 环境变量
-	Logger     Logger   // 日志记录器
+	WorkingDir string      // 工作目录
+	Env        []string    // 环境变量
+	Logger     Logger      // 日志记录器
 	BlockFuncs []BlockFunc // 命令阻止函数列表
 }
 

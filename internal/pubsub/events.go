@@ -4,9 +4,9 @@ import "context"
 
 // 事件类型常量定义
 const (
-	CreatedEvent EventType = "created"  // 创建事件
-	UpdatedEvent EventType = "updated"  // 更新事件
-	DeletedEvent EventType = "deleted"  // 删除事件
+	CreatedEvent EventType = "created" // 创建事件
+	UpdatedEvent EventType = "updated" // 更新事件
+	DeletedEvent EventType = "deleted" // 删除事件
 )
 
 // Subscriber 订阅者接口
@@ -23,8 +23,8 @@ type (
 	// Event 表示资源生命周期中的一个事件
 	// T 是事件载荷的类型
 	Event[T any] struct {
-		Type    EventType  // 事件类型
-		Payload T          // 事件载荷数据
+		Type    EventType // 事件类型
+		Payload T         // 事件载荷数据
 	}
 
 	// Publisher 发布者接口
